@@ -14,6 +14,17 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }: { addUtilities: (utilities: Record<string, any>) => void }) {
+      addUtilities({
+        ".scrollbar-none": {
+          "scrollbar-width": "none", // Hides scrollbar for Firefox
+          "&::-webkit-scrollbar": {
+            display: "none", // Hides scrollbar for Chrome/Safari
+          },
+        },
+      });
+    },
+  ],
 };
 export default config;
