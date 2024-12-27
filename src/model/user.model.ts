@@ -1,5 +1,11 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export enum ROLE {
+  ADMIN = "ADMIN",
+  USER = "USER",
+  COORDINATE = "COORDINATE",
+}
+
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -10,6 +16,7 @@ export interface IUser extends Document {
   verifyCodeExpiry: Date;
   isVerified: boolean;
   notifications: mongoose.Types.ObjectId[];
+  role: ROLE;
 }
 
 const userSchema: Schema<IUser> = new Schema(
@@ -31,6 +38,13 @@ const userSchema: Schema<IUser> = new Schema(
       type: String,
       required: true,
     },
+
+    role: {
+      type: String,
+      enum: Object.values(ROLE),
+      required: true,
+    },
+
     bookings: [
       {
         type: Schema.Types.ObjectId,
