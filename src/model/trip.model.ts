@@ -1,17 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-enum Timing {
+export enum Timing {
   Forenoon = "Forenoon",
   Afternoon = "Afternoon",
   Both = "Both",
 }
 
-enum Status{
-    Active = "Active",
-   UnActive = "UnActive",
-}
-
-interface DateTiming {
+export interface DateTiming {
   Timing: Timing;
   date: Date;
 }
@@ -20,7 +15,7 @@ export interface ITrip extends Document {
   price: number;
   destinationAddress: string;
   DateTiming: DateTiming[];
-  Status: Status;
+  Status: Boolean;
 }
 
 const dateTimingSchema = new Schema<DateTiming>({
@@ -33,7 +28,7 @@ const tripSchema: Schema<ITrip> = new Schema(
     price: { type: Number, required: true },
     destinationAddress: { type: String, required: true },
     DateTiming: [dateTimingSchema],
-    Status: { type: String, enum: Object.values(Status), required: true },
+    Status: { type: Boolean, required: true, default: false },
   },
   { timestamps: true }
 );
