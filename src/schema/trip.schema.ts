@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { Timing } from "../model/trip.model";
 
+//------------------------------------------------------------------------------------------------//
+// Trip Model Validation
+
 export const tripSchema = z.object({
   price: z.number(),
   destinationAddress: z.string(),
