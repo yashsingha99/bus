@@ -1,8 +1,17 @@
 "use client";
 
-import React from "react";
+import { dbConnection } from "@/lib/db";
+import React, { useEffect } from "react";
 
 function book() {
+  
+  useEffect(() => {
+    const conn = async() =>{
+    await dbConnection()
+  }
+  conn()
+  }, [])
+
   return (
     <div className="w-full lg:p-16 p-6 mt-8">
       <div>
