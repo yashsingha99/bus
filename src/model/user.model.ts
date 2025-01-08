@@ -7,13 +7,13 @@ export enum ROLE {
 }
 
 export interface IUser extends Document {
-  name: string;
+  username: string;
   email: string;
   phoneNumber: number;
   password: string;
   bookings: mongoose.Types.ObjectId[];
-  verifyCode: string;
-  verifyCodeExpiry: Date;
+  OTP: number;
+  OTPExpiry: Date;
   isVerified: boolean;
   notifications: mongoose.Types.ObjectId[];
   role: ROLE;
@@ -21,7 +21,7 @@ export interface IUser extends Document {
 
 const userSchema: Schema<IUser> = new Schema(
   {
-    name: {
+    username: {
       type: String,
       required: true,
     },
@@ -42,7 +42,7 @@ const userSchema: Schema<IUser> = new Schema(
     role: {
       type: String,
       enum: Object.values(ROLE),
-      required: true,
+      default: ROLE.USER
     },
 
     bookings: [
@@ -51,11 +51,11 @@ const userSchema: Schema<IUser> = new Schema(
         ref: "BookingModel",
       },
     ],
-    verifyCode: {
-      type: String,
+    OTP: {
+      type: Number,
       required: true,
     },
-    verifyCodeExpiry: {
+    OTPExpiry: {
       type: Date,
       required: true,
     },
