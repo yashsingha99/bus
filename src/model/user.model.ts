@@ -9,7 +9,7 @@ export enum ROLE {
 export interface IUser extends Document {
   username: string;
   email: string;
-  phoneNumber: number;
+  phoneNumber: string;
   password: string;
   bookings: mongoose.Types.ObjectId[];
   OTP: number;
@@ -31,7 +31,7 @@ const userSchema: Schema<IUser> = new Schema(
       unique: true,
     },
     phoneNumber: {
-      type: Number,
+      type: String,
       required: true,
     },
     password: {

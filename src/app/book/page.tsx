@@ -1,6 +1,7 @@
 "use client";
 
 import { dbConnection } from "@/lib/db";
+import Cookies from "@/subcomponents/Cookies";
 import React, { useEffect } from "react";
 
 function book() {
@@ -32,7 +33,7 @@ function book() {
             brands, engaging websites and digital products.
           </div>
         </div>
-           
+           <Cookies />
            <div>
              <div>
                 

@@ -1,12 +1,16 @@
 import { sendVerificationEmail } from "@/helper/sendVerificationEmail";
 import { dbConnection } from "@/lib/db";
 import { UserModel } from "../../../../model/user.model";
+// import bcrypt from "bcrypt"
+
 export async function POST(request: Request) {
+
   await dbConnection();
 
   try {
-    const { email, username, password, phoneNumber } = await request.json();
-
+    let { email, username, password, phoneNumber } = await request.json();
+  //  console.log(email);
+   
     const user = await UserModel.findOne({ email });
 
     if (user && user.isVerified) {
@@ -27,6 +31,7 @@ export async function POST(request: Request) {
       user.OTPExpiry = OTPExpiry;
       await user.save();
     } else {
+      // password = await bcrypt.hash(password, 10)
       const newUser = await UserModel.create({
         username,
         email,
@@ -37,7 +42,15 @@ export async function POST(request: Request) {
       });
     }
 
-    sendVerificationEmail({ email, username, OTP });
+    const emailResponse =  await sendVerificationEmail({ email, username, OTP });
+
+    if(!emailResponse.success){
+       return Response.json({
+          sucess: false,
+          message: "User name is already taken"
+       }, {status: 400});
+    }
+
     // VerifyOTP()
     Response.json(
       {
