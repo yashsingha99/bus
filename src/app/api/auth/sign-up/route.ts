@@ -13,7 +13,6 @@ export async function POST(request: Request) {
     if (user && user.isVerified) {
 
 
-
       // *********************** User is already verified and exists ************************* //
 
       return new Response(
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
         username,
         email,
         phoneNumber,
-        password, // Consider hashing this password for security
+        password, //TODO: Consider hashing this password for security
         OTP,
         OTPExpiry,
       });
@@ -60,10 +59,9 @@ export async function POST(request: Request) {
 
     }
 
-    const emailResponse = await sendVerificationEmail({ email, username, OTP });
+    const emailResponse = await sendVerificationEmail({ email, username, OTP, OTPExpiry });
 
-    if (!emailResponse.success) {
-
+    if ( !emailResponse.success ) {
 
 
       // ********** Failed to send verification email ********** //
@@ -71,14 +69,12 @@ export async function POST(request: Request) {
       return new Response(
         JSON.stringify({
           success: false,
-          message: "Failed to send verification email. Please try again.",
+          message: emailResponse.message,
         }),
-        { status: 500 } // Internal Server Error for email failure
+        { status: emailResponse.status } // Internal Server Error for email failure
       );
 
-
     }
-
 
 
     // ********** User registration successful ********** //
@@ -96,7 +92,7 @@ export async function POST(request: Request) {
     console.error("Error during user registration:", error);
 
 
-    
+
     // ********** Internal server error during registration ********** //
 
     return new Response(
