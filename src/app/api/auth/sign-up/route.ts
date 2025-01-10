@@ -1,76 +1,112 @@
 import { sendVerificationEmail } from "@/helper/sendVerificationEmail";
 import { dbConnection } from "@/lib/db";
 import { UserModel } from "../../../../model/user.model";
-// import bcrypt from "bcrypt"
 
-export async function POST(request: Request) {
-
+export async function POST(request: Request) { 
   await dbConnection();
 
   try {
-    let { email, username, password, phoneNumber } = await request.json();
-  //  console.log(email);
-   
+    const { email, username, password, phoneNumber } = await request.json();
+
     const user = await UserModel.findOne({ email });
 
     if (user && user.isVerified) {
-      return Response.json(
-        {
+
+
+
+      // *********************** User is already verified and exists ************************* //
+
+      return new Response(
+        JSON.stringify({
           success: false,
-          message: "User with this email already exist",
-        },
-        {
-          status: 400,
-        }
+          message: "A verified user with this email already exists",
+        }),
+        { status: 409 } // Conflict
       );
+
     }
-    const OTP = Math.floor(1000 + Math.random() * 9000);
-    const OTPExpiry = new Date(Date.now() + 5 * 60 * 1000);
+
+
+    // ************************* OTP Creation and validation [ Define ] ************** //
+
+    const OTP = Math.floor(1000 + Math.random() * 9000); // Generate a 4-digit OTP
+    const OTPExpiry = new Date(Date.now() + 5 * 60 * 1000); // OTP valid for 5 minutes
+
+
     if (user) {
+
+
+      // ********** User exists but is not verified ********** //
+
       user.OTP = OTP;
       user.OTPExpiry = OTPExpiry;
       await user.save();
+
+
     } else {
-      // password = await bcrypt.hash(password, 10)
-      const newUser = await UserModel.create({
+
+
+      // ********** New user registration ********** //
+
+      await UserModel.create({
         username,
         email,
         phoneNumber,
-        password,
+        password, // Consider hashing this password for security
         OTP,
         OTPExpiry,
       });
+
+
     }
 
-    const emailResponse =  await sendVerificationEmail({ email, username, OTP });
+    const emailResponse = await sendVerificationEmail({ email, username, OTP });
 
-    if(!emailResponse.success){
-       return Response.json({
-          sucess: false,
-          message: "User name is already taken"
-       }, {status: 400});
+    if (!emailResponse.success) {
+
+
+
+      // ********** Failed to send verification email ********** //
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Failed to send verification email. Please try again.",
+        }),
+        { status: 500 } // Internal Server Error for email failure
+      );
+
+
     }
 
-    // VerifyOTP()
-    Response.json(
-      {
-        sucess: false,
-        message: "Successfully register User",
-      },
-      {
-        status: 200,
-      }
+
+
+    // ********** User registration successful ********** //
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "User registered successfully. Please check your email for verification.",
+      }),
+      { status: 201 } // Created
     );
+
+
   } catch (error) {
-    console.log("Error registering user", error);
-    Response.json(
-      {
-        sucess: false,
-        message: "Error registering user",
-      },
-      {
-        status: 500,
-      }
+    console.error("Error during user registration:", error);
+
+
+    
+    // ********** Internal server error during registration ********** //
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: "An unexpected error occurred. Please try again later.",
+      }),
+      { status: 500 } // Internal Server Error
     );
+
+
   }
 }

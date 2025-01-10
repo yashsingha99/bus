@@ -10,7 +10,7 @@ interface verificationDataProps {
 }
 
 export async function sendVerificationEmail (verificationData: verificationDataProps) :Promise<ApiResponse> {
-       
+
      try {
 
         const {data, error } = await resend.emails.send({
@@ -30,6 +30,4 @@ export async function sendVerificationEmail (verificationData: verificationDataP
         console.log("error");
         return {success: false, status: 500, message: "Internel Issue to sending verification email"}
      }
-      
-
 } 
