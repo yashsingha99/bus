@@ -9,7 +9,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const { Trips, destinationAddress } = await request.json();
-
+    if (!Trips || !destinationAddress) {
+      return NextResponse.json(
+        { success: false, message: "Required fields are missing." },
+        { status: 400 }
+      );
+    }
     // const existingTrip = await TripModel.findOne({
     //   $and: [{ destinationAddress }],
     // });
@@ -55,27 +60,25 @@ export async function GET(request: Request) {
   await dbConnection();
 
   try {
-    const trips = await TripModel.find(); // Retrieve all trips
+    const trips = await TripModel.find();
 
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: true,
         message: "Trips retrieved successfully.",
         data: trips,
-      }),
+      },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching trips:", error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: "Internal server error. Please try again later.",
-      }),
+    console.error("Error fetching trips:", error instanceof Error ? error.stack : error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error. Please try again later." },
       { status: 500 }
     );
   }
 }
+
 
 export async function PUT(request: Request) {
   await dbConnection();

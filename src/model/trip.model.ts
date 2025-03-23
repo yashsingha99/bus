@@ -43,4 +43,4 @@ const tripSchema: Schema<ITrip> = new Schema(
   { timestamps: true }
 );
 
-export const TripModel = mongoose.model<ITrip>("TripModel", tripSchema);
+export const TripModel = (mongoose.models.TripModel || mongoose.model<ITrip>("TripModel", tripSchema)) as mongoose.Model<ITrip>;

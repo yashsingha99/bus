@@ -22,6 +22,7 @@ export const dbConnection = async (): Promise<void> => {
     console.log("Connected to the database");
   } catch (error) {
     console.error("Database connection failed:", error);
+     throw new Error("Database connection failed");
     // process.exit(1);
   }
 };
