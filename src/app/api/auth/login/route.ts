@@ -10,9 +10,6 @@ export async function POST(request: Request) {
 
     if (user) {
 
-      // ********** User exists and needs verification/authentication ********** //
-
-
       if (user.isVerified && user.password === password) {
         return new Response(
           JSON.stringify({
@@ -23,10 +20,6 @@ export async function POST(request: Request) {
         );
       }
 
-
-      // *********************** User is not verified yet ************************** //
-
-
       return new Response(
         JSON.stringify({
           success: false,
@@ -36,10 +29,6 @@ export async function POST(request: Request) {
       );
     }
 
-
-    // ************************ User is not registered yet ********************** //
-
-
     return new Response(
       JSON.stringify({
         success: false,
@@ -47,13 +36,7 @@ export async function POST(request: Request) {
       }),
       { status: 404 } // Not Found
     );
-
-
   } catch (error) {
-
-    
-    // ******************** An error occurred during the login process ************** //
-
 
     return new Response(
       JSON.stringify({
@@ -63,6 +46,4 @@ export async function POST(request: Request) {
       { status: 500 } // Internal Server Error
     );
   }
-
-
 }

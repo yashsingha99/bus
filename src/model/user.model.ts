@@ -11,7 +11,6 @@ export interface IUser extends Document {
   email: string;
   phoneNumber: string;
   password: string;
-  bookings: mongoose.Types.ObjectId[];
   OTP: number;
   OTPExpiry: Date;
   isVerified: boolean;
@@ -45,24 +44,21 @@ const userSchema: Schema<IUser> = new Schema(
       default: ROLE.USER
     },
 
-    bookings: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "BookingModel",
-      },
-    ],
     OTP: {
       type: Number,
       required: true,
     },
+
     OTPExpiry: {
       type: Date,
       required: true,
     },
+
     isVerified: {
       type: Boolean,
       default: false,
     },
+
     notifications: [
       {
         type: Schema.Types.ObjectId,

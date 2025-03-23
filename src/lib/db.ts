@@ -1,3 +1,4 @@
+"use server"
 import mongoose from "mongoose";
 
 type ConnectionObject = {
@@ -13,7 +14,8 @@ export const dbConnection = async (): Promise<void> => {
     return;
   }
   try {
-    const URI = "mongodb+srv://singhaly914:iQatXCzwUtoXNK1d@cluster0.vtnp9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    // const URI = "mongodb+srv://singhaly914:iQatXCzwUtoXNK1d@cluster0.vtnp9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    const URI = "mongodb://localhost:27017/"
     
     const db = await mongoose.connect(URI);
     connection.isConnected = db.connections[0].readyState;

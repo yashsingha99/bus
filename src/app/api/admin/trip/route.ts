@@ -1,51 +1,55 @@
+import { NextRequest, NextResponse } from "next/server";
+
 import { TripModel } from "../../../../model/trip.model";
 import { dbConnection } from "@/lib/db";
+import { SingleTrip } from "../../../../model/trip.model";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   await dbConnection();
 
   try {
-    const { price, status, destinationAddress, dateTiming } =
-      await request.json();
+    const { Trips, destinationAddress } = await request.json();
 
+    // const existingTrip = await TripModel.findOne({
+    //   $and: [{ destinationAddress }],
+    // });
     const existingTrip = await TripModel.findOne({ destinationAddress });
+
     if (existingTrip) {
-      return new Response(
-        JSON.stringify({
+      return NextResponse.json(
+        {
           success: false,
           message: "A trip already exists with this destination address.",
-        }),
+        },
         { status: 400 }
       );
     }
 
     const newTrip = await TripModel.create({
-      price,
-      status,
+      Trips,
       destinationAddress,
-      dateTiming,
+      // owner,
     });
 
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: true,
         message: "Trip successfully created.",
         data: newTrip,
-      }),
-      { status: 201 } // Resource created
+      },
+      { status: 201 }
     );
   } catch (error) {
     console.error("Error creating trip:", error);
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: false,
         message: "Internal server error. Please try again later.",
-      }),
+      },
       { status: 500 }
     );
   }
 }
-
 
 export async function GET(request: Request) {
   await dbConnection();
@@ -72,7 +76,6 @@ export async function GET(request: Request) {
     );
   }
 }
-
 
 export async function PUT(request: Request) {
   await dbConnection();

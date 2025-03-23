@@ -35,11 +35,9 @@ function book() {
         </div>
            <Cookies />
            <div>
-             <div>
-                
+             <div> 
              </div>
              <div>
-
              </div>
            </div>
       </div>
