@@ -23,7 +23,7 @@ const Drawer = () => {
     if (isOpen) {
       setIsVisible(true); // Trigger the animation
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300); // Wait for animation to complete
+      const timer = setTimeout(() => setIsVisible(false), 300); 
       return () => clearTimeout(timer);
     }
   }, [isOpen]);

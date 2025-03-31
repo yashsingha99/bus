@@ -1,7 +1,7 @@
 import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
 import { TripModel } from "@/model/trip.model";
-
+import { NextRequest, NextResponse } from "next/server";
 interface BookingRequest {
       bookingId?: string;
       seats?: number;
@@ -9,25 +9,22 @@ interface BookingRequest {
         date: string;
         Timing: string;
       };
-
-    }
+}
 
 export async function POST(request: Request) {
-  await dbConnection();
-
+  await dbConnection(); 
   try {
     const { user, tripId, dateTiming, seats } = await request.json();
-
-    // Validate request body
+    
     if (!user || !tripId || !dateTiming || !dateTiming.Timing || !dateTiming.date || !seats) {
-      return new Response(
-        JSON.stringify({ message: "All fields are required!" }),
-        { status: 400 }
+      return NextResponse.json(
+         { message: "All fields are required!" },
+         { status: 400 }
       );
-    }
+    } 
 
-    // Fetch the trip
-    const trip = await TripModel.findById(tripId);
+ 
+  const trip = await TripModel.findById(tripId);
     if (!trip) {
       return new Response(
         JSON.stringify({ message: "Trip not found!" }),

@@ -1,33 +1,31 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { Button } from "@heroui/button";
 import React, { useEffect, useState } from "react";
 import useScreenSize from "@/hooks/use-screen-size";
-import axios from "axios";
 import { ITrip } from "@/model/trip.model";
-// import InputSearch from "@/components/ui/input-search";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
-import { FollowerPointerCard } from "@/components/ui/following-pointer";
-const URL = process.env.VERCEL_URL || "http://localhost:3000";
+import { useRouter } from "next/navigation";
+import { tripApi } from "../../../API/trip.api";
 
 function page() {
   const isMobile = useScreenSize();
+  const router = useRouter();
+  const [trips, setTrips] = useState<ITrip[]>([]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log(e.target.value);
   };
-  // console.log(URL);
 
-  const [trips, setTrips] = useState<ITrip[]>([]);
   const fetchTrips = async () => {
     try {
-      const res = await axios.get<{ data: ITrip[] }>(`${URL}/api/admin/trip`);
-      setTrips([...trips, ...res.data.data]);
+      const data = await tripApi.getAllTrips();
+      setTrips(data);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching trips:", error);
     }
   };
-  console.log(trips);
 
   useEffect(() => {
     fetchTrips();
@@ -37,10 +35,11 @@ function page() {
     e.preventDefault();
     console.log("submitted");
   };
+
   return (
     <div className="w-full">
       <div className="w-full">
-        <div className="w-[1/2] flex  ">
+        <div className="w-[1/2] flex">
           <div className="w-full justify-start">
             <PlaceholdersAndVanishInput
               placeholders={["I've got your trip—search in me!"]}
@@ -50,22 +49,40 @@ function page() {
             />
           </div>
           <Button
+            onPress={() => {
+                  router.push(`/admin/editTrip?tripId=newTrip`);
+              }} 
             className={`bg-gradient-to-tr rounded-full from-pink-500 to-yellow-500 text-white shadow-lg`}
             radius="full"
           >
             <Plus /> {!isMobile && "Add Trip"}
           </Button>
         </div>
-        <div className="flex flex-wrap ">
-          {trips.map((trip, index) => {
-            return (
-              <div key={index}>
-                <FollowerPointerCard title={trip.destinationAddress}>
+        <div className="flex flex-wrap gap-8">
+          {trips.map((trip, index) => (
+            <div key={index} className="relative rounded-3xl border">
+              <div className="">
+                <img 
+                  src="https://images.pexels.com/photos/29702987/pexels-photo-29702987/free-photo-of-luxury-tour-bus-parked-on-street-in-daylight.jpeg" 
+                  alt="" 
+                  className="rounded-t-2xl" 
+                  width="300px" 
+                  height="200px" 
+                />
+                <div>
                   <div>{trip.destinationAddress}</div>
-                </FollowerPointerCard>
+                </div>
               </div>
-            );
-          })}
+              <Button 
+                onPress={() => {
+                  router.push(`/admin/editTrip?tripId=${trip._id}`);
+                }} 
+                className="flex items-center justify-center absolute top-2 shadow-2xl right-2 cursor-pointer rounded-full border-2 border-red-600 w-10 h-10 bg-red-200 hover:bg-red-300"
+              >
+                <Pencil className="text-red-600"/>
+              </Button>
+            </div>
+          ))}
         </div>
       </div>
     </div>

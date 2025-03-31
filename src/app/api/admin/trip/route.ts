@@ -71,58 +71,56 @@ export async function GET(request: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching trips:", error instanceof Error ? error.stack : error);
+    console.error(
+      "Error fetching trips:",
+      error instanceof Error ? error.stack : error
+    );
     return NextResponse.json(
-      { success: false, message: "Internal server error. Please try again later." },
+      {
+        success: false,
+        message: "Internal server error. Please try again later.",
+      },
       { status: 500 }
     );
   }
 }
 
-
 export async function PUT(request: Request) {
   await dbConnection();
 
   try {
-    const { id, price, status, destinationAddress, dateTiming } =
-      await request.json();
+    const { destinationAddress, Trips } = await request.json();
 
-    const updatedTrip = await TripModel.findByIdAndUpdate(
-      id,
-      {
-        price,
-        status,
-        destinationAddress,
-        dateTiming,
-      },
-      { new: true } // Return the updated document
+    const updatedTrip = await TripModel.findOneAndUpdate(
+      { destinationAddress },
+      { Trips }
     );
 
     if (!updatedTrip) {
-      return new Response(
-        JSON.stringify({
+      return NextResponse.json(
+        {
           success: false,
           message: "Trip not found or could not be updated.",
-        }),
+        },
         { status: 404 }
       );
     }
 
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: true,
         message: "Trip updated successfully.",
         data: updatedTrip,
-      }),
+      },
       { status: 200 }
     );
   } catch (error) {
     console.error("Error updating trip:", error);
-    return new Response(
-      JSON.stringify({
+    return NextResponse.json(
+      {
         success: false,
         message: "Internal server error. Please try again later.",
-      }),
+      },
       { status: 500 }
     );
   }
