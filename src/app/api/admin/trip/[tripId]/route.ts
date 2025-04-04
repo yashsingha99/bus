@@ -42,7 +42,7 @@ export async function PUT(
   try {
     const tripData = await request.json();
     const { tripId } = params;
-    console.log(tripData);
+    // console.log(tripData);
     
     const updatedTrip = await TripModel.findByIdAndUpdate(tripId, tripData);
 

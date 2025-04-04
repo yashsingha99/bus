@@ -14,14 +14,7 @@ import Alert from "@mui/material/Alert";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import useScreenSize from "@/hooks/use-screen-size";
 const URL = process.env.VERCEL_URL || "http://localhost:3000";
-// interface Trip {
-//   price: Integer
-//   Timing: Array
-//   date: Date,
-//   Status: "Active",
-//   SeatsLimit: 0,
-//   busImage: ""
-// }
+ 
 export default function EditTripPage() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("tripId");
@@ -140,11 +133,12 @@ export default function EditTripPage() {
     e.preventDefault();
     if (!tripId) return;
     try {
-      await tripApi.updateTrip(tripId, formData);
-      setAlertIsVisible(true);
-      setAlertDescription("cdvvfdn");
-      setAlertTitle("sdsvsd");
-      // Show success message or redirect
+      if (tripId === "newTrip") {
+        await tripApi.updateTrip(tripId, formData);
+        setAlertIsVisible(true);
+        setAlertDescription("cdvvfdn");
+        setAlertTitle("sdsvsd");
+      }
     } catch (error) {
       console.error("Error updating trip:", error);
     }
@@ -190,110 +184,111 @@ export default function EditTripPage() {
             <Plus /> {!isMobile && "Add Trip"}
           </Button>
         </div>
-        {formData?.Trips && formData?.Trips?.map(
-          (tripData: (typeof formData.Trips)[0], index: number) => (
-            <div className="flex w-full justify-between">
-              <div
-                key={index}
-                className="border p-4 w-full rounded-md space-y-4"
-              >
+        {formData?.Trips.length > 0 &&
+          formData?.Trips?.map(
+            (tripData: (typeof formData.Trips)[0], index: number) => (
+              <div className="flex w-full justify-between">
                 <div
-                  onClick={() => handleChangeChevron(index)}
-                  className="w-full flex cursor-pointer justify-between"
+                  key={index}
+                  className="border p-4 w-full rounded-md space-y-4"
                 >
-                  <h2 className="font-semibold">Trip Details #{index + 1}</h2>
-                  {chevron === index ? <ChevronDown /> : <ChevronUp />}
-                </div>
+                  <div
+                    onClick={() => handleChangeChevron(index)}
+                    className="w-full flex cursor-pointer justify-between"
+                  >
+                    <h2 className="font-semibold">Trip Details #{index + 1}</h2>
+                    {chevron === index ? <ChevronDown /> : <ChevronUp />}
+                  </div>
 
-                <div
-                  className={`transition-all duration-300 ease-in-out overflow-hidden ${!(chevron === index) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100"}`}
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Price
-                      </label>
-                      <input
-                        type="number"
-                        name={`Trips.${index}.price`}
-                        value={tripData.price}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      />
-                    </div>
+                  <div
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${!(chevron === index) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100"}`}
+                  >
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Price
+                        </label>
+                        <input
+                          type="number"
+                          name={`Trips.${index}.price`}
+                          value={tripData.price}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        name={`Trips.${index}.date`}
-                        value={
-                          new Date(tripData.date).toISOString().split("T")[0]
-                        }
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      />
-                    </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          name={`Trips.${index}.date`}
+                          value={
+                            new Date(tripData.date).toISOString().split("T")[0]
+                          }
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Status
-                      </label>
-                      <select
-                        name={`Trips.${index}.Status`}
-                        value={tripData.Status}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      >
-                        <option value="Active">Active</option>
-                        <option value="Upcoming">Upcoming</option>
-                        <option value="Expiry">Expiry</option>
-                      </select>
-                    </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Status
+                        </label>
+                        <select
+                          name={`Trips.${index}.Status`}
+                          value={tripData.Status}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Upcoming">Upcoming</option>
+                          <option value="Expiry">Expiry</option>
+                        </select>
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Seats Limit
-                      </label>
-                      <input
-                        type="number"
-                        name={`Trips.${index}.SeatsLimit`}
-                        value={tripData.SeatsLimit}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      />
-                    </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Seats Limit
+                        </label>
+                        <input
+                          type="number"
+                          name={`Trips.${index}.SeatsLimit`}
+                          value={tripData.SeatsLimit}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                        />
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Bus Image URL
-                      </label>
-                      <input
-                        type="text"
-                        name={`Trips.${index}.busImage`}
-                        value={tripData.busImage}
-                        onChange={handleChange}
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                      />
-                      <img
-                        src={tripData.busImage}
-                        alt="but image"
-                        className="md:w-80 md:h-80 w-20 h-20"
-                      />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Bus Image URL
+                        </label>
+                        <input
+                          type="text"
+                          name={`Trips.${index}.busImage`}
+                          value={tripData.busImage}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+                        />
+                        <img
+                          src={tripData.busImage}
+                          alt="but image"
+                          className="md:w-80 md:h-80 w-20 h-20"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="w-1/4 flex items-center justify-center">
+                  <button onClick={() => deleteTripByIndex(index)}>
+                    <Trash2 />
+                  </button>
+                </div>
               </div>
-              <div className="w-1/4 flex items-center justify-center">
-                <button onClick={() => deleteTripByIndex(index)}>
-                  <Trash2 />
-                </button>
-              </div>
-            </div>
-          )
-        )}
+            )
+          )}
 
         <div className="flex justify-end space-x-4">
           <button

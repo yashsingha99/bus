@@ -150,7 +150,7 @@ const DestSearchForm = () => {
   const dayAfter = new Date(2025, 2, 24);
   
   return (
-    <div className="flex justify-center absolute  -top-36 left-4 md:justify-start md:w-[90%] w-full items-center min-h-screen p-4">
+    <div className="flex m-8 justify-center absolute  -top-36 left-4 md:justify-start md:w-[90%] w-full items-center min-h-screen p-4">
       <div className="bg-white p-6 w-full md:max-w-md rounded-3xl">
         <h1 className="sm:text-3xl text-xl font-bold text-gray-800 mb-1">Bus Ticket Booking</h1>
         <p className="text-gray-600 lg:text-lg text-sm mb-6">Online Bus Booking made easy with bustify</p>
@@ -194,7 +194,7 @@ const DestSearchForm = () => {
           </div>
         </div>
         
-        <div className="mb-4 relative">
+        {/* <div className="mb-4 relative">
           <div 
             className="border rounded-lg p-4 cursor-pointer"
             onClick={() => setShowCalendar(!showCalendar)}
@@ -250,7 +250,7 @@ const DestSearchForm = () => {
             </div>
           )}
         </div>
-        
+         */}
         <button className="w-full bg-blue-900 text-white py-4 rounded-full font-bold text-lg hover:bg-blue-700 transition-colors">
           Search Buses
         </button>

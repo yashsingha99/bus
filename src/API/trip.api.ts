@@ -1,7 +1,8 @@
 import axios from "axios";
 import { ITrip } from "../model/trip.model";
 
-const URL = process.env.VERCEL_URL || "http://localhost:3000";
+// const URL = process.env.VERCEL_URL || "http://localhost:3000";
+const URL = process.env.VERCEL_URL || "http://172.16.54.75:3000";
 
 export const tripApi = {
   // Get all trips
@@ -56,5 +57,17 @@ export const tripApi = {
       console.error("Error deleting trip:", error);
       throw error;
     }
+  },
+
+  //Get Trip Names
+
+  getTripNames: async(): Promise<void> => {
+      try {
+         const response = await axios.get(`${URL}/api/trip`);
+         return response.data.data;
+      } catch (error) {
+         console.error("Error deleting trip:", error);
+         throw error;
+      }
   }
 }; 
