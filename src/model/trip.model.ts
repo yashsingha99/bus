@@ -7,16 +7,15 @@ enum Status {
 }
 
 export interface SingleTrip {
+  _id: string
   price: number;
   Timing: [string];
   date: Date;
   Status: Status;
-  busImage: String;
   SeatsLimit: Number;
 }
 
 export interface ITrip extends Document {
-  // owner: mongoose.Schema.Types.ObjectId;
   destinationAddress: string;
   Trips: SingleTrip[];
 }
@@ -32,11 +31,6 @@ const tripSchema: Schema<ITrip> = new Schema(
         date: { type: Date, required: true },
         Status: { type: String, enum: Object.values(Status), required: true },
         SeatsLimit: { type: Number, required: true },
-        busImage: {
-          type: String,
-          default:
-            "https://images.pexels.com/photos/29702987/pexels-photo-29702987/free-photo-of-luxury-tour-bus-parked-on-street-in-daylight.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        },
       },
     ],
   },

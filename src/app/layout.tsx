@@ -6,6 +6,9 @@ import Navbar from "@/components/Navbar"; // Navbar component
 import localFont from "next/font/local";
 import { MainNav } from "@/components/main-nav";
 import { UserNav } from "@/components/user-nav";
+import { ClerkProvider } from "@clerk/nextjs";
+import RouteGuard from "@/components/RouteGuard";
+import SignUpRedirect from "@/components/SignUpRedirect";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,26 +30,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* DrawerProvider wraps the app for global drawer state */}
-        <DrawerProvider>
-          <Navbar />
-          {/* <header className="sticky flex justify-center  top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container  flex h-16 items-center justify-between">
-              <MainNav />
-              <div className="ml-auto flex items-center space-x-4">
-                <UserNav />
-              </div>
-            </div>
-          </header> */}
-        {/* </div> */}
-
-          <main>{children}</main>
-        </DrawerProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <DrawerProvider>
+            <Navbar />
+            <SignUpRedirect />
+            <RouteGuard>
+              <main>{children}</main>
+            </RouteGuard>
+          </DrawerProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

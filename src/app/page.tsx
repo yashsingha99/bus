@@ -1,8 +1,12 @@
+"use client"
+
 import ClientFeedback from "@/components/ClientFeedback";
 import Hero from "@/components/Hero/Hero";
+import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 
 export default function Home() {
+
   return (
     <>
       <div className="w-full h-full flex items-center ">

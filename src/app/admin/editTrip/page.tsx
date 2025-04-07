@@ -3,333 +3,428 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { tripApi } from "@/API/trip.api";
-import { ITrip } from "@/model/trip.model";
-import { cn } from "@/lib/utils";
-import { IconBrandOnlyfans } from "@tabler/icons-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@heroui/button";
-// import { Alert } from "@heroui/alert";
-import Alert from "@mui/material/Alert";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
-import useScreenSize from "@/hooks/use-screen-size";
-const URL = process.env.VERCEL_URL || "http://localhost:3000";
- 
+import { FeedbackButton } from "@/components/ui/feedback-button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Trash2, Plus, X } from "lucide-react";
+
+// Interface matching the server data structure
+interface ITripItem {
+  _id?: string;
+  price: number;
+  Timing: string[];
+  date: string;
+  Status: string;
+  SeatsLimit: number;
+}
+
+interface ITrip {
+  _id?: string;
+  destinationAddress: string;
+  Trips: ITripItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export default function EditTripPage() {
   const searchParams = useSearchParams();
   const tripId = searchParams.get("tripId");
-  const [trip, setTrip] = useState<ITrip | null>(null);
-  const [alertIsVisible, setAlertIsVisible] = useState(false);
-  const [alertDescription, setAlertDescription] = useState("");
-  const [alertTitle, setAlertTitle] = useState("");
-  const [chevron, setChevron] = useState(-1);
-  const isMobile = useScreenSize();
+  const [isLoading, setIsLoading] = useState(true);
+  const [formData, setFormData] = useState<ITrip | null>(null);
+  const [errors, setErrors] = useState<Record<string, any>>({});
+  const [activeTab, setActiveTab] = useState("0");
 
-  const [formData, setFormData] = useState<any>({
-    destinationAddress: "",
-    Trips: [
-      {
-        price: 0,
-        Timing: [""],
-        date: new Date(),
-        Status: "Active",
-        SeatsLimit: 0,
-        busImage: "",
-      },
-    ],
-  });
+  function createEmptyTrip(): ITripItem {
+    return {
+      price: 0,
+      Timing: [""],
+      date: new Date().toISOString().split("T")[0],
+      Status: "Active",
+      SeatsLimit: 0,
+    };
+  }
 
   useEffect(() => {
+    if (!tripId) return;
+    
+    if (tripId === "newTrip") {
+      // Initialize new trip form
+      const initialTrip: ITrip = {
+        destinationAddress: "",
+        Trips: [createEmptyTrip()],
+      };
+      setFormData(initialTrip);
+      setIsLoading(false);
+      return;
+    }
+
+    // Fetch existing trip data
     const fetchTrip = async () => {
-      if (!tripId) return;
-      if (tripId === "newTrip") {
-        setFormData({
-          destinationAddress: "",
-          Trips: {
-            price: 0,
-            Timing: [""],
-            date: new Date(),
-            Status: "Active",
-            SeatsLimit: 0,
-            busImage: "",
-          },
-        });
-      }
       try {
+        setIsLoading(true);
         const data = await tripApi.getTripById(tripId);
-        setTrip(data);
-        setFormData({
-          destinationAddress: data.destinationAddress,
-          Trips: data.Trips,
-        });
-      } catch (error) {
-        console.error("Error fetching trip:", error);
+        
+        // Format dates coming from the server (removing time part if needed)
+        const formattedData = {
+          ...data,
+          Trips: data.Trips.map((trip: ITripItem) => ({
+            ...trip,
+            date: new Date(trip.date).toISOString().split("T")[0],
+          })),
+        };
+        
+        setFormData(formattedData);
+      } catch (err) {
+        console.error("Trip fetch error:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
-
+    
     fetchTrip();
   }, [tripId]);
 
-  const handleAddNewTrip = () => {
-    const emptyTrip = {
-      price: 0,
-      Timing: [""],
-      date: new Date(),
-      Status: "Active",
-      SeatsLimit: 0,
-      busImage: "",
-    };
-    const newTrips = [...formData.Trips, emptyTrip];
-    setFormData({
-      destinationAddress: formData.destinationAddress,
-      Trips: newTrips,
-    });
+  const validateTrip = (trip: ITripItem) => {
+    const tripErrors: Record<string, string> = {};
+    if (!trip.price && trip.price !== 0) tripErrors.price = "Price is required";
+    if (!trip.date) tripErrors.date = "Date is required";
+    if (!trip.SeatsLimit && trip.SeatsLimit !== 0) tripErrors.SeatsLimit = "Seats limit is required";
+    if (!trip.Timing || trip.Timing.length === 0 || trip.Timing.some((t: string) => !t)) {
+      tripErrors.Timing = "At least one valid timing is required";
+    }
+    return tripErrors;
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    if (name.startsWith("Trips.")) {
-      const [_, index, field] = name.split(".");
-      setFormData((prev: typeof formData) => ({
+  const validateForm = () => {
+    if (!formData) return {};
+    
+    const err: Record<string, any> = {};
+    if (!formData.destinationAddress)
+      err.destinationAddress = "Destination is required";
+    
+    formData.Trips.forEach((trip, index) => {
+      const tripErrors = validateTrip(trip);
+      if (Object.keys(tripErrors).length) err[`trip-${index}`] = tripErrors;
+    });
+    return err;
+  };
+
+  const handleChange = (index: number, field: string, value: any) => {
+    if (!formData) return;
+    
+    const updatedTrips = [...formData.Trips];
+    updatedTrips[index] = { ...updatedTrips[index], [field]: value };
+    setFormData({ ...formData, Trips: updatedTrips });
+  };
+
+  const handleDeleteTrip = (index: number) => {
+    if (!formData || formData.Trips.length <= 1) return;
+    
+    const updated = [...formData.Trips];
+    updated.splice(index, 1);
+    setFormData({ ...formData, Trips: updated });
+    
+    // If we deleted the active tab, select the previous tab
+    if (parseInt(activeTab) >= updated.length) {
+      setActiveTab((updated.length - 1).toString());
+    }
+  };
+
+  const handleAddTrip = () => {
+    if (!formData) return;
+    
+    // Validate last trip before adding a new one
+    const lastTrip = formData.Trips[formData.Trips.length - 1];
+    const lastErrors = validateTrip(lastTrip);
+    if (Object.keys(lastErrors).length) {
+      setErrors((prev) => ({
         ...prev,
-        Trips: prev.Trips.map((trip: (typeof formData.Trips)[0], i: number) => {
-          if (i === parseInt(index)) {
-            return { ...trip, [field]: value };
-          }
-          return trip;
-        }),
+        [`trip-${formData.Trips.length - 1}`]: lastErrors,
       }));
-    } else {
-      setFormData((prev: typeof formData) => ({ ...prev, [name]: value }));
+      return;
     }
+    
+    const newTrips = [...formData.Trips, createEmptyTrip()];
+    setFormData({ ...formData, Trips: newTrips });
+    setActiveTab((newTrips.length - 1).toString());
   };
 
-  const deleteTripByIndex = (index: Number) => {
-    const filteredTrips = formData.Trips.filter(
-      (trip: any, idx: Number) => idx !== index
-    );
-    setFormData({
-      destinationAddress: formData.destinationAddress,
-      Trips: filteredTrips,
-    });
+  // Handle multiple timing selection
+  const handleAddTiming = (tripIndex: number) => {
+    if (!formData) return;
+    
+    const updatedTrips = [...formData.Trips];
+    const currentTimings = updatedTrips[tripIndex].Timing || [""];
+    updatedTrips[tripIndex] = { 
+      ...updatedTrips[tripIndex], 
+      Timing: [...currentTimings, ""]
+    };
+    setFormData({ ...formData, Trips: updatedTrips });
   };
 
-  // useEffect(() => {
-  //   if (alertIsVisible) {
-  //     setTimeout(() => {
-  //       setAlertIsVisible(false);
-  //     }, 5000);
-  //   }
-  // }, [alertIsVisible]);
-  console.log(chevron);
-
-  const handleChangeChevron = (index: number) => {
-    setChevron((prev) => (prev === index ? -1 : index));
+  const handleTimingChange = (tripIndex: number, timingIndex: number, value: string) => {
+    if (!formData) return;
+    
+    const updatedTrips = [...formData.Trips];
+    const currentTimings = [...updatedTrips[tripIndex].Timing];
+    currentTimings[timingIndex] = value;
+    updatedTrips[tripIndex] = { ...updatedTrips[tripIndex], Timing: currentTimings };
+    setFormData({ ...formData, Trips: updatedTrips });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tripId) return;
+  const handleDeleteTiming = (tripIndex: number, timingIndex: number) => {
+    if (!formData) return;
+    
+    const updatedTrips = [...formData.Trips];
+    const currentTimings = [...updatedTrips[tripIndex].Timing];
+    
+    // Don't delete if it's the only timing
+    if (currentTimings.length <= 1) return;
+    
+    currentTimings.splice(timingIndex, 1);
+    updatedTrips[tripIndex] = { ...updatedTrips[tripIndex], Timing: currentTimings };
+    setFormData({ ...formData, Trips: updatedTrips });
+  };
+
+  const prepareDataForSaving = () => {
+    if (!formData) return null;
+    
+    // Create a copy to avoid modifying the original state
+    const dataToSave = { ...formData };
+    
+    // Format the data as needed before sending to the server
+    dataToSave.Trips = dataToSave.Trips.map(trip => ({
+      ...trip,
+      price: Number(trip.price),
+      SeatsLimit: Number(trip.SeatsLimit),
+      // Keep only non-empty timings
+      Timing: trip.Timing.filter(t => t.trim() !== "")
+    }));
+    
+    return dataToSave;
+  };
+
+  const handleSubmit = async () => {
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     try {
+      const dataToSave = prepareDataForSaving();
+      if (!dataToSave) return;
+      
+      setIsLoading(true);
+      
       if (tripId === "newTrip") {
-        await tripApi.updateTrip(tripId, formData);
-        setAlertIsVisible(true);
-        setAlertDescription("cdvvfdn");
-        setAlertTitle("sdsvsd");
+        // Create new trip
+        await tripApi.createTrip(dataToSave);
+        // Add success handling (redirect or message)
+      } else {
+        // Update existing trip
+        await tripApi.updateTrip(tripId, dataToSave);
+        // Add success handling (redirect or message)
       }
-    } catch (error) {
-      console.error("Error updating trip:", error);
+    } catch (err) {
+      console.error("Error submitting trip:", err);
+      // Add error notification here
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (!trip && tripId !== "newTrip") return <div>Loading...</div>;
+  if (isLoading) return <div className="flex justify-center p-8">Loading...</div>;
+  if (!formData) return <div className="flex justify-center p-8">Error loading trip data</div>;
 
   return (
-    <div className=" relative max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Edit Trip</h1>
-      {alertIsVisible && (
-        //  <div className="absolute top-4 w-full flex items-center justify-center">
-        //   <Alert
-        //     color="success"
-        //     description={alertDescription}
-        //     isVisible={alertIsVisible}
-        //     title={alertTitle}
-        //     variant="faded"
-        //     onClose={() => setAlertIsVisible(false)}
-        //   />
-        //   </div>
-        <Alert severity="success">This is a success Alert.</Alert>
-      )}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Destination Address
-          </label>
-          <input
-            type="text"
-            name="destinationAddress"
-            value={formData.destinationAddress}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-          />
-        </div>
-        <div className="w-full flex justify-end">
-          <Button
-            onClick={handleAddNewTrip}
-            className={`bg-gradient-to-tr rounded-full from-pink-500 to-yellow-500 text-white shadow-lg`}
-            radius="full"
-          >
-            <Plus /> {!isMobile && "Add Trip"}
-          </Button>
-        </div>
-        {formData?.Trips.length > 0 &&
-          formData?.Trips?.map(
-            (tripData: (typeof formData.Trips)[0], index: number) => (
-              <div className="flex w-full justify-between">
-                <div
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-4">
+        {tripId === "newTrip" ? "Create New Trip" : "Edit Trip"}
+      </h2>
+      
+      <div className="mb-4">
+        <Label htmlFor="destination">Destination Address</Label>
+        <Input
+          id="destination"
+          value={formData.destinationAddress || ""}
+          onChange={(e) =>
+            setFormData({ ...formData, destinationAddress: e.target.value })
+          }
+        />
+        {errors.destinationAddress && (
+          <p className="text-red-500 text-sm">{errors.destinationAddress}</p>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <div className="border-b">
+            <TabsList className="w-full overflow-x-auto flex pb-2">
+              {formData.Trips.map((_, index) => (
+                <TabsTrigger
                   key={index}
-                  className="border p-4 w-full rounded-md space-y-4"
+                  value={index.toString()}
+                  className="whitespace-nowrap"
                 >
-                  <div
-                    onClick={() => handleChangeChevron(index)}
-                    className="w-full flex cursor-pointer justify-between"
-                  >
-                    <h2 className="font-semibold">Trip Details #{index + 1}</h2>
-                    {chevron === index ? <ChevronDown /> : <ChevronUp />}
-                  </div>
+                  Trip #{index + 1}
+                </TabsTrigger>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddTrip}
+                className="ml-2 flex items-center gap-1"
+                size="sm"
+              >
+                <Plus size={16} /> Add Trip
+              </Button>
+            </TabsList>
+          </div>
+          
+          {formData.Trips.map((trip, index) => (
+            <TabsContent key={index} value={index.toString()}>
+              <Card>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor={`price-${index}`}>Price</Label>
+                      <Input
+                        id={`price-${index}`}
+                        type="number"
+                        value={trip.price}
+                        onChange={(e) =>
+                          handleChange(index, "price", Number(e.target.value))
+                        }
+                      />
+                      {errors[`trip-${index}`]?.price && (
+                        <p className="text-red-500 text-sm">
+                          {errors[`trip-${index}`].price}
+                        </p>
+                      )}
+                    </div>
 
-                  <div
-                    className={`transition-all duration-300 ease-in-out overflow-hidden ${!(chevron === index) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100"}`}
-                  >
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Price
-                        </label>
-                        <input
-                          type="number"
-                          name={`Trips.${index}.price`}
-                          value={tripData.price}
-                          onChange={handleChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Date
-                        </label>
-                        <input
-                          type="date"
-                          name={`Trips.${index}.date`}
-                          value={
-                            new Date(tripData.date).toISOString().split("T")[0]
-                          }
-                          onChange={handleChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Status
-                        </label>
-                        <select
-                          name={`Trips.${index}.Status`}
-                          value={tripData.Status}
-                          onChange={handleChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Upcoming">Upcoming</option>
-                          <option value="Expiry">Expiry</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Seats Limit
-                        </label>
-                        <input
-                          type="number"
-                          name={`Trips.${index}.SeatsLimit`}
-                          value={tripData.SeatsLimit}
-                          onChange={handleChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Bus Image URL
-                        </label>
-                        <input
-                          type="text"
-                          name={`Trips.${index}.busImage`}
-                          value={tripData.busImage}
-                          onChange={handleChange}
-                          className="mt-1 block w-full rounded-md border border-gray-300 p-2"
-                        />
-                        <img
-                          src={tripData.busImage}
-                          alt="but image"
-                          className="md:w-80 md:h-80 w-20 h-20"
-                        />
-                      </div>
+                    <div>
+                      <Label htmlFor={`date-${index}`}>Date</Label>
+                      <Input
+                        id={`date-${index}`}
+                        type="date"
+                        value={trip.date}
+                        onChange={(e) =>
+                          handleChange(index, "date", e.target.value)
+                        }
+                      />
+                      {errors[`trip-${index}`]?.date && (
+                        <p className="text-red-500 text-sm">
+                          {errors[`trip-${index}`].date}
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-                <div className="w-1/4 flex items-center justify-center">
-                  <button onClick={() => deleteTripByIndex(index)}>
-                    <Trash2 />
-                  </button>
-                </div>
-              </div>
-            )
-          )}
 
-        <div className="flex justify-end space-x-4">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
-            className="px-4 py-2 border rounded-md hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Save Changes
-          </button>
-        </div>
-      </form>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor={`status-${index}`}>Status</Label>
+                      <select
+                        id={`status-${index}`}
+                        className="w-full border rounded p-2"
+                        value={trip.Status}
+                        onChange={(e) =>
+                          handleChange(index, "Status", e.target.value)
+                        }
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Upcoming">Upcoming</option>
+                        <option value="Expiry">Expiry</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor={`seats-${index}`}>Seats Limit</Label>
+                      <Input
+                        id={`seats-${index}`}
+                        type="number"
+                        value={trip.SeatsLimit}
+                        onChange={(e) =>
+                          handleChange(index, "SeatsLimit", Number(e.target.value))
+                        }
+                      />
+                      {errors[`trip-${index}`]?.SeatsLimit && (
+                        <p className="text-red-500 text-sm">
+                          {errors[`trip-${index}`].SeatsLimit}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label>Timings</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddTiming(index)}
+                        className="flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Add Time
+                      </Button>
+                    </div>
+                    
+                    {errors[`trip-${index}`]?.Timing && (
+                      <p className="text-red-500 text-sm mb-2">
+                        {errors[`trip-${index}`].Timing}
+                      </p>
+                    )}
+                    
+                    {(trip.Timing || [""]).map((timing, timingIndex) => (
+                      <div key={timingIndex} className="flex items-center mb-2">
+                        <Input
+                          type="time"
+                          value={timing}
+                          onChange={(e) => handleTimingChange(index, timingIndex, e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteTiming(index, timingIndex)}
+                          className="ml-2"
+                          disabled={(trip.Timing || []).length <= 1}
+                        >
+                          <X size={16} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => handleDeleteTrip(index)}
+                      className="flex items-center gap-1"
+                      disabled={formData.Trips.length <= 1}
+                    >
+                      <Trash2 size={16} /> Delete Trip
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
+
+      <div className="flex justify-end mt-6">
+        <FeedbackButton onClick={handleSubmit} disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save Trip"}
+        </FeedbackButton>
+      </div>
     </div>
   );
 }
-
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="absolute inset-x-0 -bottom-px block h-px w-full bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-0 transition duration-500 group-hover/btn:opacity-100" />
-      <span className="absolute inset-x-10 -bottom-px mx-auto block h-px w-1/2 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-0 blur-sm transition duration-500 group-hover/btn:opacity-100" />
-    </>
-  );
-};
-
-const LabelInputContainer = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  return (
-    <div className={cn("flex w-full flex-col space-y-2", className)}>
-      {children}
-    </div>
-  );
-};

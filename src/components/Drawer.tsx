@@ -4,21 +4,23 @@ import { X } from "lucide-react";
 import { BackgroundBeamsWithCollision } from "./ui/background-beams-with-collision";
 import { useDrawerContext } from "@/context/DrawerContext";
 import { useState, useEffect } from "react";
-
+import { auth, currentUser } from '@clerk/nextjs/server'
 import "./drawer.css";
-
-const navigation = [
-  { page: "Home", navigate: "/" },
-  { page: "Book", navigate: "book" },
-  { page: "Ticket", navigate: "/" },
-  { page: "News", navigate: "/" },
-  { page: "About", navigate: "/" },
-]
+import Link from "next/link"
+import { useNavigation } from "@/utils/navigation";
 
 const Drawer = () => {
   const { isOpen, closeDrawer } = useDrawerContext();
   const [isVisible, setIsVisible] = useState(false);
-
+  const { navigate } = useNavigation();
+  
+  const navigation = [
+    { page: "Home", navigate: "/" },
+    { page: "Book", navigate: "book" },
+    { page: "Ticket", navigate: "/ticket" },
+    { page: "News", navigate: "/" },
+    { page: "About", navigate: "/" },
+  ]
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true); // Trigger the animation
@@ -55,13 +57,13 @@ const Drawer = () => {
 
           <nav className="mt-12 w-full overflow-auto scrollbar-none lg:space-y-6 space-y-4 lg:text-5xl text-3xl">
             {navigation.map((link) => (
-              <a
+              <button
                 key={link.page}
-                href={link.navigate}
-                className="block font-medium hover:text-white/80"
+                onClick={() => navigate(link.navigate)}
+                className="block font-medium hover:text-white/80 text-left w-full"
               >
                 {link.page}
-              </a>
+              </button>
             ))}
           </nav>
 
