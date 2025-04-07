@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { tripApi } from "@/API/trip.api";
 import Link from "next/link";
@@ -28,7 +28,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeedbackButton } from "@/components/ui/feedback-button";
-import { string } from "zod";
 import { ITrip, SingleTrip } from "@/model/trip.model";
 import {
   Select,
@@ -39,6 +38,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectGroup } from "@radix-ui/react-select";
+import { calculateTotalPrice, applyPromoCode, formatPrice, getPriceFromTripData } from "@/utils/priceUtils";
+import { Skeleton } from "@/components/ui/skeleton";
+
 // Mock data for buses
 const buses = [
   {
@@ -107,7 +109,7 @@ export default function BusDetailsPage() {
   const pickup = searchParams.get("pickup");
   const tripId = searchParams.get("destination") as string;
   const router = useRouter();
-  const bus = buses.find((b) => b.id === tripId);
+  const [isLoading, setIsLoading] = useState(true);
   const [openPassenger, setOpenPassenger] = useState(-1);
   const [selectedPassenger, setSelectedPassenger] = useState([1]);
   const [passengerDetails, setPassengerDetails] = useState([
@@ -120,72 +122,56 @@ export default function BusDetailsPage() {
     date: false,
     time: false,
   });
-  const [price, setPrice] = useState<number>(0);
-  const [finalPrice, setFinalPrice] = useState(0);
-  const [examDate, setExamDate] = useState<string>("");
-  const [examTiming, setExamTiming] = useState<string>("");
-  const [promoCode, setPromoCode] = useState("");
+  const [price, setPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState("");
   const [tripData, setTripData] = useState<ITrip>();
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
   
   const fetchTrips = async () => {
     try {
+      setIsLoading(true);
       const res = await tripApi.getTripById(tripId);
       setTripData(res);
     } catch (error) {
       console.error("Failed to fetch trip data:", error);
       setTripData(undefined);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  const updatePrice = () => {
-    if (selectedPassenger.length > 1)
-      setFinalPrice((selectedPassenger.length * Number(price) )- discount);
-  };
-
-  useEffect(() => {
-    updatePrice();
-  }, [selectedPassenger, tripData]);
-
-  useEffect(() => {
-    if (!tripData || !tripData.Trips || !examDate || !examTiming) return;
-
-    const selectedDate = new Date(examDate).toISOString().split("T")[0];
-
-    const serviceFees = tripData.Trips.map((trip) => {
-      const tripDate = new Date(trip.date).toISOString().split("T")[0];
-      if (tripDate === selectedDate && trip.Timing.includes(examTiming)) {
-        return trip.price;
-      }
-    });
-
-    setPrice(Number(serviceFees[0]));
-    setFinalPrice(Number(Number(serviceFees[0]) - discount));
-  }, [examDate, examTiming, tripData]);
 
   useEffect(() => {
     fetchTrips();
   }, []);
 
-  if (!tripData) {
-    return (
-      <div className="container mx-auto py-10">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold">Bus not found</h3>
-              <p className="text-muted-foreground">
-                The bus you're looking for doesn't exist
-              </p>
-              <Link href="/search">
-                <Button className="mt-4">Back to Search</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (tripData && selectedDate && selectedTime) {
+      const newPrice = getPriceFromTripData(tripData, selectedDate, selectedTime);
+      setPrice(newPrice);
+    }
+  }, [tripData, selectedDate, selectedTime]);
+
+  const finalPrice = useMemo(() => {
+    return calculateTotalPrice(price, selectedPassenger.length, discount);
+  }, [price, selectedPassenger.length, discount]);
+
+  const handleApplyPromoCode = () => {
+    if (!promoCode) {
+      setPromoError("Please enter a promo code");
+      return;
+    }
+
+    const newDiscount = applyPromoCode(promoCode, selectedPassenger.length);
+    if (newDiscount > 0) {
+      setDiscount(newDiscount);
+      setPromoError("");
+    } else {
+      setPromoError("Invalid promo code");
+    }
+  };
 
   const handleDropDown = (index: number) => {
     setOpenPassenger((prev) => (prev === index ? -1 : index));
@@ -209,11 +195,11 @@ export default function BusDetailsPage() {
   const isValidateDateTime = () => {
     let shouldProcced = true;
     const error = errorDateTime;
-    if (examDate === "") {
+    if (selectedDate === "") {
       error.date = true;
       shouldProcced = false;
     }
-    if (examTiming === "") {
+    if (selectedTime === "") {
       error.time = true;
       shouldProcced = false;
     }
@@ -234,7 +220,6 @@ export default function BusDetailsPage() {
         ...prev,
         { name: false, Ph_no: false, gender: false },
       ]);
-      updatePrice();
     }
   };
 
@@ -261,19 +246,8 @@ export default function BusDetailsPage() {
 
       const newError = error.filter((_, idx) => idx !== index);
       setError(newError);
-      updatePrice();
-
     } else {
       alert("At least one passenger is required");
-    }
-  };
-
-  const applyPromoCode = () => {
-    if (promoCode === "GROUP10" && selectedPassenger.length >= 4) {
-      setDiscount(0.1); // 10% discount
-    } else {
-      setDiscount(0);
-      alert("Invalid promo code or conditions not met");
     }
   };
 
@@ -286,6 +260,30 @@ export default function BusDetailsPage() {
       );
     }
   };
+
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!tripData) {
+    return (
+      <div className="container mx-auto py-10">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold">Bus not found</h3>
+              <p className="text-muted-foreground">
+                The bus you're looking for doesn't exist
+              </p>
+              <Link href="/search">
+                <Button className="mt-4">Back to Search</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6">
@@ -300,18 +298,10 @@ export default function BusDetailsPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          {/* <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle className="text-2xl">{bus.name}</CardTitle>
-              <CardDescription>
-                {bus.company} • {bus.busType}
-              </CardDescription>
-            </div>
-            <div className="flex items-center">
-              <Star className="mr-1 h-5 w-5 fill-primary text-primary" />
-              <span className="text-lg font-medium">{bus.rating}</span>
-            </div>
-          </div> */}
+          <CardTitle className="text-2xl">Trip Details</CardTitle>
+          <CardDescription>
+            Select your preferred date and time
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
@@ -320,11 +310,11 @@ export default function BusDetailsPage() {
                 <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>GLA University to {tripData?.destinationAddress}</span>
               </div>
-              <div className=" flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4">
                 <div className="w-[90%]">
                   <Select
-                    defaultValue={examDate}
-                    onValueChange={(value) => setExamDate(value)}
+                    value={selectedDate}
+                    onValueChange={setSelectedDate}
                     required
                   >
                     <SelectTrigger className="w-full">
@@ -354,37 +344,34 @@ export default function BusDetailsPage() {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                  <br />
                   {errorDateTime.date && (
                     <p className="text-red-600 text-sm">
-                      {" "}
-                      Exam Date is Requied{" "}
+                      Exam Date is Required
                     </p>
                   )}
                 </div>
                 <div className="w-[90%]">
                   <Select
-                    value={examTiming}
-                    onValueChange={(value) => setExamTiming(value)}
+                    value={selectedTime}
+                    onValueChange={setSelectedTime}
                     required
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select your exam Date" />
+                      <SelectValue placeholder="Select your exam Time" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectLabel>Exam Date</SelectLabel>
-
-                        {examDate && tripData?.Trips?.length ? (
+                        <SelectLabel>Exam Time</SelectLabel>
+                        {selectedDate && tripData?.Trips?.length ? (
                           tripData.Trips.map((trip: SingleTrip) => {
                             const tripDate = new Date(trip.date)
                               .toISOString()
                               .split("T")[0];
-                            const selectedDate = new Date(examDate)
+                            const selectedDateStr = new Date(selectedDate)
                               .toISOString()
                               .split("T")[0];
 
-                            if (tripDate === selectedDate) {
+                            if (tripDate === selectedDateStr) {
                               return trip.Timing.map((time, idx) => (
                                 <SelectItem
                                   key={`${trip._id}-${idx}`}
@@ -394,8 +381,7 @@ export default function BusDetailsPage() {
                                 </SelectItem>
                               ));
                             }
-
-                            return null;  
+                            return null;
                           })
                         ) : (
                           <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -405,11 +391,9 @@ export default function BusDetailsPage() {
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                  <br />
                   {errorDateTime.time && (
                     <p className="text-red-600 text-sm">
-                      {" "}
-                      Exam Time is Requied{" "}
+                      Exam Time is Required
                     </p>
                   )}
                 </div>
@@ -447,7 +431,6 @@ export default function BusDetailsPage() {
                               Passenger {index + 1}
                             </h4>
                           </div>
-
                           <div className="w-[15%]">
                             <FeedbackButton
                               onClick={() => handleRemovePassenger(index)}
@@ -458,7 +441,9 @@ export default function BusDetailsPage() {
                           </div>
                         </div>
                         <div
-                          className={`grid gap-4 md:grid-cols-3 ${openPassenger === index ? "max-h-0 opacity-0" : "opacity-100"}`}
+                          className={`grid gap-4 md:grid-cols-3 ${
+                            openPassenger === index ? "max-h-0 opacity-0" : "opacity-100"
+                          }`}
                         >
                           <div className="space-y-2">
                             <Label htmlFor={`name-${index}`}>Full Name</Label>
@@ -534,40 +519,6 @@ export default function BusDetailsPage() {
                     </FeedbackButton>
                   </TabsContent>
                   <TabsContent value="bus-info" className="space-y-4 pt-4">
-                    {/* <div className="rounded-lg border p-4">
-                      <h4 className="mb-4 font-medium">
-                        Driver & Conductor Information
-                      </h4>
-                      <div className="grid gap-6 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <User className="h-5 w-5 text-muted-foreground" />
-                            <span className="font-medium">Driver</span>
-                          </div>
-                          <div className="pl-7">
-                            <div>{bus.driver.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {bus.driver.phone}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              Experience: {bus.driver.experience}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <User className="h-5 w-5 text-muted-foreground" />
-                            <span className="font-medium">Conductor</span>
-                          </div>
-                          <div className="pl-7">
-                            <div>{bus.conductor.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {bus.conductor.phone}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div> */}
                     <div className="rounded-lg border p-4">
                       <h4 className="mb-4 font-medium">Bus Tracking</h4>
                       <div className="flex items-center justify-center rounded-lg bg-muted/30 p-6">
@@ -592,7 +543,7 @@ export default function BusDetailsPage() {
             <CardHeader>
               <CardTitle>Booking Summary</CardTitle>
             </CardHeader>
-            {examDate && examTiming ? (
+            {selectedDate && selectedTime ? (
               <CardContent>
                 <div className="space-y-4">
                   <div>
@@ -615,48 +566,12 @@ export default function BusDetailsPage() {
                     )}
                   </div>
 
-                  {/* {bus.offers.length > 0 && (
-                  <div>
-                    <h3 className="font-medium">Available Offers</h3>
-                    <div className="mt-1 space-y-2">
-                      {bus.offers.map((offer) => (
-                        <div
-                          key={offer.id}
-                          className="rounded-md border border-dashed border-primary/50 bg-primary/5 p-2 text-sm"
-                        >
-                          <div className="font-medium">{offer.title}</div>
-                          <div className="text-muted-foreground">
-                            {offer.description}
-                          </div>
-                          <div className="mt-1">
-                            <span className="font-medium">Code:</span>{" "}
-                            {offer.code}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )} */}
-
-                  {/* {selectedPassenger.length > 0 && (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Promo Code"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
-                    <FeedbackButton variant="outline" onClick={applyPromoCode}>
-                      Apply
-                    </FeedbackButton>
-                  </div>
-                )} */}
-
                   <Separator />
 
                   <div className="space-y-1">
                     <div className="flex justify-between">
                       <span>Price</span>
-                      <span>₹{price.toFixed(2)}</span>
+                      <span>{formatPrice(price)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Seats </span>
@@ -665,7 +580,7 @@ export default function BusDetailsPage() {
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
-                        <span>-${discount.toFixed(2)}</span>
+                        <span>-{formatPrice((price * selectedPassenger.length * discount) / 100)}</span>
                       </div>
                     )}
                   </div>
@@ -674,7 +589,7 @@ export default function BusDetailsPage() {
 
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span>${finalPrice.toFixed(2)}</span>
+                    <span>{formatPrice(finalPrice)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -689,8 +604,8 @@ export default function BusDetailsPage() {
                 onClick={proceedToPayment}
                 disabled={
                   selectedPassenger.length === 0 ||
-                  examDate === "" ||
-                  examTiming === ""
+                  selectedDate === "" ||
+                  selectedTime === ""
                 }
               >
                 {selectedPassenger.length === 0
@@ -719,62 +634,69 @@ export default function BusDetailsPage() {
   );
 }
 
-{
-  /* <Card>
+function LoadingSkeleton() {
+  return (
+    <div className="container mx-auto py-6">
+      <div className="mb-6">
+        <Skeleton className="h-10 w-32" />
+      </div>
+
+      <Card className="mb-6">
+        <CardHeader>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-64" />
+              <div className="flex flex-wrap gap-4">
+                <Skeleton className="h-10 w-[90%]" />
+                <Skeleton className="h-10 w-[90%]" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-[1fr_350px]">
+        <div className="space-y-6">
+          <Card>
             <CardHeader>
-              <CardTitle>Select Seats</CardTitle>
-              <CardDescription>Click on an available seat to select it</CardDescription>
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
             </CardHeader>
             <CardContent>
-              <div className="mb-6 flex justify-center">
-                <div className="w-full max-w-md rounded-lg bg-muted/30 p-4">
-                  <div className="mb-6 flex justify-center">
-                    <div className="rounded-md bg-muted px-8 py-2 text-center font-medium">Driver</div>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-3">
-                    {seats.map((seat) => (
-                      <TooltipProvider key={seat.id}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              className={`flex h-12 w-full items-center justify-center rounded-md ${
-                                seat.isBooked
-                                  ? "cursor-not-allowed bg-muted text-muted-foreground opacity-50"
-                                  : selectedPassanger.includes(seat.id)
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-background hover:bg-muted"
-                              }`}
-                              onClick={() => !seat.isBooked && toggleSeatSelection(seat.id)}
-                              disabled={seat.isBooked}
-                            >
-                              {seat.number}
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {seat.isBooked ? "Booked" : `Seat ${seat.number} - $${seat.price}`}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 flex justify-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-sm bg-background"></div>
-                      <span className="text-sm">Available</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-sm bg-primary"></div>
-                      <span className="text-sm">Selected</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 rounded-sm bg-muted opacity-50"></div>
-                      <span className="text-sm">Booked</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="space-y-4">
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-32 w-full" />
               </div>
             </CardContent>
-          </Card> */
+          </Card>
+        </div>
+
+        <div>
+          <Card className="sticky top-6">
+            <CardHeader>
+              <Skeleton className="h-8 w-48" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Skeleton className="h-10 w-full" />
+            </CardFooter>
+          </Card>
+
+          <div className="mt-4">
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
