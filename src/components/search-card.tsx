@@ -25,12 +25,41 @@ import {
 import { FormControl } from "./ui/form";
 import { SelectGroup } from "@radix-ui/react-select";
 import { tripApi } from "@/API/trip.api";
+import { Skeleton } from "@/components/ui/skeleton";
+
 interface DataSchema {
   pickUp: string;
   destination: string;
 }
 
+function SearchCardSkeleton() {
+  return (
+    <div className="flex items-center justify-center">
+      <Card className="w-full">
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-48 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-1/2" />
+              <Skeleton className="h-10 w-1/2" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function SearchCard() {
+  const [isLoading, setIsLoading] = useState(true);
   const [roundTripData, setRoundTripData] = useState<DataSchema>({
     pickUp: "",
     destination: "",
@@ -63,28 +92,36 @@ function SearchCard() {
     }
   }
   const router = useRouter();
-   const handleNavigate = () => {
-      router.push(`/searchBus?pickup=${roundTripData.pickUp}&destination=${roundTripData.destination}`);
-   }
+  const handleNavigate = () => {
+    router.push(`/searchBus?pickup=${roundTripData.pickUp}&destination=${roundTripData.destination}`);
+  }
 
   const fetchTripsName = async () => {
     try {
-      const res = await tripApi.getTripNames(); // API likely returns an array
+      setIsLoading(true);
+      const res = await tripApi.getTripNames();
       console.log(res);
 
       if (Array.isArray(res)) {
-        setDestinationData(res); // Set array correctly
+        setDestinationData(res);
       } else {
         console.error("Unexpected API response format:", res);
       }
     } catch (error) {
       console.error("Error fetching trips:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchTripsName();
   }, []);
+
+  if (isLoading) {
+    return <SearchCardSkeleton />;
+  }
+
   return (
     <div className="flex items-center justify-center">
       <Card className="w-full">
@@ -100,7 +137,7 @@ function SearchCard() {
             </TabsList>
             <TabsContent value="round-trip" className="space-y-4">
               <div className="grid gap-4">
-                <div className="flex flex-wrap justify-center  gap-4">
+                <div className="flex flex-wrap justify-center gap-4">
                   <Select
                     defaultValue={roundTripData.pickUp}
                     onValueChange={(value) =>
@@ -114,7 +151,7 @@ function SearchCard() {
                       <SelectGroup>
                         <SelectLabel>Mathura</SelectLabel>
                         {pickupLocations?.map((pickUp) => (
-                          <SelectItem value={pickUp}>{pickUp}</SelectItem>
+                          <SelectItem key={pickUp} value={pickUp}>{pickUp}</SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
@@ -132,7 +169,7 @@ function SearchCard() {
                       <SelectGroup>
                         <SelectLabel>Neptel Centers</SelectLabel>
                         {destinationData?.map((dest) => (
-                          <SelectItem value={dest._id}>
+                          <SelectItem key={dest._id} value={dest._id}>
                             {dest.destinationAddress}
                           </SelectItem>
                         ))}
@@ -140,7 +177,6 @@ function SearchCard() {
                     </SelectContent>
                   </Select>
                 </div>
-                 
                 <FeedbackButton onClick={handleNavigate} className="w-full">
                   Search Buses
                   <Search className="ml-2 h-4 w-4" />

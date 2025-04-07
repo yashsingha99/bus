@@ -8,11 +8,13 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import "./drawer.css";
 import Link from "next/link"
 import { useNavigation } from "@/utils/navigation";
+import { useUser } from "@clerk/nextjs";
 
 const Drawer = () => {
   const { isOpen, closeDrawer } = useDrawerContext();
   const [isVisible, setIsVisible] = useState(false);
   const { navigate } = useNavigation();
+  const { isSignedIn, user } = useUser();
   
   const navigation = [
     { page: "Home", navigate: "/" },

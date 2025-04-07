@@ -29,11 +29,8 @@ const Navbar = () => {
             </Link>
 
             <div className="flex items-center gap-4">
-              {isSignedIn ? (
+              {isSignedIn && (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">
-                    {user?.firstName || user?.username || 'User'}
-                  </span>
                   <Button
                     onClick={() => navigate("/ticket")}
                     variant="outline"
@@ -42,14 +39,6 @@ const Navbar = () => {
                     My Tickets
                   </Button>
                 </div>
-              ) : (
-                <Button
-                  onClick={() => navigate("/sign-in")}
-                  variant="outline"
-                  className="sm:inline-flex rounded-3xl border-[#5157C1] py-5 px-6 text-md font-medium"
-                >
-                  Sign In
-                </Button>
               )}
 
               <button
