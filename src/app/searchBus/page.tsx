@@ -38,8 +38,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectGroup } from "@radix-ui/react-select";
-import { calculateTotalPrice, applyPromoCode, formatPrice, getPriceFromTripData } from "@/utils/priceUtils";
+import {
+  calculateTotalPrice,
+  applyPromoCode,
+  formatPrice,
+  getPriceFromTripData,
+} from "@/utils/priceUtils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { createOrderId } from "@/API/orderId";
+import axios from "axios";
+import { useUser } from "@clerk/nextjs";
+import Script from "next/script";
+import Razorpay from "razorpay";
+import { bookingApi } from "@/API/booking.api";
 
 // Mock data for buses
 const buses = [
@@ -129,7 +140,114 @@ export default function BusDetailsPage() {
   const [tripData, setTripData] = useState<ITrip>();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  
+  const { user } = useUser();
+  const userData = {
+    fullName: user?.fullName,
+    email: user?.primaryEmailAddress?.emailAddress,
+    phoneNumber: user?.primaryPhoneNumber?.phoneNumber || "",
+    clerkId: user?.id,
+  };
+const URL = process.env.VERCEL_URL || "http://localhost:3000";
+
+
+  const handlePayment = async () => {
+    setIsLoading(true);
+    try {
+      // Validate passenger details and date/time
+      let shouldAdd = isValidateInfo();
+      let shouldProcced = isValidateDateTime();
+      
+      if (!shouldAdd || !shouldProcced) {
+        alert("Please fill all required fields correctly");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Format passenger details for the booking
+      const formattedPassengerDetails = passengerDetails.map(passenger => ({
+        name: passenger.name,
+        phone: passenger.Ph_no,
+        gender: passenger.gender.toLowerCase() as "male" | "female" | "other"
+      }));
+      
+      // Create order ID for payment
+      const orderId: string = await createOrderId(finalPrice, "INR");
+      console.log("Order ID:", orderId);
+      
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: finalPrice * 100,
+        currency: "INR",
+        name: "Bus Booking System",
+        description: `Booking for ${tripData?.destinationAddress || 'Destination'}`,
+        order_id: orderId,
+        handler: async function (response: any) {
+          try {
+            // Verify payment
+            const paymentResponse = await axios.post(`${URL}/api/verifyOrder`, {
+              razorpay_order_id: orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            
+            // Create booking in database using the API endpoint directly
+            const bookingResponse = await axios.post(`${URL}/api/passanger/booking`, {
+              pickupAddress: pickup || "Default Pickup",
+              bookedBy: userData.clerkId, // The API will handle ObjectId conversion
+              trip: tripId,
+              destination: tripId, // Using tripId as destination since it's the same trip
+              time: selectedTime,
+              passengerDetails: formattedPassengerDetails,
+              totalAmount: finalPrice,
+              status: "pending",
+              paymentStatus: "pending"
+            });
+            
+            const booking = bookingResponse.data.data;
+            
+            // Update payment status
+            if (booking && booking._id) {
+              await axios.put(`${URL}/api/passanger/booking/payment`, {
+                bookingId: booking._id,
+                paymentStatus: "completed"
+              });
+              
+              alert("Payment Successful! Your booking has been confirmed.");
+              console.log("Booking created:", booking);
+              
+              // Redirect to booking confirmation page
+              router.push(`/booking-confirmation?bookingId=${booking._id}`);
+            } else {
+              throw new Error("Failed to create booking");
+            }
+          } catch (error) {
+            console.error("Error processing payment:", error);
+            alert("Payment verification failed. Please contact support.");
+          }
+        },
+        prefill: {
+          name: userData.fullName,
+          email: userData.email,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.on("payment.failed", function (response: any) {
+        alert("Payment failed. Please try again.");
+        console.error("Payment failed:", response.error);
+      });
+      razorpay.open();
+    } catch (error) {
+      console.error("Error initiating payment:", error);
+      alert("Payment failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const fetchTrips = async () => {
     try {
       setIsLoading(true);
@@ -149,7 +267,11 @@ export default function BusDetailsPage() {
 
   useEffect(() => {
     if (tripData && selectedDate && selectedTime) {
-      const newPrice = getPriceFromTripData(tripData, selectedDate, selectedTime);
+      const newPrice = getPriceFromTripData(
+        tripData,
+        selectedDate,
+        selectedTime
+      );
       setPrice(newPrice);
     }
   }, [tripData, selectedDate, selectedTime]);
@@ -255,9 +377,11 @@ export default function BusDetailsPage() {
     let shouldAdd = isValidateInfo();
     let shouldProcced = isValidateDateTime();
     if (shouldAdd && shouldProcced) {
-      router.push(
-        `/payment?busId=${tripId}&seats=${selectedPassenger.join(",")}&amount=${finalPrice}`
-      );
+      // // payment gateway
+      // router.push(
+      //   `/payment?busId=${tripId}&seats=${selectedPassenger.join(",")}&amount=${finalPrice}`
+      // );
+      handlePayment();
     }
   };
 
@@ -287,6 +411,10 @@ export default function BusDetailsPage() {
 
   return (
     <div className="container mx-auto py-6">
+       <Script
+        type="text/javascript"
+        src="https://checkout.razorpay.com/v1/checkout.js"
+      />
       <div className="mb-6 flex items-center">
         <Link href="/search">
           <Button variant="ghost" size="sm">
@@ -297,11 +425,11 @@ export default function BusDetailsPage() {
       </div>
 
       <Card className="mb-6">
+       
+
         <CardHeader>
           <CardTitle className="text-2xl">Trip Details</CardTitle>
-          <CardDescription>
-            Select your preferred date and time
-          </CardDescription>
+          <CardDescription>Select your preferred date and time</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
@@ -442,7 +570,9 @@ export default function BusDetailsPage() {
                         </div>
                         <div
                           className={`grid gap-4 md:grid-cols-3 ${
-                            openPassenger === index ? "max-h-0 opacity-0" : "opacity-100"
+                            openPassenger === index
+                              ? "max-h-0 opacity-0"
+                              : "opacity-100"
                           }`}
                         >
                           <div className="space-y-2">
@@ -580,7 +710,12 @@ export default function BusDetailsPage() {
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
-                        <span>-{formatPrice((price * selectedPassenger.length * discount) / 100)}</span>
+                        <span>
+                          -
+                          {formatPrice(
+                            (price * selectedPassenger.length * discount) / 100
+                          )}
+                        </span>
                       </div>
                     )}
                   </div>

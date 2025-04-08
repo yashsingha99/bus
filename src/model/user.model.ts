@@ -7,56 +7,42 @@ export enum ROLE {
 }
 
 export interface IUser extends Document {
-  username: string;
+  fullName: string;
   email: string;
   phoneNumber: string;
-  password: string;
-  OTP: number;
-  OTPExpiry: Date;
-  isVerified: boolean;
+  clerkId: string;
   notifications: mongoose.Types.ObjectId[];
   role: ROLE;
 }
 
 const userSchema: Schema<IUser> = new Schema(
   {
-    username: {
+    fullName: {
       type: String,
       required: true,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
+
     phoneNumber: {
       type: String,
       required: true,
     },
-    password: {
+
+    clerkId: {
       type: String,
       required: true,
+      unique: true,
     },
 
     role: {
       type: String,
       enum: Object.values(ROLE),
       default: ROLE.USER
-    },
-
-    OTP: {
-      type: Number,
-      required: true,
-    },
-
-    OTPExpiry: {
-      type: Date,
-      required: true,
-    },
-
-    isVerified: {
-      type: Boolean,
-      default: false,
     },
 
     notifications: [
@@ -71,4 +57,4 @@ const userSchema: Schema<IUser> = new Schema(
   }
 );
 
-export const UserModel = mongoose.model<IUser>("UserModel", userSchema);
+export const UserModel = mongoose.models.UserModel || mongoose.model<IUser>("UserModel", userSchema);

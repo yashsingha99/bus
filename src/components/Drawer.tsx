@@ -1,36 +1,43 @@
 "use client";
 
-import { X } from "lucide-react";
+import { LogOut, X, User, UserPlus } from "lucide-react";
 import { BackgroundBeamsWithCollision } from "./ui/background-beams-with-collision";
 import { useDrawerContext } from "@/context/DrawerContext";
 import { useState, useEffect } from "react";
-import { auth, currentUser } from '@clerk/nextjs/server'
 import "./drawer.css";
 import Link from "next/link"
 import { useNavigation } from "@/utils/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { FeedbackButton } from "./ui/feedback-button";
+
 
 const Drawer = () => {
   const { isOpen, closeDrawer } = useDrawerContext();
   const [isVisible, setIsVisible] = useState(false);
   const { navigate } = useNavigation();
   const { isSignedIn, user } = useUser();
-  
+  const { signOut } = useClerk()
   const navigation = [
     { page: "Home", navigate: "/" },
     { page: "Book", navigate: "book" },
-    { page: "Ticket", navigate: "/ticket" },
+    { page: "Ticket", navigate: "/tickets" },
     { page: "News", navigate: "/" },
     { page: "About", navigate: "/" },
   ]
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true); // Trigger the animation
+      setIsVisible(true);   
     } else {
       const timer = setTimeout(() => setIsVisible(false), 300); 
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('user');
+    signOut();
+    closeDrawer();
+  };
 
   if (!isVisible) return null;
 
@@ -71,8 +78,61 @@ const Drawer = () => {
 
           <div className="absolute bottom-8 left-8 right-8">
             <div className="container mx-auto">
-              <div className=" relative flex flex-col w-full gap-8">
-                <button className="bg-[#545CFF] hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-3xl lg:text-3xl text-xl">
+              <div className="relative flex flex-wrap w-full gap-4">
+                {isSignedIn ? (
+                  <>
+                    <div className="w-full mb-4 p-4 bg-[#04051b] border border-[#545CFF] rounded-xl">
+                      <div className="flex items-center gap-3">
+                        {user?.imageUrl ? (
+                          <img 
+                            src={user.imageUrl} 
+                            alt={user.fullName || 'User'} 
+                            className="w-10 h-10 rounded-full"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-[#545CFF] flex items-center justify-center">
+                            <span className="text-white font-bold">
+                              {user?.firstName?.[0] || user?.lastName?.[0] || 'U'}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-white font-medium">{user?.fullName || 'User'}</p>
+                          <p className="text-white/70 text-sm">{user?.primaryEmailAddress?.emailAddress}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <FeedbackButton
+                      onClick={handleSignOut} 
+                      className="bg-[#04051b] cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-xl lg:text-3xl text-xl"
+                    >
+                      <div className="w-[15%] flex items-center justify-center">
+                        <LogOut />
+                      </div>
+                      Log Out
+                    </FeedbackButton>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/sign-in" className="w-full lg:w-60">
+                      <FeedbackButton className="bg-[#04051b] cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:h-16 h-10 rounded-xl lg:text-3xl text-xl w-full">
+                        <div className="w-[15%] flex items-center justify-center">
+                          <User />
+                        </div>
+                        Sign In
+                      </FeedbackButton>
+                    </Link>
+                    <Link href="/sign-up" className="w-full lg:w-60">
+                      <FeedbackButton className="bg-[#545CFF] cursor-pointer flex items-center justify-center gap-2 hover:scale-110 text-white lg:h-16 h-10 rounded-xl lg:text-3xl text-xl w-full">
+                        <div className="w-[15%] flex items-center justify-center">
+                          <UserPlus />
+                        </div>
+                        Sign Up
+                      </FeedbackButton>
+                    </Link>
+                  </>
+                )}
+                <button className="bg-[#545CFF] cursor-pointer hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-3xl lg:text-3xl text-xl">
                   Get in touch
                 </button>
                 <div

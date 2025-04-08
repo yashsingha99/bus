@@ -2,220 +2,243 @@ import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
 import { TripModel } from "@/model/trip.model";
 import { NextRequest, NextResponse } from "next/server";
-interface BookingRequest {
-      bookingId?: string;
-      seats?: number;
-      dateTiming?: {
-        date: string;
-        Timing: string;
-      };
-}
+import { IBooking } from "@/model/booking.model";
+import { UserModel } from "@/model/user.model";
+import mongoose from "mongoose";
 
 export async function POST(request: Request) {
   await dbConnection(); 
   try {
-    const { user, tripId, dateTiming, seats } = await request.json();
+    const bookingData = await request.json();
     
-    if (!user || !tripId || !dateTiming || !dateTiming.Timing || !dateTiming.date || !seats) {
+    // Validate required fields
+    const requiredFields = [
+      'pickupAddress', 
+      'bookedBy', // This will be the Clerk ID
+      'trip', 
+      'destination', 
+      'time', 
+      'passengerDetails',
+      'totalAmount'
+    ];
+    
+    const missingFields = requiredFields.filter(field => !bookingData[field]);
+    
+    if (missingFields.length > 0) {
       return NextResponse.json(
-         { message: "All fields are required!" },
-         { status: 400 }
+        { message: `Missing required fields: ${missingFields.join(', ')}` },
+        { status: 400 }
       );
-    } 
-
- 
-  const trip = await TripModel.findById(tripId);
+    }
+    
+    // Validate passenger details
+    if (!bookingData.passengerDetails || bookingData.passengerDetails.length === 0) {
+      return NextResponse.json(
+        { message: "At least one passenger is required" },
+        { status: 400 }
+      );
+    }
+    
+    // Validate trip exists
+    const trip = await TripModel.findById(bookingData.trip);
     if (!trip) {
-      return new Response(
-        JSON.stringify({ message: "Trip not found!" }),
+      return NextResponse.json(
+        { message: "Trip not found" },
         { status: 404 }
       );
     }
 
-    // Check if the selected dateTiming is valid for this trip
-    const isValidTiming = trip.DateTiming.some(
-      (dt) => dt.Timing === dateTiming.Timing && new Date(dt.date).toISOString() === new Date(dateTiming.date).toISOString()
-    );
+    // Find user by Clerk ID
+    const user = await UserModel.findOne({ clerkId: bookingData.bookedBy });
+    if (!user) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+    
+    // Create the booking with the user's MongoDB ID
+    const newBooking = await BookingModel.create({
+      ...bookingData,
+      bookedBy: user._id, // Use the MongoDB user ID
+      status: "pending",
+      paymentStatus: "pending"
+    });
 
-    if (!isValidTiming) {
-      return new Response(
-        JSON.stringify({ message: "Invalid dateTiming for the selected trip!" }),
+    return NextResponse.json(
+      { 
+        message: "Booking created successfully!",
+        data: newBooking
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error creating booking:", error);
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map((err: any) => err.message);
+      return NextResponse.json(
+        { message: "Validation error", errors: validationErrors },
         { status: 400 }
       );
     }
-
-    // Calculate total price
-    const totalPrice = trip.price * seats;
-
-    // Create the booking
-    const newBooking = await BookingModel.create({
-      user,
-      trip: tripId,
-      dateTiming,
-      seats,
-      totalPrice,
-    });
-
-    return new Response(
-      JSON.stringify({
-        message: "Booking created successfully!",
-        booking: newBooking,
-      }),
-      { status: 201 }
-    );
-  } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Error updating booking:", error.message);
-        return new Response(
-          JSON.stringify({ message: "Something went wrong!", error: error.message }),
-          { status: 500 }
-        );
-      }
     
-      // If the error is not an instance of Error, handle it as a generic unknown type
-      console.error("Unexpected error:", error);
-      return new Response(
-        JSON.stringify({ message: "Something went wrong!", error: "Unexpected error" }),
-        { status: 500 }
+    if (error.name === 'CastError') {
+      return NextResponse.json(
+        { message: "Invalid ID format", field: error.path },
+        { status: 400 }
       );
     }
     
+    return NextResponse.json(
+      { message: "Something went wrong!", error: error.message },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(request: Request) {
-      await dbConnection();
-    
-      try {
-            const { searchParams } = new URL(request.url);
-            const bookingId = searchParams.get("bookingId");
-    
-        if (!bookingId) {
-          return new Response(
-            JSON.stringify({ message: "Booking ID is required!" }),
-            { status: 400 }
-          );
-        }
-    
-        const booking = await BookingModel.findById(bookingId).populate("trip");
-    
-        if (!booking) {
-          return new Response(
-            JSON.stringify({ message: "Booking not found!" }),
-            { status: 404 }
-          );
-        }
-    
-        return new Response(
-          JSON.stringify({
-            message: "Booking retrieved successfully!",
-            booking,
-          }),
-          { status: 200 }
-        );
-      } catch (error: unknown) {
-            if (error instanceof Error) {
-              console.error("Error updating booking:", error.message);
-              return new Response(
-                JSON.stringify({ message: "Something went wrong!", error: error.message }),
-                { status: 500 }
-              );
-            }
-          
-            // If the error is not an instance of Error, handle it as a generic unknown type
-            console.error("Unexpected error:", error);
-            return new Response(
-              JSON.stringify({ message: "Something went wrong!", error: "Unexpected error" }),
-              { status: 500 }
-            );
-          }
-          
-    }
-
-
-    export async function PUT(request: Request) {
-      await dbConnection();
-    
-      try {
-        const { bookingId, seats, dateTiming }   = await request.json();
-    
-        if (!bookingId || !seats || !dateTiming) {
-          return new Response(
-            JSON.stringify({ message: "All fields are required!" }),
-            { status: 400 }
-          );
-        }
-    
-        const booking = await BookingModel.findById(bookingId);
-        if (!booking) {
-          return new Response(
-            JSON.stringify({ message: "Booking not found!" }),
-            { status: 404 }
-          );
-        }
-    
-        // Update the booking with new seats and dateTiming
-        booking.seats = seats;
-        booking.dateTiming = dateTiming;
-        booking.totalPrice = booking.trip.price * seats; // Recalculate the price
-    
-        await booking.save();
-    
-        return new Response(
-          JSON.stringify({
-            message: "Booking updated successfully!",
-            booking,
-          }),
-          { status: 200 }
-        );
-      } catch (error: unknown) {
-            if (error instanceof Error) {
-              console.error("Error updating booking:", error.message);
-              return new Response(
-                JSON.stringify({ message: "Something went wrong!", error: error.message }),
-                { status: 500 }
-              );
-            }
-          
-            // If the error is not an instance of Error, handle it as a generic unknown type
-            console.error("Unexpected error:", error);
-            return new Response(
-              JSON.stringify({ message: "Something went wrong!", error: "Unexpected error" }),
-              { status: 500 }
-            );
-          }
-      }          
-
-
-    export async function DELETE(request: Request) {
-      await dbConnection();
-    
-      try {
-        const { bookingId } = await request.json();
-    
-        if (!bookingId) {
-          return new Response(
-            JSON.stringify({ message: "Booking ID is required!" }),
-            { status: 400 }
-          );
-        }
-    
-        const booking = await BookingModel.findByIdAndDelete(bookingId);
-        if (!booking) {
-          return new Response(
-            JSON.stringify({ message: "Booking not found!" }),
-            { status: 404 }
-          );
-        }
-
-        return new Response(
-          JSON.stringify({ message: "Booking deleted successfully!" }),
-          { status: 200 }
-        );
-      } catch (error) {
-        console.error("Error deleting booking:", error);
-        return new Response(
-          JSON.stringify({ message: "Something went wrong!", error: error.message }),
-          { status: 500 }
+  await dbConnection();
+  
+  try {
+    const { searchParams } = new URL(request.url);
+    const bookingId = searchParams.get("bookingId");
+    const userId = searchParams.get("userId");
+   
+    // Get booking by ID
+    if (bookingId) {
+      const booking = await BookingModel.findById(bookingId)
+        .populate("trip")
+        .populate("destination")
+        .populate("bookedBy", "name email");
+      
+      if (!booking) {
+        return NextResponse.json(
+          { message: "Booking not found!" },
+          { status: 404 }
         );
       }
+      
+      return NextResponse.json(
+        { 
+          message: "Booking retrieved successfully!",
+          data: booking
+        },
+        { status: 200 }
+      );
     }
+    
+    // Get bookings by user ID
+    if (userId) {
+      const user = await UserModel.findOne({ clerkId: userId });  
+      if (!user) {
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 404 }
+        );
+      }
+      const bookings = await BookingModel.find({ bookedBy: user._id })
+        .populate("trip")
+        .populate("destination")
+        .sort({ createdAt: -1 });
+      
+      return NextResponse.json(
+        { 
+          message: "User bookings retrieved successfully!",
+          data: bookings
+        },
+        { status: 200 }
+      );
+    }
+    
+    return NextResponse.json(
+      { message: "Booking ID or User ID is required!" },
+      { status: 400 }
+    );
+  } catch (error: any) {
+    console.error("Error retrieving booking(s):", error);
+    return NextResponse.json(
+      { message: "Something went wrong!", error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  await dbConnection();
+  
+  try {
+    const { bookingId, ...updateData } = await request.json();
+    
+    if (!bookingId) {
+      return NextResponse.json(
+        { message: "Booking ID is required!" },
+        { status: 400 }
+      );
+    }
+    
+    const booking = await BookingModel.findById(bookingId);
+    if (!booking) {
+      return NextResponse.json(
+        { message: "Booking not found!" },
+        { status: 404 }
+      );
+    }
+    
+    // Update the booking
+    const updatedBooking = await BookingModel.findByIdAndUpdate(
+      bookingId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+    
+    return NextResponse.json(
+      {
+        message: "Booking updated successfully!",
+        data: updatedBooking
+      },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error updating booking:", error);
+    return NextResponse.json(
+      { message: "Something went wrong!", error: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  await dbConnection();
+  
+  try {
+    const { bookingId } = await request.json();
+    
+    if (!bookingId) {
+      return NextResponse.json(
+        { message: "Booking ID is required!" },
+        { status: 400 }
+      );
+    }
+    
+    const booking = await BookingModel.findByIdAndDelete(bookingId);
+    if (!booking) {
+      return NextResponse.json(
+        { message: "Booking not found!" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Booking deleted successfully!" },
+      { status: 200 }
+    );
+  } catch (error: any) {
+    console.error("Error deleting booking:", error);
+    return NextResponse.json(
+      { message: "Something went wrong!", error: error.message },
+      { status: 500 }
+    );
+  }
+}

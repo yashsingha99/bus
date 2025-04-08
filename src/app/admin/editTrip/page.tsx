@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { tripApi } from "@/API/trip.api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,10 @@ import { FeedbackButton } from "@/components/ui/feedback-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, X } from "lucide-react";
+import { Trash2, Plus, X, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 // Interface matching the server data structure
 interface ITripItem {
@@ -29,13 +32,82 @@ interface ITrip {
   updatedAt?: string;
 }
 
+function EditTripSkeleton() {
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <Skeleton className="h-8 w-64 mb-4" />
+      
+      <div className="mb-4">
+        <Skeleton className="h-4 w-32 mb-2" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+
+      <div className="mt-6">
+        <div className="border-b">
+          <div className="flex pb-2">
+            <Skeleton className="h-10 w-24 mr-2" />
+            <Skeleton className="h-10 w-24 mr-2" />
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+        
+        <Card className="mt-4">
+          <CardContent className="space-y-4 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div>
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-8 w-24" />
+              </div>
+              <Skeleton className="h-10 w-full mb-2" />
+              <Skeleton className="h-10 w-full mb-2" />
+            </div>
+
+            <div className="pt-2">
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-end mt-6">
+        <Skeleton className="h-10 w-32" />
+      </div>
+    </div>
+  );
+}
+
 export default function EditTripPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tripId = searchParams.get("tripId");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ITrip | null>(null);
   const [errors, setErrors] = useState<Record<string, any>>({});
   const [activeTab, setActiveTab] = useState("0");
+  const [error, setError] = useState<string | null>(null);
 
   function createEmptyTrip(): ITripItem {
     return {
@@ -48,7 +120,11 @@ export default function EditTripPage() {
   }
 
   useEffect(() => {
-    if (!tripId) return;
+    if (!tripId) {
+      setError("No trip ID provided");
+      setIsLoading(false);
+      return;
+    }
     
     if (tripId === "newTrip") {
       // Initialize new trip form
@@ -65,9 +141,9 @@ export default function EditTripPage() {
     const fetchTrip = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const data = await tripApi.getTripById(tripId);
         
-        // Format dates coming from the server (removing time part if needed)
         const formattedData = {
           ...data,
           Trips: data.Trips.map((trip: ITripItem) => ({
@@ -79,6 +155,8 @@ export default function EditTripPage() {
         setFormData(formattedData);
       } catch (err) {
         console.error("Trip fetch error:", err);
+        setError("Failed to load trip data. Please try again later.");
+        toast.error("Failed to load trip data");
       } finally {
         setIsLoading(false);
       }
@@ -118,6 +196,16 @@ export default function EditTripPage() {
     const updatedTrips = [...formData.Trips];
     updatedTrips[index] = { ...updatedTrips[index], [field]: value };
     setFormData({ ...formData, Trips: updatedTrips });
+    
+    // Clear error for this field if it exists
+    if (errors[`trip-${index}`]?.[field]) {
+      const updatedErrors = { ...errors };
+      delete updatedErrors[`trip-${index}`][field];
+      if (Object.keys(updatedErrors[`trip-${index}`]).length === 0) {
+        delete updatedErrors[`trip-${index}`];
+      }
+      setErrors(updatedErrors);
+    }
   };
 
   const handleDeleteTrip = (index: number) => {
@@ -144,6 +232,7 @@ export default function EditTripPage() {
         ...prev,
         [`trip-${formData.Trips.length - 1}`]: lastErrors,
       }));
+      toast.error("Please fix errors in the current trip before adding a new one");
       return;
     }
     
@@ -173,6 +262,16 @@ export default function EditTripPage() {
     currentTimings[timingIndex] = value;
     updatedTrips[tripIndex] = { ...updatedTrips[tripIndex], Timing: currentTimings };
     setFormData({ ...formData, Trips: updatedTrips });
+    
+    // Clear timing error if it exists
+    if (errors[`trip-${tripIndex}`]?.Timing) {
+      const updatedErrors = { ...errors };
+      delete updatedErrors[`trip-${tripIndex}`].Timing;
+      if (Object.keys(updatedErrors[`trip-${tripIndex}`]).length === 0) {
+        delete updatedErrors[`trip-${tripIndex}`];
+      }
+      setErrors(updatedErrors);
+    }
   };
 
   const handleDeleteTiming = (tripIndex: number, timingIndex: number) => {
@@ -181,7 +280,6 @@ export default function EditTripPage() {
     const updatedTrips = [...formData.Trips];
     const currentTimings = [...updatedTrips[tripIndex].Timing];
     
-    // Don't delete if it's the only timing
     if (currentTimings.length <= 1) return;
     
     currentTimings.splice(timingIndex, 1);
@@ -192,15 +290,12 @@ export default function EditTripPage() {
   const prepareDataForSaving = () => {
     if (!formData) return null;
     
-    // Create a copy to avoid modifying the original state
     const dataToSave = { ...formData };
     
-    // Format the data as needed before sending to the server
     dataToSave.Trips = dataToSave.Trips.map(trip => ({
       ...trip,
       price: Number(trip.price),
       SeatsLimit: Number(trip.SeatsLimit),
-      // Keep only non-empty timings
       Timing: trip.Timing.filter(t => t.trim() !== "")
     }));
     
@@ -211,6 +306,7 @@ export default function EditTripPage() {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      toast.error("Please fix the errors before saving");
       return;
     }
 
@@ -218,27 +314,62 @@ export default function EditTripPage() {
       const dataToSave = prepareDataForSaving();
       if (!dataToSave) return;
       
-      setIsLoading(true);
+      setIsSubmitting(true);
       
       if (tripId === "newTrip") {
         // Create new trip
-        await tripApi.createTrip(dataToSave);
-        // Add success handling (redirect or message)
+        await tripApi.createTrip(dataToSave );
+        toast.success("Trip created successfully");
+        router.push("/admin/trips");
       } else {
         // Update existing trip
         await tripApi.updateTrip(tripId, dataToSave);
-        // Add success handling (redirect or message)
+        toast.success("Trip updated successfully");
+        router.push("/admin/trips");
       }
     } catch (err) {
       console.error("Error submitting trip:", err);
-      // Add error notification here
+      toast.error("Failed to save trip. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (isLoading) return <div className="flex justify-center p-8">Loading...</div>;
-  if (!formData) return <div className="flex justify-center p-8">Error loading trip data</div>;
+  if (isLoading) return <EditTripSkeleton />;
+  
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Button onClick={() => router.push("/admin/trips")}>
+            Back to Trips
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!formData) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>No trip data available</AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Button onClick={() => router.push("/admin/trips")}>
+            Back to Trips
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -251,9 +382,15 @@ export default function EditTripPage() {
         <Input
           id="destination"
           value={formData.destinationAddress || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, destinationAddress: e.target.value })
-          }
+          onChange={(e) => {
+            setFormData({ ...formData, destinationAddress: e.target.value });
+            // Clear error if it exists
+            if (errors.destinationAddress) {
+              const updatedErrors = { ...errors };
+              delete updatedErrors.destinationAddress;
+              setErrors(updatedErrors);
+            }
+          }}
         />
         {errors.destinationAddress && (
           <p className="text-red-500 text-sm">{errors.destinationAddress}</p>
@@ -421,8 +558,8 @@ export default function EditTripPage() {
       </div>
 
       <div className="flex justify-end mt-6">
-        <FeedbackButton onClick={handleSubmit} disabled={isLoading}>
-          {isLoading ? "Saving..." : "Save Trip"}
+        <FeedbackButton onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save Trip"}
         </FeedbackButton>
       </div>
     </div>

@@ -1,49 +1,94 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 
-// Define protected routes
 const protectedRoutes = [
-  '/ticket',
-  '/searchBus',
-  '/admin',
-  // Add more protected routes here
+  { pattern: /^\/ticket(\/.*)?$/, base: '/ticket' },
+  { pattern: /^\/searchBus(\/.*)?$/, base: '/searchBus' },
+  { pattern: /^\/admin(\/.*)?$/, base: '/admin' },
 ];
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, isLoaded } = useUser();
+  const { isSignedIn, isLoaded, user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
+  const isProtectedRoute = useMemo(() => {
+    return protectedRoutes.some(route => route.pattern.test(pathname));
+  }, [pathname]);
+
+  // Store user data in backend and localStorage
   useEffect(() => {
-    if (isLoaded) {
-      const isProtectedRoute = protectedRoutes.some(route => 
-        pathname.startsWith(route)
-      );
+    if (isLoaded && isSignedIn && user) {
+      const userData = {
+        fullName: user.fullName,
+        email: user.primaryEmailAddress?.emailAddress,
+        phoneNumber: user.primaryPhoneNumber?.phoneNumber || '',
+        clerkId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+        role: 'USER',
+        notifications: [],
+      };
 
-      if (isProtectedRoute && !isSignedIn) {
-        // Check if we're already on a sign-in or sign-up page
-        if (!pathname.startsWith('/sign-in') && !pathname.startsWith('/sign-up')) {
-          // Store the current URL in localStorage for after sign-up redirect
-          localStorage.setItem('redirectAfterSignUp', pathname);
-          router.push(`/sign-up?redirect=${pathname}`);
-        }
+      fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            const redirectData = localStorage.getItem('redirectAfterSignUp');
+            if (redirectData) {
+              localStorage.removeItem('redirectAfterSignUp');
+
+              try {
+                const { path, query } = JSON.parse(redirectData);
+                const queryString = new URLSearchParams(query).toString();
+                const redirectUrl = queryString ? `${path}?${queryString}` : path;
+                router.push(redirectUrl);
+              } catch (error) {
+                console.error('Invalid redirectAfterSignUp data:', error);
+              }
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error storing user data:', error);
+        });
+    }
+  }, [isLoaded, isSignedIn, user, router]);
+
+  // Redirect unauthenticated users from protected routes
+  useEffect(() => {
+    if (isLoaded && isProtectedRoute && !isSignedIn) {
+      if (!pathname.startsWith('/sign-in') && !pathname.startsWith('/sign-up')) {
+        const queryParams: Record<string, string> = {};
+        searchParams.forEach((value, key) => {
+          queryParams[key] = value;
+        });
+
+        localStorage.setItem('redirectAfterSignUp', JSON.stringify({
+          path: pathname,
+          query: queryParams,
+        }));
+
+        // ✅ Just push to sign-up without putting the redirect in the URL
+        router.push('/sign-up');
       }
     }
-  }, [isLoaded, isSignedIn, pathname, router]);
+  }, [isLoaded, isSignedIn, pathname, searchParams, isProtectedRoute, router]);
 
-  // Show nothing while checking authentication
-  if (!isLoaded) {
+  if (!isLoaded || (isProtectedRoute && !isSignedIn)) {
     return null;
   }
 
-  // For protected routes, only render if signed in
-  if (protectedRoutes.some(route => pathname.startsWith(route)) && !isSignedIn) {
-    return null;
-  }
-
-  // For all other routes, render normally
   return <>{children}</>;
-} 
+}

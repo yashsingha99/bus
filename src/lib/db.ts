@@ -14,15 +14,13 @@ export const dbConnection = async (): Promise<void> => {
     return;
   }
   try {
-    // const URI = "mongodb+srv://singhaly914:iQatXCzwUtoXNK1d@cluster0.vtnp9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    const URI = "mongodb://localhost:27017/"
+    const URI = process.env.MONGODB_URI || "mongodb://localhost:27017"
     
     const db = await mongoose.connect(URI);
     connection.isConnected = db.connections[0].readyState;
     console.log("Connected to the database");
   } catch (error) {
     console.error("Database connection failed:", error);
-     throw new Error("Database connection failed");
-    // process.exit(1);
+    throw new Error("Database connection failed");
   }
 };

@@ -1,11 +1,11 @@
 import axios from "axios";
-import { IBooking } from "@/src/model/booking.model";
+import { IBooking } from "@/model/booking.model";
 
 const URL = process.env.VERCEL_URL || "http://localhost:3000";
 
 export const bookingApi = {
   // Create new booking
-  createBooking: async (bookingData: Omit<IBooking, "_id">): Promise<IBooking> => {
+  createBooking: async (bookingData: Omit<IBooking, "_id" | "createdAt" | "updatedAt">): Promise<IBooking> => {
     try {
       const response = await axios.post<{ data: IBooking }>(`${URL}/api/passanger/booking`, bookingData);
       return response.data.data;
@@ -26,6 +26,17 @@ export const bookingApi = {
     }
   },
 
+  // Get bookings by user ID
+  getBookingsByUser: async (userId: string): Promise<IBooking[]> => {
+    try {
+      const response = await axios.get<{ data: IBooking[] }>(`${URL}/api/passanger/bookings?userId=${userId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching user bookings:", error);
+      throw error;
+    }
+  },
+
   // Update booking
   updateBooking: async (bookingId: string, bookingData: Partial<IBooking>): Promise<IBooking> => {
     try {
@@ -36,6 +47,47 @@ export const bookingApi = {
       return response.data.data;
     } catch (error) {
       console.error("Error updating booking:", error);
+      throw error;
+    }
+  },
+
+  // Update booking status
+  updateBookingStatus: async (bookingId: string, status: "pending" | "confirmed" | "cancelled"): Promise<IBooking> => {
+    try {
+      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking/status`, {
+        bookingId,
+        status
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      throw error;
+    }
+  },
+
+  // Update payment status
+  updatePaymentStatus: async (bookingId: string, paymentStatus: "pending" | "completed" | "failed"): Promise<IBooking> => {
+    try {
+      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking/payment`, {
+        bookingId,
+        paymentStatus
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      throw error;
+    }
+  },
+
+  // Cancel booking
+  cancelBooking: async (bookingId: string): Promise<IBooking> => {
+    try {
+      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking/cancel`, {
+        bookingId
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error canceling booking:", error);
       throw error;
     }
   },
