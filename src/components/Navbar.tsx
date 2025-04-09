@@ -32,7 +32,7 @@ const Navbar = () => {
               {isSignedIn && (
                 <div className="flex items-center gap-2">
                   <Button
-                    onClick={() => navigate("/ticket")}
+                    onClick={() => navigate("/tickets")}
                     variant="outline"
                     className="sm:inline-flex rounded-3xl border-[#5157C1] py-5 px-6 text-md font-medium"
                   >

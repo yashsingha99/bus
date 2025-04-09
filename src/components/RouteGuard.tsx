@@ -66,22 +66,23 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
     }
   }, [isLoaded, isSignedIn, user, router]);
 
-  // Redirect unauthenticated users from protected routes
   useEffect(() => {
     if (isLoaded && isProtectedRoute && !isSignedIn) {
       if (!pathname.startsWith('/sign-in') && !pathname.startsWith('/sign-up')) {
-        const queryParams: Record<string, string> = {};
+        let queryParams= "";
         searchParams.forEach((value, key) => {
-          queryParams[key] = value;
+          queryParams += `${key}=${value}&`;
         });
 
-        localStorage.setItem('redirectAfterSignUp', JSON.stringify({
-          path: pathname,
-          query: queryParams,
-        }));
+        let newRedirectURL = `${pathname}?${queryParams}`;
 
-        // ✅ Just push to sign-up without putting the redirect in the URL
-        router.push('/sign-up');
+        // localStorage.setItem('redirectAfterSignUp', JSON.stringify({
+        //   path: newRedirect,
+        //   query: queryParams,
+        // }));
+        localStorage.setItem('redirectAfterSignUp', newRedirectURL);
+
+        router.push('/sign-in');
       }
     }
   }, [isLoaded, isSignedIn, pathname, searchParams, isProtectedRoute, router]);

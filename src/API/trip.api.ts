@@ -1,8 +1,7 @@
 import axios from "axios";
 import { ITrip } from "../model/trip.model";
 
-const URL = process.env.VERCEL_URL || "http://localhost:3000";
-// const URL = process.env.VERCEL_URL  || "http://172.16.57.155:3000";
+const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const tripApi = {
   // Get all trips

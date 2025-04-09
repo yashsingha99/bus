@@ -51,7 +51,7 @@ import { useUser } from "@clerk/nextjs";
 import Script from "next/script";
 import Razorpay from "razorpay";
 import { bookingApi } from "@/API/booking.api";
-
+import { toast, Toaster } from "sonner";
 // Mock data for buses
 const buses = [
   {
@@ -147,8 +147,7 @@ export default function BusDetailsPage() {
     phoneNumber: user?.primaryPhoneNumber?.phoneNumber || "",
     clerkId: user?.id,
   };
-const URL = process.env.VERCEL_URL || "http://localhost:3000";
-
+  const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
   const handlePayment = async () => {
     setIsLoading(true);
@@ -156,73 +155,82 @@ const URL = process.env.VERCEL_URL || "http://localhost:3000";
       // Validate passenger details and date/time
       let shouldAdd = isValidateInfo();
       let shouldProcced = isValidateDateTime();
-      
+
       if (!shouldAdd || !shouldProcced) {
         alert("Please fill all required fields correctly");
         setIsLoading(false);
         return;
       }
-      
+
       // Format passenger details for the booking
-      const formattedPassengerDetails = passengerDetails.map(passenger => ({
+      const formattedPassengerDetails = passengerDetails.map((passenger) => ({
         name: passenger.name,
         phone: passenger.Ph_no,
-        gender: passenger.gender.toLowerCase() as "male" | "female" | "other"
+        gender: passenger.gender.toLowerCase() as "male" | "female" | "other",
       }));
-      
+
       // Create order ID for payment
       const orderId: string = await createOrderId(finalPrice, "INR");
       console.log("Order ID:", orderId);
-      
+
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: finalPrice * 100,
         currency: "INR",
         name: "Bus Booking System",
-        description: `Booking for ${tripData?.destinationAddress || 'Destination'}`,
+        description: `Booking for ${tripData?.destinationAddress || "Destination"}`,
         order_id: orderId,
         handler: async function (response: any) {
           try {
-            // Verify payment
             const paymentResponse = await axios.post(`${URL}/api/verifyOrder`, {
               razorpay_order_id: orderId,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
-            
-            // Create booking in database using the API endpoint directly
-            const bookingResponse = await axios.post(`${URL}/api/passanger/booking`, {
-              pickupAddress: pickup || "Default Pickup",
-              bookedBy: userData.clerkId, // The API will handle ObjectId conversion
-              trip: tripId,
-              destination: tripId, // Using tripId as destination since it's the same trip
-              time: selectedTime,
-              passengerDetails: formattedPassengerDetails,
-              totalAmount: finalPrice,
-              status: "pending",
-              paymentStatus: "pending"
-            });
-            
+
+            const bookingResponse = await axios.post(
+              `${URL}/api/passanger/booking`,
+              {
+                pickupAddress: pickup || "Default Pickup",
+                bookedBy: userData.clerkId,
+                trip: tripId,
+                destination: tripId,
+                time: selectedTime,
+                passengerDetails: formattedPassengerDetails,
+                totalAmount: finalPrice,
+                status: "pending",
+                paymentStatus: "pending",
+              }
+            );
+
             const booking = bookingResponse.data.data;
-            
-            // Update payment status
+
             if (booking && booking._id) {
               await axios.put(`${URL}/api/passanger/booking/payment`, {
                 bookingId: booking._id,
-                paymentStatus: "completed"
+                paymentStatus: "completed",
               });
-              
-              alert("Payment Successful! Your booking has been confirmed.");
+
+              toast("Payment Successful!", {
+                description: "Your booking has been confirmed",
+                action: {
+                  label: "Procced to checkout",
+                  onClick: () =>
+                    router.push(
+                      `/booking-confirmation?bookingId=${booking._id}`
+                    ),
+                },
+              });
+              // router.push(`/booking-confirmation?bookingId=${booking._id}`);
               console.log("Booking created:", booking);
-              
-              // Redirect to booking confirmation page
-              router.push(`/booking-confirmation?bookingId=${booking._id}`);
             } else {
               throw new Error("Failed to create booking");
             }
           } catch (error) {
             console.error("Error processing payment:", error);
-            alert("Payment verification failed. Please contact support.");
+            toast("Payment Failed!", {
+              description: "Please contact support.",
+            });
           }
         },
         prefill: {
@@ -411,7 +419,7 @@ const URL = process.env.VERCEL_URL || "http://localhost:3000";
 
   return (
     <div className="container mx-auto py-6">
-       <Script
+      <Script
         type="text/javascript"
         src="https://checkout.razorpay.com/v1/checkout.js"
       />
@@ -423,10 +431,9 @@ const URL = process.env.VERCEL_URL || "http://localhost:3000";
           </Button>
         </Link>
       </div>
+      <Toaster />
 
       <Card className="mb-6">
-       
-
         <CardHeader>
           <CardTitle className="text-2xl">Trip Details</CardTitle>
           <CardDescription>Select your preferred date and time</CardDescription>
