@@ -1,136 +1,201 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { IBooking } from "@/model/booking.model";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import UserDetailsDrawer from "./_components/userDetailsDrawer";
 import axios from "axios";
+import { toast, Toaster } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
 
-interface ApiResponse {
-  data: {
-    bookings: IBooking[];
-    pagination: {
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    };
-  };
+export interface User {
+  _id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+}
+
+export interface PopulatedBooking {
+  _id: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  date: string;
+  time: string;
+  destination: string;
+  status: string;
+  paymentStatus: string;
+  totalAmount: number;
+  bookedBy: User;
+  paymentProof: string | null;
+  paymentId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  passengerDetails: {
+    name: string;
+    phone: string;
+    gender: "male" | "female" | "other";
+  }[];
+}
+
+const URL = process.env.NEXT_PUBLIC_API_URL;
+
+function ReservedUsersSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-6">
+        <Skeleton className="h-10 w-64" />
+      </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Payment Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                <TableCell><Skeleton className="h-9 w-24" /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 }
 
 export default function ReservedUsersPage() {
-  const [bookings, setBookings] = useState<IBooking[]>([]);
+  const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState<PopulatedBooking | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${URL}/api/admin/bookings`);
+      console.log(response.data.data.bookings);
+      
+      setBookings(response.data.data.bookings);
+    } catch (error) {
+      toast.error("Failed to fetch bookings");
+    } finally {
+      setLoading(false);
+    }
+  }; 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await axios.get<ApiResponse>("/api/admin/bookings");
-        setBookings(response.data.data.bookings);
-      } catch (err) {
-        setError("Failed to fetch bookings");
-        console.error("Error fetching bookings:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBookings();
   }, []);
 
-  if (error) {
-    return (
-      <div className="p-4">
-        <Card className="bg-red-50">
-          <CardContent className="p-4">
-            <p className="text-red-600">{error}</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const filteredBookings = bookings?.filter((booking) =>
+    booking.bookedBy.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.bookedBy.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.bookedBy.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.pickupAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    booking.time.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleUpdateBooking = async (updatedBooking: PopulatedBooking) => {
+    try {
+      await axios.put(`${URL}/api/admin/bookings/${updatedBooking._id}`, updatedBooking);
+      await fetchBookings();
+      setIsDrawerOpen(false);
+      toast.success("Booking updated successfully");
+    } catch (error) {
+      toast.error("Failed to update booking");
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    try {
+      await axios.delete(`${URL}/api/admin/bookings/${bookingId}`);
+      await fetchBookings();
+      setIsDrawerOpen(false);
+      toast.success("Booking deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete booking");
+    }
+  };
 
   return (
-    <div className="p-4 space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Reserved Users</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
+    <>
+      <div className=" py-10">
+        {loading ? (
+          <ReservedUsersSkeleton />
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-6">
+              <PlaceholdersAndVanishInput
+                placeholders={["Search by name, email, or phone..."]}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                onSubmit={() => fetchBookings()}
+                styleInput="w-[90%]"
+              />
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Passenger Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Pickup Address</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Payment Status</TableHead>
-                  <TableHead>Total Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow key={String(booking._id)}>
-                    <TableCell>
-                      {booking.passengerDetails.map((passenger, index) => (
-                        <div key={index}>
-                          {passenger.name} ({passenger.gender})
-                        </div>
-                      ))}
-                    </TableCell>
-                    <TableCell>
-                      {booking.passengerDetails.map((passenger, index) => (
-                        <div key={index}>{passenger.phone}</div>
-                      ))}
-                    </TableCell>
-                    <TableCell>{booking.pickupAddress}</TableCell>
-                    <TableCell>{booking.time}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          booking.status === "confirmed"
-                            ? "bg-green-100 text-green-800"
-                            : booking.status === "cancelled"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
+
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Payment Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bookings.map((booking) => (
+                    <TableRow key={booking._id}>
+                      <TableCell>{booking.bookedBy.fullName}</TableCell>
+                      <TableCell>{booking.bookedBy?.phoneNumber}</TableCell>
+                      <TableCell>{new Date(booking.date).toLocaleDateString()}</TableCell>
+                      
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
                           booking.paymentStatus === "completed"
                             ? "bg-green-100 text-green-800"
-                            : booking.paymentStatus === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {booking.paymentStatus}
-                      </span>
-                    </TableCell>
-                    <TableCell>${booking.totalAmount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                            : "bg-red-100 text-red-800"
+                        }`}>
+                          {booking.paymentStatus}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <UserDetailsDrawer booking={booking} isLoading={loading} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        )}
+      </div>
+      <Toaster />
+    </>
   );
 }

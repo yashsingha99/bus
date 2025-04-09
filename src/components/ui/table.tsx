@@ -107,8 +107,8 @@ export {
   TableHeader,
   TableBody,
   TableFooter,
-  TableHead,
   TableRow,
+  TableHead,
   TableCell,
   TableCaption,
 } 

@@ -2,52 +2,67 @@
 
 import type React from "react"
 
-import { useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
+import { useCallback, useRef } from "react"
+import { Button, ButtonProps } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-interface FeedbackButtonProps extends React.ComponentProps<typeof Button> {
-  soundEffect?: boolean
+interface FeedbackButtonProps extends ButtonProps {
+  soundEffect?: string
   vibration?: boolean
 }
 
-export function FeedbackButton({ className, soundEffect = true, vibration = true, ...props }: FeedbackButtonProps) {
+export function FeedbackButton({
+  children,
+  className,
+  soundEffect = "/sounds/click.mp3",
+  vibration = true,
+  onClick,
+  ...props
+}: FeedbackButtonProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  useEffect(() => {
-    // Create audio element for click sound
-    if (soundEffect && typeof window !== "undefined") {
-      audioRef.current = new Audio("/sounds/click.mp3")
-      audioRef.current.preload = "auto"
-      audioRef.current.volume = 0.3
-    }
-
-    return () => {
-      if (audioRef.current) {
-        audioRef.current = null
+  const playSound = useCallback(() => {
+    try {
+      // Only try to play sound if we're in a browser environment
+      if (typeof window !== "undefined") {
+        // Create audio element if it doesn't exist
+        if (!audioRef.current) {
+          audioRef.current = new Audio(soundEffect)
+        }
+        
+        // Try to play the sound, but don't throw if it fails
+        audioRef.current.play().catch(err => {
+          // Silently fail - sound is not critical
+          console.debug("Sound playback not supported:", err)
+        })
       }
+    } catch (error) {
+      // Silently fail - sound is not critical
+      console.debug("Error playing sound:", error)
     }
   }, [soundEffect])
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Play sound effect
-    if (soundEffect && audioRef.current) {
-      // Reset audio to start (allows rapid clicking)
-      audioRef.current.currentTime = 0
-      audioRef.current.play().catch((err) => console.error("Error playing sound:", err))
-    }
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      playSound()
+      onClick?.(e)
 
-    // Trigger vibration if supported
-    if (vibration && "vibrate" in navigator) {
-      navigator.vibrate(40)
-    }
+      // Trigger vibration if supported
+      if (vibration && "vibrate" in navigator) {
+        navigator.vibrate(40)
+      }
+    },
+    [onClick, playSound, vibration]
+  )
 
-    // Call the original onClick handler if it exists
-    if (props.onClick) {
-      props.onClick(e)
-    }
-  }
-
-  return <Button className={cn(className)} {...props} onClick={handleClick} />
+  return (
+    <Button
+      className={cn("", className)}
+      onClick={handleClick}
+      {...props}
+    >
+      {children}
+    </Button>
+  )
 }
 

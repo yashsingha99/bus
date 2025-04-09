@@ -1,9 +1,9 @@
- "use client";
+"use client";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Clock, MapPin, User } from "lucide-react";
+import { CheckCircle, Clock, Clock4, MapPin, User } from "lucide-react";
 import axios from "axios";
 
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,9 @@ export default function BookingConfirmationPage() {
       }
 
       try {
-        const response = await axios.get(`/api/passanger/booking?bookingId=${bookingId}`);
+        const response = await axios.get(
+          `/api/passanger/booking?bookingId=${bookingId}`
+        );
         setBooking(response.data.data);
       } catch (error) {
         console.error("Error fetching booking:", error);
@@ -82,15 +84,27 @@ export default function BookingConfirmationPage() {
       </div>
 
       <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-6 w-6 text-green-500" />
-            <CardTitle className="text-2xl">Booking Confirmed!</CardTitle>
-          </div>
-          <CardDescription>
-            Your booking has been successfully confirmed
-          </CardDescription>
-        </CardHeader>
+        {booking.paymentStatus === "pending" ? (
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Clock4 className="h-6 w-6 text-yellow-500" />
+              <CardTitle className="text-2xl">Pending Booking!</CardTitle>
+            </div>
+            <CardDescription>
+              Your ticket will be confirmed after the verification of the payment.
+            </CardDescription>
+          </CardHeader>
+        ) : (
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-6 w-6 text-green-500" />
+              <CardTitle className="text-2xl">Booking Confirmed!</CardTitle>
+            </div>
+            <CardDescription>
+              Your booking has been successfully confirmed
+            </CardDescription>
+          </CardHeader>
+        )}
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-4">
@@ -107,9 +121,7 @@ export default function BookingConfirmationPage() {
               </div>
               <div className="flex items-center text-sm">
                 <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>
-                  {booking.passengerDetails.length} Passenger(s)
-                </span>
+                <span>{booking.passengerDetails.length} Passenger(s)</span>
               </div>
             </div>
             <div className="space-y-4">
@@ -117,16 +129,16 @@ export default function BookingConfirmationPage() {
                 <h4 className="mb-2 font-medium">Booking Details</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Booking ID:</span>
-                    <span className="font-medium">{booking._id}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="font-medium capitalize">{booking.status}</span>
+                    <span className="font-medium capitalize">
+                      {booking.status}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Payment Status:</span>
-                    <span className="font-medium capitalize">{booking.paymentStatus}</span>
+                    <span className="font-medium capitalize">
+                      {booking.paymentStatus}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Amount:</span>
@@ -138,10 +150,14 @@ export default function BookingConfirmationPage() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push("/search")}>
+          <Button variant="outline" onClick={() => router.push("/searchBus")}>
             Book Another Trip
           </Button>
-          <Button onClick={() => router.push(`/my-bookings?userId=${booking.bookedBy}`)}>
+          <Button
+            onClick={() =>
+              router.push(`/my-bookings?userId=${booking.bookedBy}`)
+            }
+          >
             View My Bookings
           </Button>
         </CardFooter>
@@ -167,7 +183,9 @@ export default function BookingConfirmationPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Gender:</span>
-                    <span className="font-medium capitalize">{passenger.gender}</span>
+                    <span className="font-medium capitalize">
+                      {passenger.gender}
+                    </span>
                   </div>
                 </div>
               </div>

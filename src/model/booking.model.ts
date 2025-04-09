@@ -10,7 +10,6 @@ interface PassengerDetails {
 export interface IBooking extends Document {
   pickupAddress: string;     
   bookedBy: mongoose.Types.ObjectId; 
-  trip: mongoose.Types.ObjectId;
   destination: mongoose.Types.ObjectId;
   time: string;
   passengerDetails: PassengerDetails[];
@@ -19,7 +18,8 @@ export interface IBooking extends Document {
   paymentStatus: "pending" | "completed" | "failed";
   createdAt: Date;
   updatedAt: Date;
-  
+  paymentProof: string;
+  paymentId: string;
   // DateTIme: DateTiming
 }
 
@@ -70,11 +70,6 @@ const bookingSchema: Schema<IBooking> = new Schema(
       ref: "UserModel", 
       required: [true, "User reference is required"]
     },
-    trip: {
-      type: Schema.Types.ObjectId,
-      ref: "TripModel",
-      required: [true, "Trip reference is required"]
-    },
     destination: {
       type: Schema.Types.ObjectId,
       ref: "TripModel",
@@ -94,6 +89,12 @@ const bookingSchema: Schema<IBooking> = new Schema(
       type: String,
       enum: ["pending", "completed", "failed"],
       default: "pending"
+    },
+    paymentProof: {
+      type: String,
+    },
+    paymentId: {
+      type: String,
     }
   },
   {
@@ -105,7 +106,7 @@ const bookingSchema: Schema<IBooking> = new Schema(
 
 // Indexes for better query performance
 bookingSchema.index({ bookedBy: 1 });
-bookingSchema.index({ trip: 1 });
+bookingSchema.index({ destination: 1 });
 bookingSchema.index({ status: 1 });
 bookingSchema.index({ createdAt: 1 });
 

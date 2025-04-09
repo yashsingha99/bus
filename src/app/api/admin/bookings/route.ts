@@ -7,49 +7,49 @@ export async function GET(request: NextRequest) {
   await dbConnection();
   
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search") || "";
-    const status = searchParams.get("status") || "";
-    const paymentStatus = searchParams.get("paymentStatus") || "";
-    const startDate = searchParams.get("startDate") || "";
-    const endDate = searchParams.get("endDate") || "";
+    // const searchParams = request.nextUrl.searchParams;
+    // const page = parseInt(searchParams.get("page") || "1");
+    // const limit = parseInt(searchParams.get("limit") || "10");
+    // const search = searchParams.get("search") || "";
+    // const status = searchParams.get("status") || "";
+    // const paymentStatus = searchParams.get("paymentStatus") || "";
+    // const startDate = searchParams.get("startDate") || "";
+    // const endDate = searchParams.get("endDate") || "";
     
-    const skip = (page - 1) * limit;
+    // const skip = (page - 1) * limit;
     
-    // Build query
-    const query: any = {};
+    // // Build query
+    // const query: any = {};
     
-    if (search) {
-      query.$or = [
-        { pickupAddress: { $regex: search, $options: "i" } }
-      ];
-    }
+    // if (search) {
+    //   query.$or = [
+    //     { pickupAddress: { $regex: search, $options: "i" } }
+    //   ];
+    // }
     
-    if (status) {
-      query.status = status;
-    }
+    // if (status) {
+    //   query.status = status;
+    // }
     
-    if (paymentStatus) {
-      query.paymentStatus = paymentStatus;
-    }
+    // if (paymentStatus) {
+    //   query.paymentStatus = paymentStatus;
+    // }
     
-    if (startDate && endDate) {
-      query.time = {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      };
-    }
+    // if (startDate && endDate) {
+    //   query.time = {
+    //     $gte: new Date(startDate),
+    //     $lte: new Date(endDate)
+    //   };
+    // }
     
     // Get bookings with pagination
+    let query: any = {};
     const bookings = await BookingModel.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
+      // .sort({ createdAt: -1 })
+      // .skip(skip)
+      // .limit(limit)
       .populate('bookedBy', 'fullName email phoneNumber')
-      .populate('trip', 'busNumber departureTime arrivalTime')
-      .populate('destination', 'name');
+      .populate('destination', 'destinationAddress Trips');
     
     // Get total count for pagination
     const total = await BookingModel.countDocuments(query);
@@ -58,12 +58,12 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         bookings,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit)
-        }
+        // pagination: {
+        //   total,
+        //   page,
+        //   limit,
+        //   totalPages: Math.ceil(total / limit)
+        // }
       }
     });
   } catch (error: any) {

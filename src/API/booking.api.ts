@@ -1,7 +1,7 @@
 import axios from "axios";
 import { IBooking } from "@/model/booking.model";
 
-const URL = process.env.VERCEL_URL || "http://localhost:3000";
+const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const bookingApi = {
   // Create new booking

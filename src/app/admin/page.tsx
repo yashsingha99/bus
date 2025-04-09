@@ -10,7 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import Link from "next/link";
-
+import AdminStats from "./_components/AdminStats";
+import { toast } from "sonner";
+import { FeedbackButton } from "@/components/ui/feedback-button";
+import { Component as Analytics } from "./_components/Analytics";
 interface DashboardData {
   totalUsers: number;
   totalTrips: number;
@@ -53,14 +56,40 @@ interface DashboardData {
     revenue: number;
     count: number;
   }>;
+  revenue: {
+    totalRevenue: number;
+    dayByRevenue: Array<{
+      _id: string;
+      revenue: number;
+    }>;
+  };
+  dailyUserRegistrations: Array<{
+    _id: string;
+    count: number;
+  }>;
+}
+
+interface AdminStats {
+  totalUsers: number;
+  totalTrips: number;
+  totalBookings: number;
+  revenue: number;
 }
 
 export default function AdminDashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    totalTrips: 0,
+    totalBookings: 0,
+    revenue: 0,
+  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -68,6 +97,8 @@ export default function AdminDashboard() {
 
       try {
         const response = await axios.get("/api/admin/dashboard");
+        // console.log(response.data.data);
+        
         setDashboardData(response.data.data);
       } catch (err) {
         setError("Failed to fetch dashboard data. Please try again later.");
@@ -79,6 +110,23 @@ export default function AdminDashboard() {
 
     fetchDashboardData();
   }, [isLoaded, user]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get("/api/admin/stats");
+        setStats(response.data.data);
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        toast.error("Failed to fetch statistics");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -114,7 +162,9 @@ export default function AdminDashboard() {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Please sign in to access the admin dashboard</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            Please sign in to access the admin dashboard
+          </h1>
           <Button onClick={() => router.push("/sign-in")}>Sign In</Button>
         </div>
       </div>
@@ -146,57 +196,38 @@ export default function AdminDashboard() {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/admin/users">Users</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin/trips">Trips</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin/bookings">Bookings</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin/refunds">Refunds</Link>
-          </Button>
+          <Link href="/admin/users">
+            <FeedbackButton>Users</FeedbackButton>
+          </Link>
+          <Link href="/admin/trips">
+            <FeedbackButton>Trips</FeedbackButton>
+          </Link>
+          <Link href="/admin/bookings">
+            <FeedbackButton>Bookings</FeedbackButton>
+          </Link>
+          <Link href="/admin/refunds">
+            <FeedbackButton>Refunds</FeedbackButton>
+          </Link>
         </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.totalUsers}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Trips</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.totalTrips}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData.totalBookings}</div>
-          </CardContent>
-        </Card>
       </div>
 
       <Tabs defaultValue="overview" className="mb-6">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="bookings">Recent Bookings</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
+          <AdminStats
+            stats={{
+              totalUsers: dashboardData?.totalUsers || 0,
+              totalTrips: dashboardData?.totalTrips || 0,
+              totalBookings: dashboardData?.totalBookings || 0,
+              revenue: dashboardData?.revenue.totalRevenue || 0,
+            }}
+            isLoading={loading}
+          />
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -206,7 +237,9 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   {dashboardData.bookingStats.map((stat) => (
                     <div key={stat._id} className="flex justify-between">
-                      <span className="capitalize">{stat._id || "Unknown"}</span>
+                      <span className="capitalize">
+                        {stat._id || "Unknown"}
+                      </span>
                       <span className="font-medium">{stat.count}</span>
                     </div>
                   ))}
@@ -221,7 +254,9 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   {dashboardData.paymentStats.map((stat) => (
                     <div key={stat._id} className="flex justify-between">
-                      <span className="capitalize">{stat._id || "Unknown"}</span>
+                      <span className="capitalize">
+                        {stat._id || "Unknown"}
+                      </span>
                       <span className="font-medium">{stat.count}</span>
                     </div>
                   ))}
@@ -230,82 +265,110 @@ export default function AdminDashboard() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="bookings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Bookings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Booking ID</th>
-                      <th className="text-left py-2">User</th>
-                      <th className="text-left py-2">Destination</th>
-                      <th className="text-left py-2">Date</th>
-                      <th className="text-left py-2">Status</th>
-                      <th className="text-left py-2">Payment</th>
-                      <th className="text-left py-2">Amount</th>
-                      <th className="text-left py-2">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboardData.recentBookings.map((booking) => (
-                      <tr key={booking._id} className="border-b">
-                        <td className="py-2">{booking._id.substring(0, 8)}...</td>
-                        <td className="py-2">{booking.bookedBy.fullName}</td>
-                        <td className="py-2">{booking.destination.name}</td>
-                        <td className="py-2">
-                          {/* {format(new Date(booking.time), "MMM d, yyyy")} */}
-                        </td>
-                        <td className="py-2">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                        <td className="py-2">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getPaymentStatusColor(booking.paymentStatus)}`}>
-                            {booking.paymentStatus}
-                          </span>
-                        </td>
-                        <td className="py-2">₹{booking.totalAmount}</td>
-                        <td className="py-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => router.push(`/admin/bookings/${booking._id}`)}
-                          >
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="analytics">
+          <Analytics
+            dayByRevenue={dashboardData?.revenue.dayByRevenue}
+            dailyUserRegistrations={dashboardData?.dailyUserRegistrations}
+          />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Booking Growth
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+20.1%</div>
+                <p className="text-xs text-muted-foreground">
+                  +180.1% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Revenue Growth
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+15.3%</div>
+                <p className="text-xs text-muted-foreground">
+                  +120.1% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  User Growth
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+12.5%</div>
+                <p className="text-xs text-muted-foreground">
+                  +90.1% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Trip Growth
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+8.2%</div>
+                <p className="text-xs text-muted-foreground">
+                  +60.1% from last month
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          
         </TabsContent>
-        <TabsContent value="stats">
-          <Card>
-            <CardHeader>
-              <CardTitle>Revenue (Last 7 Days)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {dashboardData.revenueData.map((day) => (
-                  <div key={day._id} className="flex justify-between items-center">
-                    {/* <span>{format(new Date(day._id), "MMM d, yyyy")}</span> */}
-                    <div className="flex gap-4">
-                      <span className="font-medium">{day.count} bookings</span>
-                      <span className="font-bold">₹{day.revenue}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="reports">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Report</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Download monthly booking and revenue reports
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>User Report</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Download user registration and activity reports
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Trip Report</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Download trip performance and occupancy reports
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue Report</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Download detailed revenue and payment reports
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

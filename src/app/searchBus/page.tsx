@@ -9,6 +9,7 @@ import {
   Clock,
   Info,
   MapPin,
+  Plus,
   Star,
   Trash2,
   User,
@@ -38,13 +39,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SelectGroup } from "@radix-ui/react-select";
+
 import {
   calculateTotalPrice,
   applyPromoCode,
   formatPrice,
   getPriceFromTripData,
 } from "@/utils/priceUtils";
-import { Skeleton } from "@/components/ui/skeleton";
 import { createOrderId } from "@/API/orderId";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
@@ -52,6 +53,8 @@ import Script from "next/script";
 import Razorpay from "razorpay";
 import { bookingApi } from "@/API/booking.api";
 import { toast, Toaster } from "sonner";
+import LoadingSkeleton from "./_components/loading-skeleton";
+import PaymentDrawer from "./_components/paymentDrawer";
 // Mock data for buses
 const buses = [
   {
@@ -124,10 +127,10 @@ export default function BusDetailsPage() {
   const [openPassenger, setOpenPassenger] = useState(-1);
   const [selectedPassenger, setSelectedPassenger] = useState([1]);
   const [passengerDetails, setPassengerDetails] = useState([
-    { name: "", Ph_no: "", gender: "" },
+    { name: "", phone: "", gender: "" },
   ]);
   const [error, setError] = useState([
-    { name: false, Ph_no: false, gender: false },
+    { name: false, phone: false, gender: false },
   ]);
   const [errorDateTime, setErrorDateTime] = useState({
     date: false,
@@ -140,6 +143,8 @@ export default function BusDetailsPage() {
   const [tripData, setTripData] = useState<ITrip>();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [openManualPaymentDrawer, setOpenManualPaymentDrawer] = useState(false);
+  const [paymentProof, setPaymentProof] = useState<File>();
   const { user } = useUser();
   const userData = {
     fullName: user?.fullName,
@@ -147,9 +152,78 @@ export default function BusDetailsPage() {
     phoneNumber: user?.primaryPhoneNumber?.phoneNumber || "",
     clerkId: user?.id,
   };
+
+  //--------------------------- URL -----------------------------
   const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
-  const handlePayment = async () => {
+  //--------------------------- HANDLE PAYMENT BY MANUAL -----------------------------
+  const handlePaymentByManual = async () => {
+    setIsLoading(true);
+    try {
+      let shouldAdd = isValidateInfo();
+      let shouldProcced = isValidateDateTime();
+
+      if (!shouldAdd || !shouldProcced || !paymentProof) {
+        alert("Please fill all required fields correctly");
+        setIsLoading(false);
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', paymentProof);
+      
+      const uploadResponse = await axios.post(`${URL}/api/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (!uploadResponse.data.url) {
+        throw new Error("Failed to upload payment proof");
+      }
+      
+      const paymentProofUrl = uploadResponse.data.url;
+      
+      // Now create the booking with the payment proof URL
+      const bookingResponse = await axios.post(`${URL}/api/passanger/bookingManual`, {
+        pickupAddress: pickup || "Default Pickup",
+        bookedBy: userData.clerkId,
+        destination: tripId,
+        time: selectedTime,
+        passengerDetails: passengerDetails,
+        totalAmount: finalPrice,
+        status: "pending",
+        paymentStatus: "pending",
+        paymentProof: paymentProofUrl,
+      });
+
+      const booking = bookingResponse.data.data;
+
+      if (booking && booking._id) {
+        toast("Booking Successful!", {
+          description: "Your booking has been confirmed",
+          action: {
+            label: "View Booking",
+            onClick: () =>
+              router.push(`/booking-confirmation?bookingId=${booking._id}`),
+          },
+        });
+        router.push(`/booking-confirmation?bookingId=${booking._id}`);
+      } else {
+        throw new Error("Failed to create booking");
+      }
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      toast("Payment Failed!", {
+        description: "Please try again or contact support.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //--------------------------- HANDLE PAYMENT BY RAZORPAY -----------------------------
+  const handlePaymentByRazorpay = async () => {
     setIsLoading(true);
     try {
       // Validate passenger details and date/time
@@ -165,7 +239,7 @@ export default function BusDetailsPage() {
       // Format passenger details for the booking
       const formattedPassengerDetails = passengerDetails.map((passenger) => ({
         name: passenger.name,
-        phone: passenger.Ph_no,
+        phone: passenger.phone,
         gender: passenger.gender.toLowerCase() as "male" | "female" | "other",
       }));
 
@@ -187,19 +261,20 @@ export default function BusDetailsPage() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
+            console.log("Payment Response:", paymentResponse, "response", response);
 
             const bookingResponse = await axios.post(
               `${URL}/api/passanger/booking`,
               {
                 pickupAddress: pickup || "Default Pickup",
                 bookedBy: userData.clerkId,
-                trip: tripId,
                 destination: tripId,
                 time: selectedTime,
                 passengerDetails: formattedPassengerDetails,
                 totalAmount: finalPrice,
                 status: "pending",
                 paymentStatus: "pending",
+                paymentId: response.razorpay_payment_id,
               }
             );
 
@@ -256,6 +331,7 @@ export default function BusDetailsPage() {
     }
   };
 
+  //--------------------------- FETCH TRIP DATA -----------------------------
   const fetchTrips = async () => {
     try {
       setIsLoading(true);
@@ -269,10 +345,12 @@ export default function BusDetailsPage() {
     }
   };
 
+  //--------------------------- FETCH TRIP DATA BY PAGE LOAD  -----------------------------
   useEffect(() => {
     fetchTrips();
   }, []);
 
+  //------------- SET PRICE BY DATE AND TIME OF TRIP  -----------------------------
   useEffect(() => {
     if (tripData && selectedDate && selectedTime) {
       const newPrice = getPriceFromTripData(
@@ -284,10 +362,12 @@ export default function BusDetailsPage() {
     }
   }, [tripData, selectedDate, selectedTime]);
 
+  //--------------------------- CALCULATE FINAL PRICE -----------------------------
   const finalPrice = useMemo(() => {
     return calculateTotalPrice(price, selectedPassenger.length, discount);
   }, [price, selectedPassenger.length, discount]);
 
+  //--------------------------- APPLY PROMO CODE -----------------------------
   const handleApplyPromoCode = () => {
     if (!promoCode) {
       setPromoError("Please enter a promo code");
@@ -303,25 +383,28 @@ export default function BusDetailsPage() {
     }
   };
 
+  //--------------------------- HANDLE DROP DOWN -----------------------------
   const handleDropDown = (index: number) => {
     setOpenPassenger((prev) => (prev === index ? -1 : index));
   };
 
+  //--------------------------- VALIDATE PASSENGER DETAILS -----------------------------
   const isValidateInfo = () => {
-    const newError = passengerDetails.map(({ name, Ph_no, gender }) => ({
+    const newError = passengerDetails.map(({ name, phone, gender }) => ({
       name: name === "",
-      Ph_no: Ph_no.length !== 10,
+      phone: phone.length !== 10,
       gender: gender === "",
     }));
 
     setError(newError);
 
     const shouldAdd = newError.every(
-      (err) => !err.name && !err.Ph_no && !err.gender
+      (err) => !err.name && !err.phone && !err.gender
     );
     return shouldAdd;
   };
 
+  //--------------------------- VALIDATE DATE AND TIME -----------------------------
   const isValidateDateTime = () => {
     let shouldProcced = true;
     const error = errorDateTime;
@@ -337,6 +420,7 @@ export default function BusDetailsPage() {
     return shouldProcced;
   };
 
+  //--------------------------- HANDLE ADD PASSENGER -----------------------------
   const handleAddPassenger = () => {
     let shouldAdd = isValidateInfo();
 
@@ -344,15 +428,16 @@ export default function BusDetailsPage() {
       setSelectedPassenger((prev) => [...prev, prev.length + 1]);
       setPassengerDetails((prev) => [
         ...prev,
-        { name: "", Ph_no: "", gender: "" },
+        { name: "", phone: "", gender: "" },
       ]);
       setError((prev) => [
         ...prev,
-        { name: false, Ph_no: false, gender: false },
+        { name: false, phone: false, gender: false },
       ]);
     }
   };
 
+  //--------------------------- UPDATE PASSENGER DETAILS -----------------------------
   const updatePassengerDetail = (
     index: number,
     field: string,
@@ -363,6 +448,7 @@ export default function BusDetailsPage() {
     setPassengerDetails(updatedDetails);
   };
 
+  //--------------------------- HANDLE REMOVE PASSENGER -----------------------------
   const handleRemovePassenger = (index: number) => {
     if (passengerDetails.length > 1) {
       const newSelectedPassenger = [...selectedPassenger];
@@ -381,6 +467,7 @@ export default function BusDetailsPage() {
     }
   };
 
+  //--------------------------- PROCEED TO PAYMENT -----------------------------
   const proceedToPayment = () => {
     let shouldAdd = isValidateInfo();
     let shouldProcced = isValidateDateTime();
@@ -389,14 +476,16 @@ export default function BusDetailsPage() {
       // router.push(
       //   `/payment?busId=${tripId}&seats=${selectedPassenger.join(",")}&amount=${finalPrice}`
       // );
-      handlePayment();
+      handlePaymentByRazorpay();
     }
   };
 
+  //--------------------------- LOADING SKELETON -----------------------------
   if (isLoading) {
     return <LoadingSkeleton />;
   }
 
+  //--------------------------- BUS NOT FOUND -----------------------------
   if (!tripData) {
     return (
       <div className="container mx-auto py-10">
@@ -416,6 +505,8 @@ export default function BusDetailsPage() {
       </div>
     );
   }
+
+  //--------------------------- RETURN JSX -----------------------------
 
   return (
     <div className="container mx-auto py-6">
@@ -603,22 +694,22 @@ export default function BusDetailsPage() {
                             )}
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`Ph_no-${index}`}>
+                            <Label htmlFor={`phone-${index}`}>
                               Phone Number
                             </Label>
                             <Input
-                              id={`Ph_no-${index}`}
-                              value={passengerDetails[index]?.Ph_no || ""}
+                              id={`phone-${index}`}
+                              value={passengerDetails[index]?.phone || ""}
                               onChange={(e) =>
                                 updatePassengerDetail(
                                   index,
-                                  "Ph_no",
+                                  "phone",
                                   e.target.value
                                 )
                               }
                               placeholder="1234567890"
                             />
-                            {error[index]?.Ph_no && (
+                            {error[index]?.phone && (
                               <p className="text-red-600 text-sm">
                                 Phone Number must be 10 digits
                               </p>
@@ -652,7 +743,7 @@ export default function BusDetailsPage() {
                       </div>
                     ))}
                     <FeedbackButton onClick={handleAddPassenger}>
-                      Add Passenger
+                      Add Another Passenger
                     </FeedbackButton>
                   </TabsContent>
                   <TabsContent value="bus-info" className="space-y-4 pt-4">
@@ -712,7 +803,7 @@ export default function BusDetailsPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Seats </span>
-                      <span>X {selectedPassenger.length}</span>
+                      <span> {selectedPassenger.length}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
@@ -740,10 +831,12 @@ export default function BusDetailsPage() {
                 <p>First Select your Exam Date and Time</p>
               </CardContent>
             )}
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-2">
               <FeedbackButton
                 className="w-full"
-                onClick={proceedToPayment}
+                onClick={
+                  proceedToPayment
+                }
                 disabled={
                   selectedPassenger.length === 0 ||
                   selectedDate === "" ||
@@ -754,6 +847,15 @@ export default function BusDetailsPage() {
                   ? "Select Seats"
                   : "Proceed to Payment"}
               </FeedbackButton>
+              <PaymentDrawer
+                isDisabled={
+                  selectedPassenger.length === 0 ||
+                  selectedDate === "" ||
+                  selectedTime === ""
+                }
+                handlePaymentByManual={handlePaymentByManual}
+                setPaymentProof={setPaymentProof}
+              />
             </CardFooter>
           </Card>
 
@@ -769,73 +871,6 @@ export default function BusDetailsPage() {
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <Skeleton className="h-10 w-32" />
-      </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-64" />
-              <div className="flex flex-wrap gap-4">
-                <Skeleton className="h-10 w-[90%]" />
-                <Skeleton className="h-10 w-[90%]" />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-[1fr_350px]">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Skeleton className="h-32 w-full" />
-                <Skeleton className="h-32 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <Card className="sticky top-6">
-            <CardHeader>
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-10 w-full" />
-            </CardFooter>
-          </Card>
-
-          <div className="mt-4">
-            <Skeleton className="h-32 w-full" />
           </div>
         </div>
       </div>

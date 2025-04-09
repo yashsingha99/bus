@@ -15,11 +15,11 @@ export async function POST(request: Request) {
     const requiredFields = [
       'pickupAddress', 
       'bookedBy', // This will be the Clerk ID
-      'trip', 
       'destination', 
       'time', 
       'passengerDetails',
-      'totalAmount'
+      'totalAmount',
+      'paymentId'
     ];
     
     const missingFields = requiredFields.filter(field => !bookingData[field]);
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     }
     
     // Validate trip exists
-    const trip = await TripModel.findById(bookingData.trip);
+    const trip = await TripModel.findById(bookingData.destination);
     if (!trip) {
       return NextResponse.json(
         { message: "Trip not found" },
@@ -109,7 +109,6 @@ export async function GET(request: Request) {
     // Get booking by ID
     if (bookingId) {
       const booking = await BookingModel.findById(bookingId)
-        .populate("trip")
         .populate("destination")
         .populate("bookedBy", "name email");
       
@@ -139,7 +138,6 @@ export async function GET(request: Request) {
         );
       }
       const bookings = await BookingModel.find({ bookedBy: user._id })
-        .populate("trip")
         .populate("destination")
         .sort({ createdAt: -1 });
       

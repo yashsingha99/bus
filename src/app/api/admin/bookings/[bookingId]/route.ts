@@ -24,7 +24,6 @@ export async function GET(
     // Get booking details
     const booking = await BookingModel.findById(bookingId)
       .populate('bookedBy', 'fullName email phoneNumber')
-      .populate('trip', 'busNumber departureTime arrivalTime')
       .populate('destination', 'name');
     
     if (!booking) {

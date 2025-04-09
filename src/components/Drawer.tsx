@@ -24,6 +24,14 @@ const Drawer = () => {
     { page: "News", navigate: "/" },
     { page: "About", navigate: "/" },
   ]
+
+  const adminNavigation = [
+    { page: "Dashboard", navigate: "/admin" },
+    { page: "Trips", navigate: "/admin/trips" },
+    { page: "Users", navigate: "/admin/users" },
+    { page: "Reserved Users", navigate: "/admin/reserved-users" },
+    { page: "Settings", navigate: "/admin/settings" },
+  ]
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);   
