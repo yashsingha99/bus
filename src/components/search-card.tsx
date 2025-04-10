@@ -32,6 +32,14 @@ interface DataSchema {
   destination: string;
 }
 
+export const pickupLocations = [
+    "GLA University (GLAU)",
+    "Jait (JAIT)",
+    "Krishana Vally (KV)",
+    "Chattikara  (CK)",
+    "Goverdhan Choraha (GOV CH)",
+  ];
+
 function SearchCardSkeleton() {
   return (
     <div className="flex items-center justify-center">
@@ -64,6 +72,7 @@ function SearchCard() {
     pickUp: "",
     destination: "",
   });
+  const [isSearching, setIsSearching] = useState(false);
 
   const [oneWayData, setOneWayData] = useState<DataSchema>({
     pickUp: "",
@@ -73,13 +82,7 @@ function SearchCard() {
   const [destinationData, setDestinationData] = useState<
     { _id: string; destinationAddress: string }[] | null
   >(null);
-  const pickupLocations = [
-    "GLA University (GLAU)",
-    "Jait (JAIT)",
-    "Krishana Vally (KV)",
-    "Chattikara  (CK)",
-    "Goverdhan Choraha (GOV CH)",
-  ];
+ 
   function handleChangeData(
     stateLabel: string,
     dataLabel: string,
@@ -93,8 +96,11 @@ function SearchCard() {
   }
   const router = useRouter();
   const handleNavigate = () => {
-    router.push(`/searchBus?pickup=${roundTripData.pickUp}&destination=${roundTripData.destination}`);
-  }
+    setIsSearching(true);
+    router.push(
+      `/searchBus/source?pickup=${roundTripData.pickUp}&destination=${roundTripData.destination}`
+    );
+  };
 
   const fetchTripsName = async () => {
     try {
@@ -151,7 +157,9 @@ function SearchCard() {
                       <SelectGroup>
                         <SelectLabel>Mathura</SelectLabel>
                         {pickupLocations?.map((pickUp) => (
-                          <SelectItem key={pickUp} value={pickUp}>{pickUp}</SelectItem>
+                          <SelectItem key={pickUp} value={pickUp}>
+                            {pickUp}
+                          </SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
@@ -178,7 +186,7 @@ function SearchCard() {
                   </Select>
                 </div>
                 <FeedbackButton onClick={handleNavigate} className="w-full">
-                  Search Buses
+                  {isSearching ? "Searching..." : "Search Buses"}
                   <Search className="ml-2 h-4 w-4" />
                 </FeedbackButton>
               </div>

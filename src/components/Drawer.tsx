@@ -17,6 +17,8 @@ const Drawer = () => {
   const { navigate } = useNavigation();
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk()
+  const userDataString = localStorage.getItem("user")
+  const userData = userDataString ? JSON.parse(userDataString) : null;
   const navigation = [
     { page: "Home", navigate: "/" },
     { page: "Book", navigate: "book" },
@@ -82,6 +84,15 @@ const Drawer = () => {
                 {link.page}
               </button>
             ))}
+            {userData && userData.role !== "ADMIN" && adminNavigation.map((link) => (
+              <button
+                key={link.page}
+                onClick={() => navigate(link.navigate)}
+                className="block font-medium hover:text-white/80 text-left w-full"
+              >
+                {link.page}
+              </button>
+            ))}
           </nav>
 
           <div className="absolute bottom-8 left-8 right-8">
@@ -89,7 +100,7 @@ const Drawer = () => {
               <div className="relative flex flex-wrap w-full gap-4">
                 {isSignedIn ? (
                   <>
-                    <div className="w-full mb-4 p-4 bg-[#04051b] border border-[#545CFF] rounded-xl">
+                    {/* <div className="w-full mb-4 p-4 bg-[#04051b] border border-[#545CFF] rounded-xl">
                       <div className="flex items-center gap-3">
                         {user?.imageUrl ? (
                           <img 
@@ -109,7 +120,7 @@ const Drawer = () => {
                           <p className="text-white/70 text-sm">{user?.primaryEmailAddress?.emailAddress}</p>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                     <FeedbackButton
                       onClick={handleSignOut} 
                       className="bg-[#04051b] cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-xl lg:text-3xl text-xl"

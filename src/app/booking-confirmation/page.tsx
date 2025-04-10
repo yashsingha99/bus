@@ -37,6 +37,8 @@ export default function BookingConfirmationPage() {
         const response = await axios.get(
           `/api/passanger/booking?bookingId=${bookingId}`
         );
+        console.log(response);
+        
         setBooking(response.data.data);
       } catch (error) {
         console.error("Error fetching booking:", error);

@@ -133,14 +133,14 @@ export default function TicketsPage() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="text-xl">
-                  {ticket.destination.name}
+                  {ticket?.destination?.name}
                 </CardTitle>
                 <div className="flex gap-2">
-                  <Badge className={getStatusColor(ticket.status)}>
+                  <Badge className={getStatusColor(ticket?.status)}>
                     {ticket.status}
                   </Badge>
-                  <Badge className={getPaymentStatusColor(ticket.paymentStatus)}>
-                    {ticket.paymentStatus}
+                  <Badge className={getPaymentStatusColor(ticket?.paymentStatus)}>
+                    {ticket?.paymentStatus}
                   </Badge>
                 </div>
               </div>
@@ -149,12 +149,12 @@ export default function TicketsPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Bus Number:</span>
-                  <span className="font-medium">{ticket.trip.busNumber}</span>
+                  <span className="font-medium">{ticket?.trip?.busNumber}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date:</span>
                   <span className="font-medium">
-                    {ticket.time}
+                    {ticket?.time}
                   </span>
                 </div>
                 <div className="flex justify-between">
