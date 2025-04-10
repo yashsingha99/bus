@@ -33,6 +33,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function Hero() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearch, setIsSearch] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const isMobile = useScreenSize();
 
@@ -65,17 +66,21 @@ function Hero() {
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <Link href="/searchBus">
-                  <FeedbackButton className="w-full">
-                    Book Your Seat
+                  <FeedbackButton  onClick={() => setIsSearch(true)} className="w-full">
+                    {!isSearch ? "Book Your Seat" : "Executing..."}
                     {/* <Search className="ml-2 h-4 w-4" /> */}
-                    <MoveRight className="ml-2 h-4 w-4"/>
+                    <MoveRight className="ml-2 h-4 w-4" />
                   </FeedbackButton>
                 </Link>
-                <Link href="/register">
-                  <FeedbackButton variant="outline" className="w-full">
-                    Register as Bus Owner
+                {/* <Link href="/register">
+                  <FeedbackButton
+                    onClick={() => setIsSearch(true)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {isSearch ? "Executing" : "Register as Bus Owner"}
                   </FeedbackButton>
-                </Link>
+                </Link> */}
               </div>
             </div>
             <SearchCard />
