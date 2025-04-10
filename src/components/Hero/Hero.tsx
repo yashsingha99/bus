@@ -1,41 +1,54 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-// import DestSearchForm from "./DestSearchForm";
-import { motion } from "framer-motion";
-import SearchCard from "../search-card";
-import useScreenSize from "@/hooks/use-screen-size";
 import Link from "next/link";
-import { FeedbackButton } from "../ui/feedback-button";
 import {
-  Bus,
   Clock,
   CreditCard,
-  MapPin,
   Search,
-  Shield,
-  Star,
   Users,
-  CheckCircle2,
   MoveRight,
 } from "lucide-react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "../ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import SearchCard from "../search-card";
+import { FeedbackButton } from "../ui/feedback-button";
+
+function HeroSkeleton() {
+  return (
+    <main className="flex-1">
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
+        <div className="container px-4 md:px-6">
+          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+            <div className="flex flex-col justify-center space-y-4">
+              <div className="space-y-2">
+                <Skeleton className="h-12 w-3/4" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-5/6" />
+              </div>
+              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-[400px] w-full rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 function Hero() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearch, setIsSearch] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const isMobile = useScreenSize();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -66,21 +79,11 @@ function Hero() {
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <Link href="/searchBus">
-                  <FeedbackButton  onClick={() => setIsSearch(true)} className="w-full">
+                  <FeedbackButton onClick={() => setIsSearch(true)} className="w-full">
                     {!isSearch ? "Book Your Seat" : "Executing..."}
-                    {/* <Search className="ml-2 h-4 w-4" /> */}
                     <MoveRight className="ml-2 h-4 w-4" />
                   </FeedbackButton>
                 </Link>
-                {/* <Link href="/register">
-                  <FeedbackButton
-                    onClick={() => setIsSearch(true)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {isSearch ? "Executing" : "Register as Bus Owner"}
-                  </FeedbackButton>
-                </Link> */}
               </div>
             </div>
             <SearchCard />
@@ -96,8 +99,7 @@ function Hero() {
                 Why Choose Us
               </h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Experience the best bus booking platform with our unique
-                features
+                Experience the best bus booking platform with our unique features
               </p>
             </div>
           </div>
@@ -148,7 +150,6 @@ function Hero() {
         </div>
       </section>
 
-      {/* How It Works Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -202,7 +203,6 @@ function Hero() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -215,7 +215,7 @@ function Hero() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Link href="/search">
+              <Link href="/searchBus">
                 <FeedbackButton className="w-full">
                   Book Now
                   <Search className="ml-2 h-4 w-4" />
@@ -226,95 +226,6 @@ function Hero() {
                   Learn More
                 </FeedbackButton>
               </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-function HeroSkeleton() {
-  return (
-    <main className="flex-1">
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-            <div className="flex flex-col justify-center space-y-4">
-              <div className="space-y-2">
-                <Skeleton className="h-12 w-3/4" />
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-5/6" />
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </div>
-            <div className="space-y-4">
-              <Skeleton className="h-[400px] w-full rounded-lg" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-48 mx-auto" />
-              <Skeleton className="h-6 w-96 mx-auto" />
-            </div>
-          </div>
-          <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-3 lg:gap-12">
-            {[1, 2, 3].map((i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <Skeleton className="h-6 w-32 mt-4" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-20 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-48 mx-auto" />
-              <Skeleton className="h-6 w-96 mx-auto" />
-            </div>
-          </div>
-          <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-4 lg:gap-12">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center space-y-2 text-center"
-              >
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-48 mx-auto" />
-              <Skeleton className="h-6 w-96 mx-auto" />
-            </div>
-            <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Skeleton className="h-10 w-32" />
-              <Skeleton className="h-10 w-32" />
             </div>
           </div>
         </div>

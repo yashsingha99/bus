@@ -1,75 +1,62 @@
+import { NextResponse } from "next/server";
 import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
-import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 
-// Get all bookings with pagination
-export async function GET(request: NextRequest) {
-  await dbConnection();
-  
+interface QueryParams {
+  page?: string;
+  limit?: string;
+  status?: string;
+  search?: string;
+}
+
+export async function GET(request: Request) {
   try {
-    // const searchParams = request.nextUrl.searchParams;
-    // const page = parseInt(searchParams.get("page") || "1");
-    // const limit = parseInt(searchParams.get("limit") || "10");
-    // const search = searchParams.get("search") || "";
-    // const status = searchParams.get("status") || "";
-    // const paymentStatus = searchParams.get("paymentStatus") || "";
-    // const startDate = searchParams.get("startDate") || "";
-    // const endDate = searchParams.get("endDate") || "";
+    await dbConnection();
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const status = searchParams.get("status");
+    const search = searchParams.get("search");
+
+    const query: Record<string, unknown> = {};
     
-    // const skip = (page - 1) * limit;
-    
-    // // Build query
-    // const query: any = {};
-    
-    // if (search) {
-    //   query.$or = [
-    //     { pickupAddress: { $regex: search, $options: "i" } }
-    //   ];
-    // }
-    
-    // if (status) {
-    //   query.status = status;
-    // }
-    
-    // if (paymentStatus) {
-    //   query.paymentStatus = paymentStatus;
-    // }
-    
-    // if (startDate && endDate) {
-    //   query.time = {
-    //     $gte: new Date(startDate),
-    //     $lte: new Date(endDate)
-    //   };
-    // }
-    
-    // Get bookings with pagination
-    let query: any = {};
+    if (status) {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { pickupAddress: { $regex: search, $options: "i" } },
+        { "passengerDetails.name": { $regex: search, $options: "i" } },
+        { "passengerDetails.phone": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
     const bookings = await BookingModel.find(query)
-      // .sort({ createdAt: -1 })
-      // .skip(skip)
-      // .limit(limit)
-      .populate('bookedBy', 'fullName email phoneNumber')
-      .populate('destination', 'destinationAddress Trips');
-    
-    // Get total count for pagination
-    const total = await BookingModel.countDocuments(query);
-    
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 })
+      .populate("bookedBy", "name email phoneNumber")
+      .populate("destination", "tripName source destination");
+
+    const totalBookings = await BookingModel.countDocuments(query);
+
     return NextResponse.json({
       success: true,
-      data: {
-        bookings,
-        // pagination: {
-        //   total,
-        //   page,
-        //   limit,
-        //   totalPages: Math.ceil(total / limit)
-        // }
-      }
+      data: bookings,
+      pagination: {
+        total: totalBookings,
+        page,
+        limit,
+        totalPages: Math.ceil(totalBookings / limit),
+      },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error fetching bookings:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch bookings", error: error.message },
+      { success: false, error: "Failed to fetch bookings" },
       { status: 500 }
     );
   }
@@ -86,7 +73,6 @@ export async function POST(request: Request) {
     const requiredFields = [
       'pickupAddress', 
       'bookedBy', 
-      'trip', 
       'destination', 
       'time', 
       'passengerDetails',
@@ -114,7 +100,7 @@ export async function POST(request: Request) {
     const newBooking = await BookingModel.create({
       ...bookingData,
       status: "confirmed",
-      paymentStatus: "paid"
+      paymentStatus: "completed"
     });
     
     return NextResponse.json({
@@ -122,10 +108,10 @@ export async function POST(request: Request) {
       message: "Booking created successfully",
       data: newBooking
     }, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating booking:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to create booking", error: error.message },
+      { success: false, message: "Failed to create booking" },
       { status: 500 }
     );
   }

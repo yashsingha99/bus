@@ -27,7 +27,6 @@ import { Toaster } from "sonner";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
 
 //--------------------------- URL -----------------------------
-const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export default function BusSearchPage() {
   const router = useRouter();

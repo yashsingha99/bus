@@ -19,10 +19,12 @@ import { Copy } from "lucide-react";
 import { useState } from "react";
 
 export default function PaymentDrawer({
+  amount,
   setPaymentProof,
   isDisabled,
   handlePaymentByManual,
 }: {
+  amount: number;
   setPaymentProof: (data: File) => void;
   isDisabled: boolean;
   handlePaymentByManual: () => void;
@@ -47,6 +49,11 @@ export default function PaymentDrawer({
     }
   };
 
+  const upiPay = (amount: number) => {
+  const upiURL = `upi://pay?pa=9756144688@ptsbi&pn=YourStore&am=${amount}&cu=INR`;
+  window.location.href = upiURL;
+};
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -66,7 +73,7 @@ export default function PaymentDrawer({
             <DrawerDescription>
               Upload your payment proof to complete the booking
             </DrawerDescription>
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <Label>UPI ID</Label>
               <div className="flex items-center gap-2">
                 <Input
@@ -85,7 +92,8 @@ export default function PaymentDrawer({
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
+            </div> */}
+            <FeedbackButton onClick={() => upiPay(amount)}>Proceed to Payment</FeedbackButton>
           </DrawerHeader>
           <div className="p-4 pb-0">
             <FileUpload 

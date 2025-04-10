@@ -96,9 +96,6 @@ export default function BusDetailsPage() {
 
   let isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
 
-  //--------------------------- URL -----------------------------
-  const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
   //--------------------------------------- HANDLE PAYMENT BY MANUAL -----------------------------------
   const handlePaymentByManual = async () => {
     setIsLoading(true);
@@ -115,7 +112,7 @@ export default function BusDetailsPage() {
       const formData = new FormData();
       formData.append("file", paymentProof);
 
-      const uploadResponse = await axios.post(`${URL}/api/upload`, formData, {
+      const uploadResponse = await axios.post(`/api/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -129,7 +126,7 @@ export default function BusDetailsPage() {
 
       // Now create the booking with the payment proof URL
       const bookingResponse = await axios.post(
-        `${URL}/api/passanger/bookingManual`,
+        `/api/passanger/bookingManual`,
         {
           pickupAddress: pickup || selectedPickup,
           bookedBy: userData.clerkId,
@@ -202,7 +199,7 @@ export default function BusDetailsPage() {
         order_id: orderId,
         handler: async function (response: any) {
           try {
-            const paymentResponse = await axios.post(`${URL}/api/verifyOrder`, {
+            const paymentResponse = await axios.post(`/api/verifyOrder`, {
               razorpay_order_id: orderId,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
@@ -215,7 +212,7 @@ export default function BusDetailsPage() {
             );
 
             const bookingResponse = await axios.post(
-              `${URL}/api/passanger/booking`,
+              `/api/passanger/booking`,
               {
                 pickupAddress: pickup || selectedPickup,
                 bookedBy: userData.clerkId,
@@ -232,7 +229,7 @@ export default function BusDetailsPage() {
             const booking = bookingResponse.data.data;
 
             if (booking && booking._id) {
-              await axios.put(`${URL}/api/passanger/booking/payment`, {
+                await axios.put(`/api/passanger/booking/payment`, {
                 bookingId: booking._id,
                 paymentStatus: "completed",
               });
@@ -842,6 +839,7 @@ export default function BusDetailsPage() {
     {/* //------------------------------ MANUAL PAYMENT -----------------------------------*/}
 
               <PaymentDrawer
+                amount={finalPrice}
                 isDisabled={
                   selectedPassenger.length === 0 ||
                   selectedDate === "" ||

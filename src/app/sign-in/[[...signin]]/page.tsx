@@ -11,32 +11,32 @@ export default function CustomSignIn() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
 
-  useEffect(() => {
-    if (isLoaded && user) {
-      fetch("/api/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: user.fullName,
-          email: user.emailAddresses[0].emailAddress,
-          phoneNumber: user.phoneNumbers[0]?.phoneNumber || "",
-          clerkId: user.id,
-        }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.token) {
-            localStorage.setItem("token", data.token);
-            router.push("/");
-          }
-        })
-        .catch((error) => {
-          console.error("Error storing user data:", error);
-        });
-    }
-  }, [isLoaded, user, router]);
+  // useEffect(() => {
+  //   if (isLoaded && user) {
+  //     fetch("/api/auth", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         fullName: user.fullName,
+  //         email: user.emailAddresses[0].emailAddress,
+  //         phoneNumber: user.phoneNumbers[0]?.phoneNumber || "",
+  //         clerkId: user.id,
+  //       }),
+  //     })
+  //       .then((res) => res.json())
+  //       .then((data) => {
+  //         if (data.token) {
+  //           localStorage.setItem("token", data.token);
+  //           router.push("/");
+  //         }
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error storing user data:", error);
+  //       });
+  //   }
+  // }, [isLoaded, user, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">

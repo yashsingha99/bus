@@ -159,4 +159,51 @@ export async function DELETE(
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: { userId: string } }
+) {
+  try {
+    await dbConnection();
+    const { userId } = params;
+    const body = await request.json();
+
+    const { name, email, phoneNumber, role } = body;
+
+    // Validate required fields
+    if (!name || !email || !phoneNumber || !role) {
+      return NextResponse.json(
+        { success: false, message: "All fields are required" },
+        { status: 400 }
+      );
+    }
+
+    // Update user
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      userId,
+      { name, email, phoneNumber, role },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "User updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return NextResponse.json(
+      { success: false, message: "Failed to update user" },
+      { status: 500 }
+    );
+  }
 } 

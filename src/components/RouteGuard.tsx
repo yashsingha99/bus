@@ -19,7 +19,7 @@ export default function RouteGuard({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  const userRole = JSON.parse(localStorage.getItem("user") || "{}").role;
   const isProtectedRoute = useMemo(() => {
     return protectedRoutes.some((route) => route.pattern.test(pathname));
   }, [pathname]);
@@ -49,21 +49,14 @@ export default function RouteGuard({
           if (data.user) {
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            const redirectData = localStorage.getItem("redirectAfterSignUp");
-            if (redirectData) {
-              localStorage.removeItem("redirectAfterSignUp");
-
-              try {
-                const { path, query } = JSON.parse(redirectData);
-                const queryString = new URLSearchParams(query).toString();
-                const redirectUrl = queryString
-                  ? `${path}?${queryString}`
-                  : path;
-                router.push(redirectUrl);
-              } catch (error) {
-                console.error("Invalid redirectAfterSignUp data:", error);
-              }
-            }
+            const returnUrl = sessionStorage.getItem('returnUrl');
+            if (returnUrl) {
+              sessionStorage.removeItem('returnUrl');
+              router.push(returnUrl);
+            } 
+            // else {
+            //   router.push('/');
+            // }
           }
         })
         .catch((error) => {
@@ -91,7 +84,9 @@ export default function RouteGuard({
         // }));
         localStorage.setItem("redirectAfterSignUp", newRedirectURL);
 
-        router.push("/sign-in");
+        const currentPath = window.location.pathname + window.location.search;
+        sessionStorage.setItem('returnUrl', currentPath);
+        router.push(`/sign-in?redirect=true`);
       }
     }
   }, [isLoaded, isSignedIn, pathname, searchParams, isProtectedRoute, router]);

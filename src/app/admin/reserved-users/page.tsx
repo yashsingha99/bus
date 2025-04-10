@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -96,10 +94,10 @@ export default function ReservedUsersPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${URL}/api/admin/bookings`);
-      console.log(response.data.data.bookings);
+      const response = await axios.get(`/api/admin/bookings`);
+      console.log(response.data.data );
       
-      setBookings(response.data.data.bookings);
+      setBookings(response.data.data);
     } catch (error) {
       toast.error("Failed to fetch bookings");
     } finally {
@@ -110,14 +108,14 @@ export default function ReservedUsersPage() {
     fetchBookings();
   }, []);
 
-  const filteredBookings = bookings?.filter((booking) =>
-    booking.bookedBy.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.bookedBy.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.bookedBy.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.pickupAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    booking.time.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredBookings = bookings?.filter((booking) =>
+  //   booking.bookedBy.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   booking.bookedBy.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   booking.bookedBy.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   booking.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   booking.pickupAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   booking.time.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   const handleUpdateBooking = async (updatedBooking: PopulatedBooking) => {
     try {
@@ -172,9 +170,9 @@ export default function ReservedUsersPage() {
                   {bookings.map((booking) => (
                     <TableRow key={booking._id}>
                       <TableCell>{booking.bookedBy.fullName}</TableCell>
-                      <TableCell>{booking.bookedBy?.phoneNumber}</TableCell>
+                      {/* <TableCell>{booking.bookedBy?.phoneNumber}</TableCell> */}
                       <TableCell>{new Date(booking.date).toLocaleDateString()}</TableCell>
-                      
+                                             
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           booking.paymentStatus === "completed"

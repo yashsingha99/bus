@@ -5,19 +5,18 @@ import { BackgroundBeamsWithCollision } from "./ui/background-beams-with-collisi
 import { useDrawerContext } from "@/context/DrawerContext";
 import { useState, useEffect } from "react";
 import "./drawer.css";
-import Link from "next/link"
+import Link from "next/link";
 import { useNavigation } from "@/utils/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { FeedbackButton } from "./ui/feedback-button";
-
 
 const Drawer = () => {
   const { isOpen, closeDrawer } = useDrawerContext();
   const [isVisible, setIsVisible] = useState(false);
   const { navigate } = useNavigation();
   const { isSignedIn, user } = useUser();
-  const { signOut } = useClerk()
-  const userDataString = localStorage.getItem("user")
+  const { signOut } = useClerk();
+  const userDataString = localStorage.getItem("user");
   const userData = userDataString ? JSON.parse(userDataString) : null;
   const navigation = [
     { page: "Home", navigate: "/" },
@@ -25,26 +24,26 @@ const Drawer = () => {
     { page: "Ticket", navigate: "/tickets" },
     { page: "News", navigate: "/" },
     { page: "About", navigate: "/" },
-  ]
+  ];
 
   const adminNavigation = [
     { page: "Dashboard", navigate: "/admin" },
     { page: "Trips", navigate: "/admin/trips" },
     { page: "Users", navigate: "/admin/users" },
-    { page: "Reserved Users", navigate: "/admin/reserved-users" },
+    { page: "Reserved", navigate: "/admin/reserved-users" },
     { page: "Settings", navigate: "/admin/settings" },
-  ]
+  ];
   useEffect(() => {
     if (isOpen) {
-      setIsVisible(true);   
+      setIsVisible(true);
     } else {
-      const timer = setTimeout(() => setIsVisible(false), 300); 
+      const timer = setTimeout(() => setIsVisible(false), 300);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
   const handleSignOut = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
     signOut();
     closeDrawer();
   };
@@ -53,7 +52,7 @@ const Drawer = () => {
 
   return (
     <div
-      className={`fixed  inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50 transition-opacity duration-300 ${
+      className={`fixed  inset-0 z-max flex items-center justify-center backdrop-blur-sm bg-black/50 transition-opacity duration-300 ${
         isOpen ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -67,32 +66,38 @@ const Drawer = () => {
             <h2 className="text-lg font-medium">Navigation</h2>
             <button
               onClick={closeDrawer}
-              className="text-white hover:text-white/80"
+              className="text-gray-100 bg-gray-800 p-2 rounded-full hover:text-white/80"
               aria-label="Close Drawer"
             >
               <X className="h-6 w-6" />
             </button>
           </div>
 
-          <nav className="mt-12 w-full overflow-auto scrollbar-none lg:space-y-6 space-y-4 lg:text-5xl text-3xl">
-            {navigation.map((link) => (
-              <button
-                key={link.page}
-                onClick={() => navigate(link.navigate)}
-                className="block font-medium hover:text-white/80 text-left w-full"
-              >
-                {link.page}
-              </button>
-            ))}
-            {userData && userData.role !== "ADMIN" && adminNavigation.map((link) => (
-              <button
-                key={link.page}
-                onClick={() => navigate(link.navigate)}
-                className="block font-medium hover:text-white/80 text-left w-full"
-              >
-                {link.page}
-              </button>
-            ))}
+          <nav className="mt-12 w-full flex justify-around overflow-auto scrollbar-none lg:space-y-6 space-y-4 lg:text-5xl text-3xl">
+            <div className="flex flex-col gap-4">
+              {navigation.map((link) => (
+                <button
+                  key={link.page}
+                  onClick={() => navigate(link.navigate)}
+                  className="block lg:text-4xl  text-[25px] font-medium hover:text-white/80 text-left w-full"
+                >
+                  {link.page}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-4">
+              {userData &&
+                userData.role === "ADMIN" &&
+                adminNavigation.map((link) => (
+                  <button
+                    key={link.page}
+                    onClick={() => navigate(link.navigate)}
+                    className="block text-[25px] font-medium hover:text-white/80 text-left w-full"
+                  >
+                    {link.page}
+                  </button>
+                ))}
+            </div>
           </nav>
 
           <div className="absolute bottom-8 left-8 right-8">
@@ -122,7 +127,7 @@ const Drawer = () => {
                       </div>
                     </div> */}
                     <FeedbackButton
-                      onClick={handleSignOut} 
+                      onClick={handleSignOut}
                       className="bg-[#04051b] cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-xl lg:text-3xl text-xl"
                     >
                       <div className="w-[15%] flex items-center justify-center">
@@ -139,14 +144,6 @@ const Drawer = () => {
                           <User />
                         </div>
                         Sign In
-                      </FeedbackButton>
-                    </Link>
-                    <Link href="/sign-up" className="w-full lg:w-60">
-                      <FeedbackButton className="bg-[#545CFF] cursor-pointer flex items-center justify-center gap-2 hover:scale-110 text-white lg:h-16 h-10 rounded-xl lg:text-3xl text-xl w-full">
-                        <div className="w-[15%] flex items-center justify-center">
-                          <UserPlus />
-                        </div>
-                        Sign Up
                       </FeedbackButton>
                     </Link>
                   </>

@@ -5,11 +5,9 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeedbackButton } from "./ui/feedback-button";
 import { Search } from "lucide-react";
@@ -21,15 +19,19 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
 } from "./ui/select";
-import { FormControl } from "./ui/form";
-import { SelectGroup } from "@radix-ui/react-select";
 import { tripApi } from "@/API/trip.api";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DataSchema {
   pickUp: string;
   destination: string;
+}
+
+interface TripData {
+  _id: string;
+  destinationAddress: string;
 }
 
 export const pickupLocations = [
@@ -68,34 +70,30 @@ function SearchCardSkeleton() {
 
 function SearchCard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [roundTripData, setRoundTripData] = useState<DataSchema>({
     pickUp: "",
     destination: "",
   });
   const [isSearching, setIsSearching] = useState(false);
+  const [destinationData, setDestinationData] = useState<TripData[] | null>(null);
 
-  const [oneWayData, setOneWayData] = useState<DataSchema>({
-    pickUp: "",
-    destination: "",
-  });
+  const router = useRouter();
 
-  const [destinationData, setDestinationData] = useState<
-    { _id: string; destinationAddress: string }[] | null
-  >(null);
- 
   function handleChangeData(
-    stateLabel: string,
-    dataLabel: string,
+    stateLabel: "round-trip" | "one-way",
+    dataLabel: keyof DataSchema,
     data: string
   ) {
-    if (stateLabel === "round-trip") {
-      setRoundTripData((prev) => ({ ...prev, [dataLabel]: data }));
-    } else {
-      setOneWayData((prev) => ({ ...prev, [dataLabel]: data }));
-    }
+    setRoundTripData((prev) => ({ ...prev, [dataLabel]: data }));
   }
-  const router = useRouter();
+
   const handleNavigate = () => {
+    if (!roundTripData.pickUp || !roundTripData.destination) {
+      setError("Please select both pickup and destination locations");
+      return;
+    }
+    
     setIsSearching(true);
     router.push(
       `/searchBus/source?pickup=${roundTripData.pickUp}&destination=${roundTripData.destination}`
@@ -105,15 +103,18 @@ function SearchCard() {
   const fetchTripsName = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const res = await tripApi.getTripNames();
-      console.log(res);
-
+     console.log(res);
+     
       if (Array.isArray(res)) {
         setDestinationData(res);
       } else {
+        setError("Failed to load destinations");
         console.error("Unexpected API response format:", res);
       }
     } catch (error) {
+      setError("Failed to load destinations");
       console.error("Error fetching trips:", error);
     } finally {
       setIsLoading(false);
@@ -126,6 +127,14 @@ function SearchCard() {
 
   if (isLoading) {
     return <SearchCardSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
   }
 
   return (
@@ -149,6 +158,7 @@ function SearchCard() {
                     onValueChange={(value) =>
                       handleChangeData("round-trip", "pickUp", value)
                     }
+                    aria-label="Pick-up location"
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Pick-up location" />
@@ -169,6 +179,7 @@ function SearchCard() {
                     onValueChange={(value) =>
                       handleChangeData("round-trip", "destination", value)
                     }
+                    aria-label="Destination"
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select your center" />
@@ -185,7 +196,11 @@ function SearchCard() {
                     </SelectContent>
                   </Select>
                 </div>
-                <FeedbackButton onClick={handleNavigate} className="w-full">
+                <FeedbackButton 
+                  onClick={handleNavigate} 
+                  className="w-full"
+                  disabled={isSearching}
+                >
                   {isSearching ? "Searching..." : "Search Buses"}
                   <Search className="ml-2 h-4 w-4" />
                 </FeedbackButton>
@@ -193,7 +208,7 @@ function SearchCard() {
             </TabsContent>
             <TabsContent value="one-way" className="space-y-4">
               <div className="flex items-center justify-center">
-                Will be release soon
+                Will be released soon
               </div>
             </TabsContent>
           </Tabs>

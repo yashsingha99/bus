@@ -58,7 +58,10 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		zIndex: {
+          max: '2147483647',  
+        },
   	}
   },
   plugins: [function ({ addUtilities }: { addUtilities: (utilities: Record<string,any>) => void }) {

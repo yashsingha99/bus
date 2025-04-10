@@ -1,13 +1,12 @@
 import axios from "axios";
 import { IBooking } from "@/model/booking.model";
 
-const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const bookingApi = {
   // Create new booking
   createBooking: async (bookingData: Omit<IBooking, "_id" | "createdAt" | "updatedAt">): Promise<IBooking> => {
     try {
-      const response = await axios.post<{ data: IBooking }>(`${URL}/api/passanger/booking`, bookingData);
+      const response = await axios.post<{ data: IBooking }>(`/api/passanger/booking`, bookingData);
       return response.data.data;
     } catch (error) {
       console.error("Error creating booking:", error);
@@ -18,7 +17,7 @@ export const bookingApi = {
   // Get booking by ID
   getBookingById: async (bookingId: string): Promise<IBooking> => {
     try {
-      const response = await axios.get<{ data: IBooking }>(`${URL}/api/passanger/booking?bookingId=${bookingId}`);
+      const response = await axios.get<{ data: IBooking }>(`/api/passanger/booking?bookingId=${bookingId}`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching booking:", error);
@@ -29,7 +28,7 @@ export const bookingApi = {
   // Get bookings by user ID
   getBookingsByUser: async (userId: string): Promise<IBooking[]> => {
     try {
-      const response = await axios.get<{ data: IBooking[] }>(`${URL}/api/passanger/bookings?userId=${userId}`);
+      const response = await axios.get<{ data: IBooking[] }>(`/api/passanger/bookings?userId=${userId}`);
       return response.data.data;
     } catch (error) {
       console.error("Error fetching user bookings:", error);
@@ -40,7 +39,7 @@ export const bookingApi = {
   // Update booking
   updateBooking: async (bookingId: string, bookingData: Partial<IBooking>): Promise<IBooking> => {
     try {
-      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking`, {
+      const response = await axios.put<{ data: IBooking }>(`/api/passanger/booking`, {
         bookingId,
         ...bookingData
       });
@@ -54,7 +53,7 @@ export const bookingApi = {
   // Update booking status
   updateBookingStatus: async (bookingId: string, status: "pending" | "confirmed" | "cancelled"): Promise<IBooking> => {
     try {
-      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking/status`, {
+      const response = await axios.put<{ data: IBooking }>(`/api/passanger/booking/status`, {
         bookingId,
         status
       });
@@ -68,7 +67,7 @@ export const bookingApi = {
   // Update payment status
   updatePaymentStatus: async (bookingId: string, paymentStatus: "pending" | "completed" | "failed"): Promise<IBooking> => {
     try {
-      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking/payment`, {
+      const response = await axios.put<{ data: IBooking }>(`/api/passanger/booking/payment`, {
         bookingId,
         paymentStatus
       });
@@ -82,7 +81,7 @@ export const bookingApi = {
   // Cancel booking
   cancelBooking: async (bookingId: string): Promise<IBooking> => {
     try {
-      const response = await axios.put<{ data: IBooking }>(`${URL}/api/passanger/booking/cancel`, {
+      const response = await axios.put<{ data: IBooking }>(`/api/passanger/booking/cancel`, {
         bookingId
       });
       return response.data.data;
@@ -95,7 +94,7 @@ export const bookingApi = {
   // Delete booking
   deleteBooking: async (bookingId: string): Promise<void> => {
     try {
-      await axios.delete(`${URL}/api/passanger/booking`, {
+      await axios.delete(`/api/passanger/booking`, {
         data: { bookingId }
       });
     } catch (error) {
