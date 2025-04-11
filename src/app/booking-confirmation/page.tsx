@@ -65,7 +65,7 @@ export default function BookingConfirmationPage() {
               <p className="text-muted-foreground">
                 {error || "The booking you're looking for doesn't exist"}
               </p>
-              <Link href="/search">
+              <Link href="/searchBus">
                 <Button className="mt-4">Back to Search</Button>
               </Link>
             </div>
@@ -78,7 +78,7 @@ export default function BookingConfirmationPage() {
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6 flex items-center">
-        <Link href="/search">
+        <Link href="/searchBus">
           <Button variant="ghost" size="sm">
             Back to Search
           </Button>

@@ -93,7 +93,6 @@ export default function BusDetailsPage() {
     clerkId: user?.id,
   };
 
-
   let isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
 
   //--------------------------------------- HANDLE PAYMENT BY MANUAL -----------------------------------
@@ -125,20 +124,17 @@ export default function BusDetailsPage() {
       const paymentProofUrl = uploadResponse.data.url;
 
       // Now create the booking with the payment proof URL
-      const bookingResponse = await axios.post(
-        `/api/passanger/bookingManual`,
-        {
-          pickupAddress: pickup || selectedPickup,
-          bookedBy: userData.clerkId,
-          destination: tripId,
-          time: selectedTime,
-          passengerDetails: passengerDetails,
-          totalAmount: finalPrice,
-          status: "pending",
-          paymentStatus: "pending",
-          paymentProof: paymentProofUrl,
-        }
-      );
+      const bookingResponse = await axios.post(`/api/passanger/bookingManual`, {
+        pickupAddress: pickup || selectedPickup,
+        bookedBy: userData.clerkId,
+        destination: tripId,
+        time: selectedTime,
+        passengerDetails: passengerDetails,
+        totalAmount: finalPrice,
+        status: "pending",
+        paymentStatus: "pending",
+        paymentProof: paymentProofUrl,
+      });
 
       const booking = bookingResponse.data.data;
 
@@ -194,8 +190,8 @@ export default function BusDetailsPage() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: finalPrice * 100,
         currency: "INR",
-        name: "Bus Booking System",
-        description: `Booking for ${tripData?.destinationAddress || "Destination"}`,
+        name: "Bustify Ticket Booking",
+        description: `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"}`,
         order_id: orderId,
         handler: async function (response: any) {
           try {
@@ -211,25 +207,22 @@ export default function BusDetailsPage() {
               response
             );
 
-            const bookingResponse = await axios.post(
-              `/api/passanger/booking`,
-              {
-                pickupAddress: pickup || selectedPickup,
-                bookedBy: userData.clerkId,
-                destination: tripId,
-                time: selectedTime,
-                passengerDetails: formattedPassengerDetails,
-                totalAmount: finalPrice,
-                status: "pending",
-                paymentStatus: "pending",
-                paymentId: response.razorpay_payment_id,
-              }
-            );
+            const bookingResponse = await axios.post(`/api/passanger/booking`, {
+              pickupAddress: pickup || selectedPickup,
+              bookedBy: userData.clerkId,
+              destination: tripId,
+              time: selectedTime,
+              passengerDetails: formattedPassengerDetails,
+              totalAmount: finalPrice,
+              status: "pending",
+              paymentStatus: "pending",
+              paymentId: response.razorpay_payment_id,
+            });
 
             const booking = bookingResponse.data.data;
 
             if (booking && booking._id) {
-                await axios.put(`/api/passanger/booking/payment`, {
+              await axios.put(`/api/passanger/booking/payment`, {
                 bookingId: booking._id,
                 paymentStatus: "completed",
               });
@@ -481,15 +474,22 @@ export default function BusDetailsPage() {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-2xl">Trip Details</CardTitle>
-          <CardDescription>Select your preferred {!isPickUpLocationExist && "Pickup Location,"} date and time</CardDescription>
+          <CardDescription>
+            Select your preferred {!isPickUpLocationExist && "Pickup Location,"}{" "}
+            date and time
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-4">
-             {isPickUpLocationExist && <div className="flex items-center text-sm">
-                <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>{pickup} to {tripData?.destinationAddress}</span>
-              </div>}
+              {isPickUpLocationExist && (
+                <div className="flex items-center text-sm">
+                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {pickup} to {tripData?.destinationAddress}
+                  </span>
+                </div>
+              )}
               <div className="flex flex-wrap gap-4">
                 {!isPickUpLocationExist && (
                   <div className="w-[90%]">
@@ -503,7 +503,7 @@ export default function BusDetailsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectLabel>Exam Date</SelectLabel>
+                          <SelectLabel>PickUp Location</SelectLabel>
                           {pickupLocations?.length ? (
                             pickupLocations.map((location) => (
                               <SelectItem key={location} value={location}>
@@ -730,9 +730,14 @@ export default function BusDetailsPage() {
                         </div>
                       </div>
                     ))}
-                    <FeedbackButton onClick={handleAddPassenger}>
-                      Add Another Passenger
-                    </FeedbackButton>
+                    <div className="w-full active:underline flex justify-end ">
+                      <div
+                        className="text-black cursor-pointer text-sm"
+                        onClick={handleAddPassenger}
+                      >
+                        +{" "} Add Another Passenger
+                      </div>
+                    </div>
                   </TabsContent>
                   <TabsContent value="bus-info" className="space-y-4 pt-4">
                     <div className="rounded-lg border p-4">
@@ -816,19 +821,24 @@ export default function BusDetailsPage() {
               </CardContent>
             ) : (
               <CardContent>
-                <p>First Select your { isPickUpLocationExist ? "Exam Date and Time" : "Exam Date, Time and Pickup Location"} </p>
+                <p>
+                  First Select your{" "}
+                  {isPickUpLocationExist
+                    ? "Exam Date and Time"
+                    : "Exam Date, Time and Pickup Location"}{" "}
+                </p>
               </CardContent>
             )}
             <CardFooter className="flex flex-col gap-2">
-
-    {/* //------------------------------ RAZORPAY PAYMENT -----------------------------------*/}
+              {/* //------------------------------ RAZORPAY PAYMENT -----------------------------------*/}
               <FeedbackButton
                 className="w-full"
                 onClick={proceedToPayment}
                 disabled={
                   selectedPassenger.length === 0 ||
                   selectedDate === "" ||
-                  selectedTime === "" || ( selectedPickup == "" && pickup === null)
+                  selectedTime === "" ||
+                  (selectedPickup == "" && pickup === null)
                 }
               >
                 {selectedPassenger.length === 0
@@ -836,14 +846,15 @@ export default function BusDetailsPage() {
                   : "Proceed to Payment"}
               </FeedbackButton>
 
-    {/* //------------------------------ MANUAL PAYMENT -----------------------------------*/}
+              {/* //------------------------------ MANUAL PAYMENT -----------------------------------*/}
 
               <PaymentDrawer
                 amount={finalPrice}
                 isDisabled={
                   selectedPassenger.length === 0 ||
                   selectedDate === "" ||
-                  selectedTime === "" || ( selectedPickup == "" && pickup === null)
+                  selectedTime === "" ||
+                  (selectedPickup == "" && pickup === null)
                 }
                 handlePaymentByManual={handlePaymentByManual}
                 setPaymentProof={setPaymentProof}

@@ -75,3 +75,44 @@ export async function PUT(
     );
   }
 } 
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: { tripId: string } }
+) {
+  await dbConnection();
+
+  try {
+    const { tripId } = params;
+    
+    const deletedTrip = await TripModel.findByIdAndDelete(tripId);
+
+    if (!deletedTrip) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Trip not found or could not be deleted.",
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Trip deleted successfully.",
+        data: deletedTrip,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting trip:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal server error. Please try again later.",
+      },
+      { status: 500 }
+    );
+  }
+} 

@@ -105,47 +105,21 @@ const Drawer = () => {
               <div className="relative flex flex-wrap w-full gap-4">
                 {isSignedIn ? (
                   <>
-                    {/* <div className="w-full mb-4 p-4 bg-[#04051b] border border-[#545CFF] rounded-xl">
-                      <div className="flex items-center gap-3">
-                        {user?.imageUrl ? (
-                          <img 
-                            src={user.imageUrl} 
-                            alt={user.fullName || 'User'} 
-                            className="w-10 h-10 rounded-full"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-[#545CFF] flex items-center justify-center">
-                            <span className="text-white font-bold">
-                              {user?.firstName?.[0] || user?.lastName?.[0] || 'U'}
-                            </span>
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-white font-medium">{user?.fullName || 'User'}</p>
-                          <p className="text-white/70 text-sm">{user?.primaryEmailAddress?.emailAddress}</p>
-                        </div>
-                      </div>
-                    </div> */}
-                    <FeedbackButton
+                    <button
                       onClick={handleSignOut}
-                      className="bg-[#04051b] cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-xl lg:text-3xl text-xl"
+                      className="bg-[#04051b] lg:cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:w-60 lg:h-16 lg:rounded-xl w-full h-10 rounded-xl lg:text-3xl text-xl"
                     >
-                      <div className="w-[15%] flex items-center justify-center">
-                        <LogOut />
-                      </div>
                       Log Out
-                    </FeedbackButton>
+                    </button>
                   </>
                 ) : (
                   <>
-                    <Link href="/sign-in" className="w-full lg:w-60">
-                      <FeedbackButton className="bg-[#04051b] cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:h-16 h-10 rounded-xl lg:text-3xl text-xl w-full">
-                        <div className="w-[15%] flex items-center justify-center">
-                          <User />
-                        </div>
-                        Sign In
-                      </FeedbackButton>
-                    </Link>
+                    <button
+                      onClick={() => navigate("/sign-in")}
+                      className="bg-[#04051b] lg:cursor-pointer border-2 border-[#545CFF] flex items-center justify-center gap-2 hover:scale-110 text-white lg:h-16 h-10 rounded-xl lg:text-3xl text-xl w-full"
+                    >
+                      Sign In
+                    </button>
                   </>
                 )}
                 <button className="bg-[#545CFF] cursor-pointer hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-3xl lg:text-3xl text-xl">

@@ -9,10 +9,17 @@ import { FeedbackButton } from "@/components/ui/feedback-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, X, AlertCircle } from "lucide-react";
+import { Trash2, Plus, X, AlertCircle, Trash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Interface matching the server data structure
 interface ITripItem {
@@ -32,11 +39,23 @@ interface ITrip {
   updatedAt?: string;
 }
 
+// Interface for API data
+interface ITripApiData {
+  destinationAddress: string;
+  Trips: {
+    price: number;
+    Timing: string[];
+    date: string;
+    Status: string;
+    SeatsLimit: number;
+  }[];
+}
+
 function EditTripSkeleton() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Skeleton className="h-8 w-64 mb-4" />
-      
+
       <div className="mb-4">
         <Skeleton className="h-4 w-32 mb-2" />
         <Skeleton className="h-10 w-full" />
@@ -50,7 +69,7 @@ function EditTripSkeleton() {
             <Skeleton className="h-10 w-24" />
           </div>
         </div>
-        
+
         <Card className="mt-4">
           <CardContent className="space-y-4 pt-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -112,7 +131,7 @@ export default function EditTripPage() {
   function createEmptyTrip(): ITripItem {
     return {
       price: 0,
-      Timing: [""],
+      Timing: ["forenoon"],
       date: new Date().toISOString().split("T")[0],
       Status: "Active",
       SeatsLimit: 0,
@@ -125,7 +144,7 @@ export default function EditTripPage() {
       setIsLoading(false);
       return;
     }
-    
+
     if (tripId === "newTrip") {
       // Initialize new trip form
       const initialTrip: ITrip = {
@@ -143,15 +162,20 @@ export default function EditTripPage() {
         setIsLoading(true);
         setError(null);
         const data = await tripApi.getTripById(tripId);
-        
-        const formattedData = {
-          ...data,
-          Trips: data.Trips.map((trip: ITripItem) => ({
+
+        const formattedData: ITrip = {
+          _id: String(data._id),
+          destinationAddress: data.destinationAddress,
+          Trips: data.Trips.map((trip) => ({
             ...trip,
-            date: new Date(trip.date).toISOString().split("T")[0],
+            date:
+              trip.date instanceof Date
+                ? trip.date.toISOString().split("T")[0]
+                : new Date(trip.date).toISOString().split("T")[0],
+            SeatsLimit: Number(trip.SeatsLimit),
           })),
         };
-        
+
         setFormData(formattedData);
       } catch (err) {
         console.error("Trip fetch error:", err);
@@ -161,7 +185,7 @@ export default function EditTripPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchTrip();
   }, [tripId]);
 
@@ -169,8 +193,13 @@ export default function EditTripPage() {
     const tripErrors: Record<string, string> = {};
     if (!trip.price && trip.price !== 0) tripErrors.price = "Price is required";
     if (!trip.date) tripErrors.date = "Date is required";
-    if (!trip.SeatsLimit && trip.SeatsLimit !== 0) tripErrors.SeatsLimit = "Seats limit is required";
-    if (!trip.Timing || trip.Timing.length === 0 || trip.Timing.some((t: string) => !t)) {
+    if (!trip.SeatsLimit && trip.SeatsLimit !== 0)
+      tripErrors.SeatsLimit = "Seats limit is required";
+    if (
+      !trip.Timing ||
+      trip.Timing.length === 0 ||
+      trip.Timing.some((t: string) => !t)
+    ) {
       tripErrors.Timing = "At least one valid timing is required";
     }
     return tripErrors;
@@ -178,11 +207,11 @@ export default function EditTripPage() {
 
   const validateForm = () => {
     if (!formData) return {};
-    
+
     const err: Record<string, any> = {};
     if (!formData.destinationAddress)
       err.destinationAddress = "Destination is required";
-    
+
     formData.Trips.forEach((trip, index) => {
       const tripErrors = validateTrip(trip);
       if (Object.keys(tripErrors).length) err[`trip-${index}`] = tripErrors;
@@ -192,11 +221,11 @@ export default function EditTripPage() {
 
   const handleChange = (index: number, field: string, value: any) => {
     if (!formData) return;
-    
+
     const updatedTrips = [...formData.Trips];
     updatedTrips[index] = { ...updatedTrips[index], [field]: value };
     setFormData({ ...formData, Trips: updatedTrips });
-    
+
     // Clear error for this field if it exists
     if (errors[`trip-${index}`]?.[field]) {
       const updatedErrors = { ...errors };
@@ -210,11 +239,11 @@ export default function EditTripPage() {
 
   const handleDeleteTrip = (index: number) => {
     if (!formData || formData.Trips.length <= 1) return;
-    
+
     const updated = [...formData.Trips];
     updated.splice(index, 1);
     setFormData({ ...formData, Trips: updated });
-    
+
     // If we deleted the active tab, select the previous tab
     if (parseInt(activeTab) >= updated.length) {
       setActiveTab((updated.length - 1).toString());
@@ -223,7 +252,7 @@ export default function EditTripPage() {
 
   const handleAddTrip = () => {
     if (!formData) return;
-    
+
     // Validate last trip before adding a new one
     const lastTrip = formData.Trips[formData.Trips.length - 1];
     const lastErrors = validateTrip(lastTrip);
@@ -232,10 +261,12 @@ export default function EditTripPage() {
         ...prev,
         [`trip-${formData.Trips.length - 1}`]: lastErrors,
       }));
-      toast.error("Please fix errors in the current trip before adding a new one");
+      toast.error(
+        "Please fix errors in the current trip before adding a new one"
+      );
       return;
     }
-    
+
     const newTrips = [...formData.Trips, createEmptyTrip()];
     setFormData({ ...formData, Trips: newTrips });
     setActiveTab((newTrips.length - 1).toString());
@@ -244,62 +275,65 @@ export default function EditTripPage() {
   // Handle multiple timing selection
   const handleAddTiming = (tripIndex: number) => {
     if (!formData) return;
-    
+
     const updatedTrips = [...formData.Trips];
     const currentTimings = updatedTrips[tripIndex].Timing || [""];
-    updatedTrips[tripIndex] = { 
-      ...updatedTrips[tripIndex], 
-      Timing: [...currentTimings, ""]
+    updatedTrips[tripIndex] = {
+      ...updatedTrips[tripIndex],
+      Timing: [...currentTimings, ""],
     };
     setFormData({ ...formData, Trips: updatedTrips });
   };
 
-  const handleTimingChange = (tripIndex: number, timingIndex: number, value: string) => {
+  const handleTimingChange = (
+    tripIndex: number,
+    timingIndex: number,
+    value: string
+  ) => {
     if (!formData) return;
-    
+
     const updatedTrips = [...formData.Trips];
     const currentTimings = [...updatedTrips[tripIndex].Timing];
     currentTimings[timingIndex] = value;
-    updatedTrips[tripIndex] = { ...updatedTrips[tripIndex], Timing: currentTimings };
+    updatedTrips[tripIndex] = {
+      ...updatedTrips[tripIndex],
+      Timing: currentTimings,
+    };
     setFormData({ ...formData, Trips: updatedTrips });
-    
-    // Clear timing error if it exists
-    if (errors[`trip-${tripIndex}`]?.Timing) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[`trip-${tripIndex}`].Timing;
-      if (Object.keys(updatedErrors[`trip-${tripIndex}`]).length === 0) {
-        delete updatedErrors[`trip-${tripIndex}`];
-      }
-      setErrors(updatedErrors);
-    }
   };
 
   const handleDeleteTiming = (tripIndex: number, timingIndex: number) => {
     if (!formData) return;
-    
+
     const updatedTrips = [...formData.Trips];
     const currentTimings = [...updatedTrips[tripIndex].Timing];
-    
+
     if (currentTimings.length <= 1) return;
-    
+
     currentTimings.splice(timingIndex, 1);
-    updatedTrips[tripIndex] = { ...updatedTrips[tripIndex], Timing: currentTimings };
+    updatedTrips[tripIndex] = {
+      ...updatedTrips[tripIndex],
+      Timing: currentTimings,
+    };
     setFormData({ ...formData, Trips: updatedTrips });
   };
 
   const prepareDataForSaving = () => {
     if (!formData) return null;
-    
-    const dataToSave = { ...formData };
-    
-    dataToSave.Trips = dataToSave.Trips.map(trip => ({
-      ...trip,
-      price: Number(trip.price),
-      SeatsLimit: Number(trip.SeatsLimit),
-      Timing: trip.Timing.filter(t => t.trim() !== "")
-    }));
-    
-    return dataToSave;
+
+    // Create a simplified trip object for the API
+    const apiTrip: ITripApiData = {
+      destinationAddress: formData.destinationAddress,
+      Trips: formData.Trips.map((trip) => ({
+        price: Number(trip.price),
+        Timing: trip.Timing,
+        date: trip.date,
+        Status: trip.Status,
+        SeatsLimit: Number(trip.SeatsLimit),
+      })),
+    };
+
+    return apiTrip;
   };
 
   const handleSubmit = async () => {
@@ -313,17 +347,17 @@ export default function EditTripPage() {
     try {
       const dataToSave = prepareDataForSaving();
       if (!dataToSave) return;
-      
+
       setIsSubmitting(true);
-      
+
       if (tripId === "newTrip") {
         // Create new trip
-        await tripApi.createTrip(dataToSave );
+        await tripApi.createTrip(dataToSave as any);
         toast.success("Trip created successfully");
         router.push("/admin/trips");
-      } else {
+      } else if (tripId) {
         // Update existing trip
-        await tripApi.updateTrip(tripId, dataToSave);
+        await tripApi.updateTrip(tripId, dataToSave as any);
         toast.success("Trip updated successfully");
         router.push("/admin/trips");
       }
@@ -335,8 +369,27 @@ export default function EditTripPage() {
     }
   };
 
+  const handleDeleteDestination = async () => {
+    if (!tripId || tripId === "newTrip") {
+      router.push("/admin/trips");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await tripApi.deleteTrip(tripId);
+      toast.success("Destination deleted successfully");
+      router.push("/admin/trips");
+    } catch (err) {
+      console.error("Error deleting destination:", err);
+      toast.error("Failed to delete destination. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) return <EditTripSkeleton />;
-  
+
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -353,7 +406,7 @@ export default function EditTripPage() {
       </div>
     );
   }
-  
+
   if (!formData) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -373,10 +426,23 @@ export default function EditTripPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">
-        {tripId === "newTrip" ? "Create New Trip" : "Edit Trip"}
-      </h2>
-      
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">
+          {tripId === "newTrip" ? "Create New Trip" : "Edit Trip"}
+        </h2>
+        {tripId !== "newTrip" && (
+          <Button
+            variant="destructive"
+            onClick={handleDeleteDestination}
+            disabled={isSubmitting}
+            className="flex items-center gap-2"
+          >
+            <Trash className="h-4 w-4" />
+            Delete Destination
+          </Button>
+        )}
+      </div>
+
       <div className="mb-4">
         <Label htmlFor="destination">Destination Address</Label>
         <Input
@@ -421,7 +487,7 @@ export default function EditTripPage() {
               </Button>
             </TabsList>
           </div>
-          
+
           {formData.Trips.map((trip, index) => (
             <TabsContent key={index} value={index.toString()}>
               <Card>
@@ -436,6 +502,8 @@ export default function EditTripPage() {
                         onChange={(e) =>
                           handleChange(index, "price", Number(e.target.value))
                         }
+                        max={1000000}
+                        min={1}
                       />
                       {errors[`trip-${index}`]?.price && (
                         <p className="text-red-500 text-sm">
@@ -486,8 +554,14 @@ export default function EditTripPage() {
                         type="number"
                         value={trip.SeatsLimit}
                         onChange={(e) =>
-                          handleChange(index, "SeatsLimit", Number(e.target.value))
+                          handleChange(
+                            index,
+                            "SeatsLimit",
+                            Number(e.target.value)
+                          )
                         }
+                        max={1000000}
+                        min={1}
                       />
                       {errors[`trip-${index}`]?.SeatsLimit && (
                         <p className="text-red-500 text-sm">
@@ -499,44 +573,59 @@ export default function EditTripPage() {
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <Label>Timings</Label>
+                      <Label>Timing</Label>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddTiming(index)}
-                        className="flex items-center gap-1"
                       >
-                        <Plus size={14} /> Add Time
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Timing
                       </Button>
                     </div>
-                    
+                  </div>
+
+                  <div>
+                    {trip.Timing.map((timing, timingIndex) => (
+                      <div key={timingIndex} className="flex gap-2 mb-2">
+                        <Select
+                          value={timing}
+                          onValueChange={(value) =>
+                            handleTimingChange(index, timingIndex, value)
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select timing" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="forenoon">
+                              Forenoon (9 AM - 12 PM)
+                            </SelectItem>
+                            <SelectItem value="afternoon">
+                              Afternoon (2 PM - 5 PM)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {trip.Timing.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              handleDeleteTiming(index, timingIndex)
+                            }
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
                     {errors[`trip-${index}`]?.Timing && (
-                      <p className="text-red-500 text-sm mb-2">
+                      <p className="text-sm text-red-500 mt-1">
                         {errors[`trip-${index}`].Timing}
                       </p>
                     )}
-                    
-                    {(trip.Timing || [""]).map((timing, timingIndex) => (
-                      <div key={timingIndex} className="flex items-center mb-2">
-                        <Input
-                          type="time"
-                          value={timing}
-                          onChange={(e) => handleTimingChange(index, timingIndex, e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteTiming(index, timingIndex)}
-                          className="ml-2"
-                          disabled={(trip.Timing || []).length <= 1}
-                        >
-                          <X size={16} />
-                        </Button>
-                      </div>
-                    ))}
                   </div>
 
                   <div className="pt-2">
