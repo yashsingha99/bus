@@ -41,7 +41,18 @@ interface SignUpErrors {
   phone: string;
 }
 
-function Auth({ children, navigateRoute, callback }: { children: React.ReactNode, navigateRoute: string, callback: () => void }) {
+type AuthProps = {
+  children: React.ReactNode;
+  navigateRoute: string;
+  callback: (() => void)[];
+  state: (data: any) => void;
+};
+
+function Auth({ children, navigateRoute, callback, state }: AuthProps) {
+   const handleAllCallbacks = () => {
+     callback.forEach((fn) => fn());
+   };
+
   const [signInFormData, setSignInFormData] = useState<SignInFormData>({
     email: "",
     dob: "",
@@ -174,13 +185,15 @@ function Auth({ children, navigateRoute, callback }: { children: React.ReactNode
       };
 
       const response = await axios.post(endpoint, payload);
-      console.log(response.data);
       if (response.data) {
+        if(state) {
+          state(response.data.exists);
+        }
         localStorage.setItem('user', JSON.stringify(response.data.exists));
         toast.success(isSignIn ? 'Signed in successfully!' : 'Registered successfully!');
         setIsOpen(false);
         if(navigateRoute === "") {
-          callback();
+          handleAllCallbacks();
         } else {
           router.push(navigateRoute);
         }
@@ -197,15 +210,15 @@ function Auth({ children, navigateRoute, callback }: { children: React.ReactNode
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
           <DialogTitle>{isSignIn ? 'Sign In' : 'Register'}</DialogTitle>
-          <DialogDescription>
+              <DialogDescription>
             {isSignIn 
               ? 'Sign in with your email and date of birth' 
               : 'Create a new account'}
-          </DialogDescription>
-        </DialogHeader>
+              </DialogDescription>
+            </DialogHeader>
         
         <div className="grid gap-4 py-4">
           {!isSignIn && (
@@ -250,7 +263,7 @@ function Auth({ children, navigateRoute, callback }: { children: React.ReactNode
               ? errorSignIn.email && <p className="text-red-500 text-sm">{errorSignIn.email}</p>
               : errorSignUp.email && <p className="text-red-500 text-sm">{errorSignUp.email}</p>
             }
-          </div>
+            </div>
 
           <div className="grid gap-2">
             <Label htmlFor="dob">Date of Birth</Label>
@@ -293,8 +306,8 @@ function Auth({ children, navigateRoute, callback }: { children: React.ReactNode
               : 'Already have an account? Sign In'}
           </Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </DialogContent>
+        </Dialog>
   );
 }
 

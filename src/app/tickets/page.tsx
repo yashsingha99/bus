@@ -48,9 +48,14 @@ export default function TicketsPage() {
   useEffect(() => {
     const fetchTickets = async () => {
       if (!user || !user._id) return;
+      // console.log(user);
 
       try {
-        const response = await axios.get(`/api/passanger/booking?userId=${user._id}`);
+        const response = await axios.get(
+          `/api/passanger/booking?userId=${user._id}`
+        );
+        // console.log(response.data.data);
+
         setTickets(response.data.data);
       } catch (err) {
         setError("Failed to fetch tickets. Please try again later.");
@@ -61,7 +66,7 @@ export default function TicketsPage() {
     };
 
     fetchTickets();
-  }, [user]);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -93,9 +98,19 @@ export default function TicketsPage() {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Please sign in to view your tickets</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            Please sign in to view your tickets
+          </h1>
 
-          <Auth navigateRoute="" callback={() => {window.location.reload();}}>
+          <Auth
+            navigateRoute=""
+            callback={[
+              () => {
+                window.location.reload();
+              },
+            ]}
+            state={() => {}}
+          >
             <Button>Sign In</Button>
           </Auth>
         </div>
@@ -106,7 +121,6 @@ export default function TicketsPage() {
   if (loading) {
     return <LoadingSkeleton />;
   }
-
 
   if (error) {
     return (
@@ -124,7 +138,9 @@ export default function TicketsPage() {
       <div className="container mx-auto p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">No Tickets Found</h1>
-          <p className="text-gray-600 mb-4">You haven't booked any tickets yet.</p>
+          <p className="text-gray-600 mb-4">
+            You haven't booked any tickets yet.
+          </p>
           <Button onClick={() => router.push("/")}>Book a Ticket</Button>
         </div>
       </div>
@@ -140,13 +156,16 @@ export default function TicketsPage() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <CardTitle className="text-xl">
-                  {ticket?.destination?.name}
+                  {ticket?.destination?.destinationAddress ||
+                    "Unknown Destination"}
                 </CardTitle>
                 <div className="flex gap-2">
                   <Badge className={getStatusColor(ticket?.status)}>
                     {ticket.status}
                   </Badge>
-                  <Badge className={getPaymentStatusColor(ticket?.paymentStatus)}>
+                  <Badge
+                    className={getPaymentStatusColor(ticket?.paymentStatus)}
+                  >
                     {ticket?.paymentStatus}
                   </Badge>
                 </div>
@@ -155,33 +174,48 @@ export default function TicketsPage() {
             <CardContent>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Bus Number:</span>
-                  <span className="font-medium">{ticket?.trip?.busNumber}</span>
+                  <span className="text-gray-600">Pickup Address:</span>
+                  <span className="font-medium">{ticket.pickupAddress}</span>
                 </div>
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date:</span>
                   <span className="font-medium">
-                    {ticket?.time}
+                    {new Date(
+                      ticket?.destination?.Trips?.[0]?.date
+                    ).toLocaleDateString()}
                   </span>
                 </div>
+
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Time:</span>
+                  <span className="text-gray-600">Timing:</span>
                   <span className="font-medium">
-                    {ticket.time}
+                    {ticket?.destination?.Trips?.[0]?.Timing?.join(", ")}
                   </span>
                 </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Price:</span>
+                  <span className="font-medium">
+                    ₹{ticket?.destination?.Trips?.[0]?.price}
+                  </span>
+                </div>
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">Passengers:</span>
-                  <span className="font-medium">{ticket.passengerDetails.length}</span>
+                  <span className="font-medium">
+                    {ticket?.passengerDetails?.length || 1}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Amount:</span>
-                  <span className="font-medium">₹{ticket.totalAmount}</span>
-                </div>
+
                 <div className="pt-4">
                   <Button
                     className="w-full"
-                    onClick={() => router.push(`/booking-confirmation?bookingId=${ticket._id}`)}
+                    onClick={() =>
+                      router.push(
+                        `/booking-confirmation?bookingId=${ticket._id}`
+                      )
+                    }
                   >
                     View Details
                   </Button>
@@ -229,4 +263,4 @@ function LoadingSkeleton() {
       </div>
     </div>
   );
-} 
+}

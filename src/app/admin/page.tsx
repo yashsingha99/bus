@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +12,7 @@ import AdminStats from "./_components/AdminStats";
 // import { toast } from "sonner";
 import { FeedbackButton } from "@/components/ui/feedback-button";
 import { Component as Analytics } from "./_components/Analytics";
+import Auth from "@/components/model/auth";
 
 interface DashboardData {
   totalUsers: number;
@@ -77,49 +77,61 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
-  const { user, isLoaded } = useUser();
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const userString = localStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) : null;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!isLoaded || !user) return;
+      if (!user) return;
 
       try {
         const response = await axios.get("/api/admin/dashboard");
         // console.log(response.data.data);
-        
+
         setDashboardData(response.data.data);
       } catch (err) {
         setError("Failed to fetch dashboard data. Please try again later.");
-        console.error("Error fetching dashboard data:", err);
+        // console.error("Error fetching dashboard data:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [isLoaded, user]);
-
-  if (!isLoaded || loading) {
-    return <LoadingSkeleton />;
-  }
+  }, []);
 
   if (!user) {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">
-            Please sign in to access the admin dashboard
+            Please sign in to view your tickets
           </h1>
-          <Button onClick={() => router.push("/sign-in")}>Sign In</Button>
+
+          <Auth
+            navigateRoute=""
+            callback={[
+              () => {
+                window.location.reload();
+              },
+            ]}
+            state={() => {}}
+          >
+            <Button>Sign In</Button>
+          </Auth>
         </div>
       </div>
     );
+  }
+
+  if (!dashboardData || loading) {
+    return <LoadingSkeleton />;
   }
 
   if (error) {
@@ -133,16 +145,16 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!dashboardData) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">No data available</h1>
-          <Button onClick={() => window.location.reload()}>Refresh</Button>
-        </div>
-      </div>
-    );
-  }
+  // if (!dashboardData) {
+  //   return (
+  //     <div className="container mx-auto p-4">
+  //       <div className="text-center">
+  //         <h1 className="text-2xl font-bold mb-4">No data available</h1>
+  //         <Button onClick={() => window.location.reload()}>Refresh</Button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="container mx-auto p-4">
@@ -275,7 +287,6 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
-          
         </TabsContent>
         <TabsContent value="reports">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -8,7 +8,6 @@ import { useDrawerContext } from "@/context/DrawerContext";
 import { MainNav } from "./main-nav";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useUser } from "@clerk/nextjs";
 import { useNavigation } from "@/utils/navigation";
 import Auth from "./model/auth";
 const Navbar = () => {
@@ -39,10 +38,10 @@ const Navbar = () => {
                     className="sm:inline-flex rounded-3xl border-[#5157C1] py-5 px-6 text-md font-medium"
                   >
                     My Tickets
-                  </Button>
+                  </Button> 
                 </div>
               ) : (
-                <Auth navigateRoute="/tickets" callback={() => {}}>
+                <Auth navigateRoute="/tickets" callback={[]} state={() => {}}>
                   <Button
                     variant="outline"
                     className="sm:inline-flex rounded-3xl border-[#5157C1] py-5 px-6 text-md font-medium"

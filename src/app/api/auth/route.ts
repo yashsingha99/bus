@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     try {
       const existingUser = await UserModel.findOne(
-        { $or: [{ phoneNumber: phone }, { email: email }] }
+        { $or: [{ phone: phone }, { email: email }] }
       );
       if (existingUser) {
         return NextResponse.json(
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
       const newUser = await UserModel.create({
         fullName: fullName,
-        phoneNumber: phone || "",
+        phone: phone || "",
         email: email || "",
         dob: dob,
         role: "USER",
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         user: {
           id: newUser._id,
           fullName: newUser.fullName,
-          phoneNumber: newUser.phoneNumber,
+          phone: newUser.phone,
           role: newUser.role,
           email: newUser.email,
           dob: newUser.dob,

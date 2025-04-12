@@ -25,9 +25,9 @@ export default function PaymentDrawer({
   handlePaymentByManual,
 }: {
   amount: number;
-  setPaymentProof: (data: File) => void;
+  setPaymentProof?: (data: File) => void;
   isDisabled: boolean;
-  handlePaymentByManual: () => void;
+  handlePaymentByManual?: () => void;
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -40,7 +40,9 @@ export default function PaymentDrawer({
     
     try {
       // Set the file in the parent component state
-      setPaymentProof(files[0]);
+      if (setPaymentProof) {
+        setPaymentProof(files[0]);
+      }
     } catch (error) {
       console.error("Error handling file:", error);
       setUploadError("Failed to process the file. Please try again.");

@@ -48,7 +48,7 @@ import {
 } from "@/utils/priceUtils";
 import { createOrderId } from "@/API/orderId";
 import axios from "axios";
-import { useUser } from "@clerk/nextjs";
+// import { useUser } from "@clerk/nextjs";
 import Script from "next/script";
 import Razorpay from "razorpay";
 import { bookingApi } from "@/API/booking.api";
@@ -56,6 +56,7 @@ import { toast, Toaster } from "sonner";
 import LoadingSkeleton from "../../_components/loading-skeleton";
 import PaymentDrawer from "../../_components/paymentDrawer";
 import { pickupLocations } from "@/components/search-card";
+import Auth from "@/components/model/auth";
 
 export default function BusDetailsPage() {
   const searchParams = useSearchParams();
@@ -65,6 +66,12 @@ export default function BusDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [openPassenger, setOpenPassenger] = useState(-1);
   const [selectedPassenger, setSelectedPassenger] = useState([1]);
+  const [userDetails, setUserDetails] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    userId: "",
+  });
   // const [passengerDetails, setPassengerDetails] = useState([
   //   { name: "", phone: "", gender: "" },
   // ]);
@@ -76,22 +83,29 @@ export default function BusDetailsPage() {
     time: false,
   });
   const [price, setPrice] = useState(0);
-  const [discount, setDiscount] = useState(0);
-  const [promoCode, setPromoCode] = useState("");
-  const [promoError, setPromoError] = useState("");
+  // const [discount, setDiscount] = useState(0);
+  // const [promoCode, setPromoCode] = useState("");
+  // const [promoError, setPromoError] = useState("");
   const [tripData, setTripData] = useState<ITrip>();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedPickup, setSelectedPickup] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [openManualPaymentDrawer, setOpenManualPaymentDrawer] = useState(false);
+  // const [openManualPaymentDrawer, setOpenManualPaymentDrawer] = useState(false);
   const [paymentProof, setPaymentProof] = useState<File>();
-  const { user } = useUser();
+  // const { user } = useUser();
+  const userString = localStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) : null;
   const userData = {
     fullName: user?.fullName,
-    email: user?.primaryEmailAddress?.emailAddress,
-    phoneNumber: user?.primaryPhoneNumber?.phoneNumber || "",
-    clerkId: user?.id,
+    email: user?.email,
+    phone: user?.phone || "",
+    userId: user?._id,
   };
+  // useEffect(() => {
+  //   if (user) {
+  //     setUserDetails(userData);
+  //   }
+  // }, [user]);
 
   let isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
 
@@ -104,7 +118,9 @@ export default function BusDetailsPage() {
 
       if (
         // !shouldAdd ||
-         !shouldProcced || !paymentProof) {
+        !shouldProcced ||
+        !paymentProof
+      ) {
         alert("Please fill all required fields correctly");
         setIsLoading(false);
         return;
@@ -124,11 +140,11 @@ export default function BusDetailsPage() {
       }
 
       const paymentProofUrl = uploadResponse.data.url;
-
+    // console.log(userData);  
       // Now create the booking with the payment proof URL
       const bookingResponse = await axios.post(`/api/passanger/bookingManual`, {
         pickupAddress: pickup || selectedPickup,
-        bookedBy: userData.clerkId,
+        bookedBy: userData.userId,
         destination: tripId,
         time: selectedTime,
         // passengerDetails: passengerDetails,
@@ -137,7 +153,7 @@ export default function BusDetailsPage() {
         paymentStatus: "pending",
         paymentProof: paymentProofUrl,
       });
-
+      console.log(bookingResponse);
       const booking = bookingResponse.data.data;
 
       if (booking && booking._id) {
@@ -173,7 +189,8 @@ export default function BusDetailsPage() {
 
       if (
         // !shouldAdd ||
-         !shouldProcced) {
+        !shouldProcced
+      ) {
         alert("Please fill all required fields correctly");
         setIsLoading(false);
         return;
@@ -213,7 +230,7 @@ export default function BusDetailsPage() {
 
             const bookingResponse = await axios.post(`/api/passanger/booking`, {
               pickupAddress: pickup || selectedPickup,
-              bookedBy: userData.clerkId,
+              bookedBy: userData.userId,
               destination: tripId,
               time: selectedTime,
               // passengerDetails: formattedPassengerDetails,
@@ -241,7 +258,7 @@ export default function BusDetailsPage() {
                     ),
                 },
               });
-              // router.push(`/booking-confirmation?bookingId=${booking._id}`);
+              router.push(`/booking-confirmation?bookingId=${booking._id}`);
               console.log("Booking created:", booking);
             } else {
               throw new Error("Failed to create booking");
@@ -256,6 +273,7 @@ export default function BusDetailsPage() {
         prefill: {
           name: userData.fullName,
           email: userData.email,
+          contact: userData.phone,
         },
         theme: {
           color: "#3399cc",
@@ -316,29 +334,29 @@ export default function BusDetailsPage() {
 
   //-------------------------------------- CALCULATE FINAL PRICE -------------------------------------
   const finalPrice = useMemo(() => {
-    return calculateTotalPrice(price, selectedPassenger.length, discount);
-  }, [price, selectedPassenger.length, discount]);
+    return calculateTotalPrice(price, selectedPassenger.length, 0);
+  }, [price, selectedPassenger.length]);
 
   //--------------------------------------- APPLY PROMO CODE -----------------------------
-  const handleApplyPromoCode = () => {
-    if (!promoCode) {
-      setPromoError("Please enter a promo code");
-      return;
-    }
+  // const handleApplyPromoCode = () => {
+  //   if (!promoCode) {
+  //     setPromoError("Please enter a promo code");
+  //     return;
+  //   }
 
-    const newDiscount = applyPromoCode(promoCode, selectedPassenger.length);
-    if (newDiscount > 0) {
-      setDiscount(newDiscount);
-      setPromoError("");
-    } else {
-      setPromoError("Invalid promo code");
-    }
-  };
+  //   const newDiscount = applyPromoCode(promoCode, selectedPassenger.length);
+  //   if (newDiscount > 0) {
+  //     setDiscount(newDiscount);
+  //     setPromoError("");
+  //   } else {
+  //     setPromoError("Invalid promo code");
+  //   }
+  // };
 
   //--------------------------- HANDLE DROP DOWN -----------------------------
-  const handleDropDown = (index: number) => {
-    setOpenPassenger((prev) => (prev === index ? -1 : index));
-  };
+  // const handleDropDown = (index: number) => {
+  //   setOpenPassenger((prev) => (prev === index ? -1 : index));
+  // };
 
   //--------------------------- VALIDATE PASSENGER DETAILS -----------------------------
   // const isValidateInfo = () => {
@@ -424,8 +442,9 @@ export default function BusDetailsPage() {
     // let shouldAdd = isValidateInfo();
     let shouldProcced = isValidateDateTime();
     if (
-      // shouldAdd  && 
-      shouldProcced) {
+      // shouldAdd  &&
+      shouldProcced
+    ) {
       // // payment gateway
       // router.push(
       //   `/payment?busId=${tripId}&seats=${selectedPassenger.join(",")}&amount=${finalPrice}`
@@ -804,17 +823,17 @@ export default function BusDetailsPage() {
                       <span>Seats </span>
                       <span> {selectedPassenger.length}</span>
                     </div>
-                    {discount > 0 && (
+                    {/* {discount > 0 && (
                       <div className="flex justify-between text-green-600">
                         <span>Discount</span>
                         <span>
                           -
                           {formatPrice(
-                            (price * selectedPassenger.length * discount) / 100
+                            (price * selectedPassenger.length) / 100
                           )}
                         </span>
                       </div>
-                    )}
+                    )} */}
                   </div>
 
                   <Separator />
@@ -837,34 +856,78 @@ export default function BusDetailsPage() {
             )}
             <CardFooter className="flex flex-col gap-2">
               {/* //------------------------------ RAZORPAY PAYMENT -----------------------------------*/}
-              <FeedbackButton
-                className="w-full"
-                onClick={proceedToPayment}
-                disabled={
-                  selectedPassenger.length === 0 ||
-                  selectedDate === "" ||
-                  selectedTime === "" ||
-                  (selectedPickup == "" && pickup === null)
-                }
-              >
-                {selectedPassenger.length === 0
-                  ? "Select Seats"
-                  : "Proceed to Payment"}
-              </FeedbackButton>
+              {user ? (
+                <FeedbackButton
+                  className="w-full"
+                  onClick={proceedToPayment}
+                  disabled={
+                    selectedPassenger.length === 0 ||
+                    selectedDate === "" ||
+                    selectedTime === "" ||
+                    (selectedPickup == "" && pickup === null)
+                  }
+                >
+                  {selectedPassenger.length === 0
+                    ? "Select Seats"
+                    : "Proceed to Payment"}
+                </FeedbackButton>
+              ) : (
+                <Auth
+                  navigateRoute=""
+                  callback={[() => {}]}
+                  state={setUserDetails}
+                >
+                  <FeedbackButton
+                    className="w-full"
+                    variant="default"
+                    disabled={
+                      selectedPassenger.length === 0 ||
+                      selectedDate === "" ||
+                      selectedTime === "" ||
+                      (selectedPickup == "" && pickup === null)
+                    }
+                  >
+                    {selectedPassenger.length === 0
+                      ? "Select Seats"
+                      : "Proceed to Payment"}
+                  </FeedbackButton>
+                </Auth>
+              )}
 
               {/* //------------------------------ MANUAL PAYMENT -----------------------------------*/}
 
-              <PaymentDrawer
-                amount={finalPrice}
-                isDisabled={
-                  selectedPassenger.length === 0 ||
-                  selectedDate === "" ||
-                  selectedTime === "" ||
-                  (selectedPickup == "" && pickup === null)
-                }
-                handlePaymentByManual={handlePaymentByManual}
-                setPaymentProof={setPaymentProof}
-              />
+              {user ? (
+                <PaymentDrawer
+                  amount={finalPrice}
+                  isDisabled={
+                    selectedPassenger.length === 0 ||
+                    selectedDate === "" ||
+                    selectedTime === "" ||
+                    (selectedPickup == "" && pickup === null)
+                  }
+                  handlePaymentByManual={handlePaymentByManual}
+                  setPaymentProof={setPaymentProof}
+                />
+              ) : (
+                <Auth
+                  navigateRoute=""
+                  callback={[() => {}]}
+                  state={setUserDetails}
+                >
+                  <FeedbackButton
+                    className="w-full"
+                    variant="default"
+                    disabled={
+                      selectedPassenger.length === 0 ||
+                      selectedDate === "" ||
+                      selectedTime === "" ||
+                      (selectedPickup == "" && pickup === null)
+                    }
+                  >
+                    Proceed to Payment Manual
+                  </FeedbackButton>
+                </Auth>
+              )}
             </CardFooter>
           </Card>
 

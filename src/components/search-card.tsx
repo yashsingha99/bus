@@ -105,7 +105,7 @@ function SearchCard() {
       setIsLoading(true);
       setError(null);
       const res = await tripApi.getTripNames();
-     console.log(res);
+    //  console.log(res);
      
       if (Array.isArray(res)) {
         setDestinationData(res);
@@ -129,13 +129,13 @@ function SearchCard() {
     return <SearchCardSkeleton />;
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center p-4">
-        <div className="text-red-500">{error}</div>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="flex items-center justify-center p-4">
+  //       <div className="text-red-500">{error}</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex items-center justify-center">

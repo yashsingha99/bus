@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Clock, Clock4, MapPin, User } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, Clock4, MapPin } from "lucide-react";
 import axios from "axios";
 
 import { Button } from "@/components/ui/button";
@@ -37,8 +37,8 @@ export default function BookingConfirmationPage() {
         const response = await axios.get(
           `/api/passanger/booking?bookingId=${bookingId}`
         );
-        console.log(response);
-        
+        // console.log(response);
+
         setBooking(response.data.data);
       } catch (error) {
         console.error("Error fetching booking:", error);
@@ -51,9 +51,10 @@ export default function BookingConfirmationPage() {
     fetchBooking();
   }, [bookingId]);
 
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+  if (bookingId)
+    if (isLoading) {
+      return <LoadingSkeleton />;
+    }
 
   if (error || !booking) {
     return (
@@ -66,7 +67,10 @@ export default function BookingConfirmationPage() {
                 {error || "The booking you're looking for doesn't exist"}
               </p>
               <Link href="/searchBus">
-                <Button className="mt-4">Back to Search</Button>
+                <Button className="mt-4">
+                  {" "}
+                  <ArrowLeft className="ml-2 h-4 w-4" /> Back to Search
+                </Button>
               </Link>
             </div>
           </CardContent>
@@ -80,20 +84,24 @@ export default function BookingConfirmationPage() {
       <div className="mb-6 flex items-center">
         <Link href="/searchBus">
           <Button variant="ghost" size="sm">
+            <ArrowLeft className="ml-2 h-4 w-4" />
+            {" "}
             Back to Search
           </Button>
         </Link>
       </div>
-
       <Card className="mb-6">
         {booking.paymentStatus === "pending" ? (
           <CardHeader>
             <div className="flex items-center gap-2">
               <Clock4 className="h-6 w-6 text-yellow-500" />
-              <CardTitle className="text-2xl">Pending Booking!</CardTitle>
+              <CardTitle className="text-2xl">
+                Your Ticket Is Almost Confirmed!
+              </CardTitle>
             </div>
             <CardDescription>
-              Your ticket will be confirmed after the verification of the payment.
+              Passengers trust us even while their booking is being verified.
+              Your ticket will be confirmed shortly after payment verification.
             </CardDescription>
           </CardHeader>
         ) : (
@@ -103,7 +111,7 @@ export default function BookingConfirmationPage() {
               <CardTitle className="text-2xl">Booking Confirmed!</CardTitle>
             </div>
             <CardDescription>
-              Your booking has been successfully confirmed
+              Your booking has been successfully confirmed.
             </CardDescription>
           </CardHeader>
         )}
@@ -120,10 +128,6 @@ export default function BookingConfirmationPage() {
               <div className="flex items-center text-sm">
                 <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>Time: {booking.time}</span>
-              </div>
-              <div className="flex items-center text-sm">
-                <User className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>{booking.passengerDetails.length} Passenger(s)</span>
               </div>
             </div>
             <div className="space-y-4">
@@ -165,7 +169,7 @@ export default function BookingConfirmationPage() {
         </CardFooter>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Passenger Details</CardTitle>
         </CardHeader>
@@ -194,7 +198,7 @@ export default function BookingConfirmationPage() {
             ))}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

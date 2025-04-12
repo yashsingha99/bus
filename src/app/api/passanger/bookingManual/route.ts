@@ -5,7 +5,7 @@ import { UserModel } from "@/model/user.model";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+    console.log(body);
     // Validate required fields
     if (!body.pickupAddress || !body.bookedBy || !body.time || !body.totalAmount || !body.paymentProof) {
       return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const user = await UserModel.findOne({ clerkId: body.bookedBy });
+    const user = await UserModel.findById(body.bookedBy);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
     // Create booking
+    console.log(user);
     const booking = await BookingModel.create({
       pickupAddress: body.pickupAddress,
       bookedBy: user._id,
