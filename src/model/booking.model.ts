@@ -20,23 +20,6 @@ export interface IBooking extends Document {
 
 //---------------------------------------- Booking Model --------------------------------------------------------//
 
-const passengerSchema = new Schema({
-  name: { 
-    type: String, 
-    required: [true, "Passenger name is required"],
-    trim: true
-  },
-  phone: { 
-    type: String, 
-    required: [true, "Phone number is required"],
-    trim: true
-  },
-  gender: { 
-    type: String, 
-    required: [true, "Gender is required"],
-    enum: ["male", "female", "other"]
-  }
-}, { _id: false });
 
 const bookingSchema: Schema<IBooking> = new Schema(
   {

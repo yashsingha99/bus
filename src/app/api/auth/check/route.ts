@@ -5,7 +5,7 @@ import { UserModel } from "@/model/user.model";
 export async function POST(req: Request) {
   try {
     const { email, dob } = await req.json();
-    console.log(email, dob);
+    // console.log(email, dob);
     if (!email || !dob) {
       return NextResponse.json(
         { error: "Missing required fields" },

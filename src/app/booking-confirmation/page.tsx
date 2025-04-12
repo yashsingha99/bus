@@ -161,44 +161,13 @@ export default function BookingConfirmationPage() {
           </Button>
           <Button
             onClick={() =>
-              router.push(`/my-bookings?userId=${booking.bookedBy}`)
+              router.push(`/tickets`)
             }
           >
-            View My Bookings
+            View Tickets
           </Button>
         </CardFooter>
       </Card>
-
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>Passenger Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {booking.passengerDetails.map((passenger: any, index: number) => (
-              <div key={index} className="rounded-lg border p-4">
-                <h4 className="mb-2 font-medium">Passenger {index + 1}</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Name:</span>
-                    <span className="font-medium">{passenger.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Phone:</span>
-                    <span className="font-medium">{passenger.phone}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Gender:</span>
-                    <span className="font-medium capitalize">
-                      {passenger.gender}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }

@@ -15,7 +15,7 @@ const Navbar = () => {
   const { navigate } = useNavigation();
 
   const user = localStorage.getItem("user");
-  console.log(user);
+  // console.log(user);
   
   return (
     <header className="w-full ">

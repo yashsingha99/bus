@@ -185,6 +185,8 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       };
 
       const response = await axios.post(endpoint, payload);
+      console.log(response.data);
+      
       if (response.data) {
         if(state) {
           state(response.data.exists);
@@ -199,7 +201,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
         }
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Authentication failed');
+      toast.error(error.response?.data?.message || 'Invalid Email or DOB');
     } finally {
       setIsLoading(false);
     }

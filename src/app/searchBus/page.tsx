@@ -21,12 +21,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ITrip, SingleTrip } from "@/model/trip.model";
+import { ITrip } from "@/model/trip.model";
 import { formatPrice } from "@/utils/priceUtils";
 import { Toaster } from "sonner";
 import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
-
-//--------------------------- URL -----------------------------
 
 export default function BusSearchPage() {
   const router = useRouter();

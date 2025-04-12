@@ -12,7 +12,7 @@ export interface SingleTrip {
   Timing: [string];
   date: Date;
   Status: Status;
-  SeatsLimit: Number;
+  SeatsLimit: number;
 }
 
 export interface ITrip extends Document {

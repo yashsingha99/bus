@@ -23,7 +23,7 @@ import {
 } from "./ui/select";
 import { tripApi } from "@/API/trip.api";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { Toaster, toast } from "sonner";
 interface DataSchema {
   pickUp: string;
   destination: string;
@@ -90,7 +90,7 @@ function SearchCard() {
 
   const handleNavigate = () => {
     if (!roundTripData.pickUp || !roundTripData.destination) {
-      setError("Please select both pickup and destination locations");
+      toast.error("Please select both pickup and destination locations");
       return;
     }
     
@@ -139,6 +139,7 @@ function SearchCard() {
 
   return (
     <div className="flex items-center justify-center">
+      <Toaster />
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Quick Search</CardTitle>
