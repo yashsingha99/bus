@@ -22,6 +22,14 @@ interface Ticket {
   destination: {
     _id: string;
     name: string;
+    destinationAddress: string;
+    Trips: Array<{
+      _id: string;
+      date: string;
+      Timing: string[];
+      price: number;
+      SeatsLimit: number;
+    }>;
   };
   pickupAddress: string;
   time: string;
@@ -54,7 +62,7 @@ export default function TicketsPage() {
         const response = await axios.get(
           `/api/passanger/booking?userId=${user._id}`
         );
-        // console.log(response.data.data);
+        console.log(response.data.data);
 
         setTickets(response.data.data);
       } catch (err) {
@@ -178,35 +186,42 @@ export default function TicketsPage() {
                   <span className="font-medium">{ticket.pickupAddress}</span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Date:</span>
-                  <span className="font-medium">
-                    {new Date(
-                      ticket?.destination?.Trips?.[0]?.date
-                    ).toLocaleDateString()}
-                  </span>
-                </div>
+                {ticket?.destination?.Trips?.length > 0 ? (
+                  ticket.destination.Trips.map((trip, index) => (
+                    <div
+                      key={trip._id || index}
+                      className="border rounded p-2 bg-muted/30"
+                    >
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Date: </span>
+                        <span className="font-medium">
+                          {new Date(trip.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Timing:</span>
+                        <span className="font-medium">
+                          {trip.Timing.join(", ")}
+                        </span>
+                      </div>
+                      {/* <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Price:</span>
+                        <span className="font-medium">₹{trip.price}</span>
+                      </div> */}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    No trips found for this destination.
+                  </p>
+                )}
 
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Timing:</span>
-                  <span className="font-medium">
-                    {ticket?.destination?.Trips?.[0]?.Timing?.join(", ")}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Price:</span>
-                  <span className="font-medium">
-                    ₹{ticket?.destination?.Trips?.[0]?.price}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between mt-2">
                   <span className="text-gray-600">Passengers:</span>
                   <span className="font-medium">
-                    {ticket?.passengerDetails?.length || 1}
+                    {ticket.passengerDetails?.length || 1}
                   </span>
-                </div>
+                </div> */}
 
                 <div className="pt-4">
                   <Button
