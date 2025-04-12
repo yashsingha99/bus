@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Plus, X, AlertCircle, Trash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import {
   Select,
   SelectContent,
@@ -49,6 +49,20 @@ interface ITripApiData {
     Status: string;
     SeatsLimit: number;
   }[];
+}
+
+interface ValidationErrors {
+  _id?: string;
+  price?: string;
+  Timing?: string;
+  date?: string;
+  Status?: string;
+  SeatsLimit?: string;
+}
+
+interface FormErrors {
+  destinationAddress?: string;
+  [key: `trip-${number}`]: ValidationErrors;
 }
 
 function EditTripSkeleton() {
@@ -124,7 +138,7 @@ export default function EditTripPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ITrip | null>(null);
-  const [errors, setErrors] = useState<Record<string, any>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [activeTab, setActiveTab] = useState("0");
   const [error, setError] = useState<string | null>(null);
 
@@ -190,51 +204,42 @@ export default function EditTripPage() {
   }, [tripId]);
 
   const validateTrip = (trip: ITripItem) => {
-    const tripErrors: Record<string, string> = {};
-    if (!trip.price && trip.price !== 0) tripErrors.price = "Price is required";
-    if (!trip.date) tripErrors.date = "Date is required";
-    if (!trip.SeatsLimit && trip.SeatsLimit !== 0)
-      tripErrors.SeatsLimit = "Seats limit is required";
-    if (
-      !trip.Timing ||
-      trip.Timing.length === 0 ||
-      trip.Timing.some((t: string) => !t)
-    ) {
-      tripErrors.Timing = "At least one valid timing is required";
-    }
-    return tripErrors;
+    const validationErrors: ValidationErrors = {};
+    if (!trip.price && trip.price !== 0) validationErrors.price = "Price is required";
+    if (!trip.date) validationErrors.date = "Date is required";
+    if (!trip.Status) validationErrors.Status = "Status is required";
+    if (!trip.SeatsLimit) validationErrors.SeatsLimit = "Seats limit is required";
+    if (!trip.Timing || trip.Timing.length === 0) validationErrors.Timing = "At least one timing is required";
+    return validationErrors;
   };
 
   const validateForm = () => {
     if (!formData) return {};
 
-    const err: Record<string, any> = {};
+    const formValidationErrors: FormErrors = {};
     if (!formData.destinationAddress)
-      err.destinationAddress = "Destination is required";
+      formValidationErrors.destinationAddress = "Destination is required";
 
     formData.Trips.forEach((trip, index) => {
-      const tripErrors = validateTrip(trip);
-      if (Object.keys(tripErrors).length) err[`trip-${index}`] = tripErrors;
+      const tripValidationErrors = validateTrip(trip);
+      if (Object.keys(tripValidationErrors).length) formValidationErrors[`trip-${index}`] = tripValidationErrors;
     });
-    return err;
+    return formValidationErrors;
   };
 
-  const handleChange = (index: number, field: string, value: any) => {
+  const handleChange = (
+    index: number,
+    field: Exclude<keyof ITripItem, '_id'>,
+    value: string | number | string[]
+  ) => {
     if (!formData) return;
 
     const updatedTrips = [...formData.Trips];
-    updatedTrips[index] = { ...updatedTrips[index], [field]: value };
+    updatedTrips[index] = {
+      ...updatedTrips[index],
+      [field]: value,
+    };
     setFormData({ ...formData, Trips: updatedTrips });
-
-    // Clear error for this field if it exists
-    if (errors[`trip-${index}`]?.[field]) {
-      const updatedErrors = { ...errors };
-      delete updatedErrors[`trip-${index}`][field];
-      if (Object.keys(updatedErrors[`trip-${index}`]).length === 0) {
-        delete updatedErrors[`trip-${index}`];
-      }
-      setErrors(updatedErrors);
-    }
   };
 
   const handleDeleteTrip = (index: number) => {
@@ -321,7 +326,7 @@ export default function EditTripPage() {
   const prepareDataForSaving = () => {
     if (!formData) return null;
 
-    // Create a simplified trip object for the API
+    // Create a trip object for the API
     const apiTrip: ITripApiData = {
       destinationAddress: formData.destinationAddress,
       Trips: formData.Trips.map((trip) => ({
@@ -426,6 +431,7 @@ export default function EditTripPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <Toaster />
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">
           {tripId === "newTrip" ? "Create New Trip" : "Edit Trip"}

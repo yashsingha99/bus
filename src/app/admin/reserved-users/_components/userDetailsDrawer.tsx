@@ -1,17 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { IBooking } from "@/model/booking.model";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerDescription,
-  DrawerFooter,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -23,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-  CalendarIcon,
   Clock,
   MapPin,
   CreditCard,
@@ -34,21 +30,21 @@ import {
 import axios from "axios";
 import { toast } from "sonner";
 import { FeedbackButton } from "@/components/ui/feedback-button";
-import Image from "next/image";
 import { PopulatedBooking } from "../page";
-import { Skeleton } from "@/components/ui/skeleton";
 import { UserDetailsDrawerSkeleton } from "./user-details-drawer-skeleton";
+import Image from "next/image";
 
-interface PassengerDetails {
-  name: string;
-  phone: string;
-  gender: "male" | "female" | "other";
-}
+// interface PassengerDetails {
+//   name: string;
+//   phone: string;
+//   gender: "male" | "female" | "other";
+// }
 
 interface UserDetailsDrawerProps {
-  booking: PopulatedBooking & {
-    passengerDetails: PassengerDetails[];
-  };
+  booking: PopulatedBooking 
+    // & {
+    //   passengerDetails: PassengerDetails[];
+    // };
   isLoading?: boolean;
 }
 
@@ -71,7 +67,7 @@ export default function UserDetailsDrawer({
   const handleUpdate = async () => {
     try {
       setIsUpdating(true);
-      const response = await axios.put(`/api/admin/bookings/${booking._id}`, {
+      await axios.put(`/api/admin/bookings/${booking._id}`, {
         status,
         paymentStatus,
       });
@@ -180,7 +176,7 @@ export default function UserDetailsDrawer({
                 </Card>
 
                 {/* Passenger Details */}
-                <Card>
+                {/* <Card>
                   <CardContent className="p-4 space-y-4 overflow-y-auto max-h-[200px]">
                     <h3 className="font-semibold">Passenger Information</h3>
                     {booking?.passengerDetails.map(
@@ -207,7 +203,7 @@ export default function UserDetailsDrawer({
                     )}
                     
                   </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Payment Proof */}
                 {booking.paymentProof && (
@@ -218,9 +214,10 @@ export default function UserDetailsDrawer({
                         className="relative w-full h-48 cursor-pointer"
                         onClick={() => setIsImageFullScreen(true)}
                       >
-                        <img
+                        <Image
                           src={booking.paymentProof}
                           alt="Payment Proof"
+                          fill
                           className="object-contain rounded-lg"
                         />
                       </div>
@@ -298,11 +295,14 @@ export default function UserDetailsDrawer({
             >
               <X className="h-6 w-6" />
             </button>
-            <img
-              src={booking.paymentProof}
-              alt="Payment Proof"
-              className="max-h-full max-w-full object-contain"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={booking.paymentProof}
+                alt="Payment Proof"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
         </div>
       )}

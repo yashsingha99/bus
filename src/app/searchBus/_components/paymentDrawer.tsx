@@ -71,7 +71,7 @@ export default function PaymentDrawer({
           <DrawerHeader>
             <DrawerTitle>Payment Methods</DrawerTitle>
             <DrawerDescription>
-              Upload your payment proof to complete the booking
+              Make the payment first, then upload your screenshot here.
             </DrawerDescription>
             {/* <div className="mt-4">
               <Label>UPI ID</Label>
@@ -93,7 +93,7 @@ export default function PaymentDrawer({
                 </Button>
               </div>
             </div> */}
-            <FeedbackButton onClick={() => upiPay(amount)}>Proceed to Payment</FeedbackButton>
+            <FeedbackButton onClick={() => upiPay(amount)}>Proceed to Pay</FeedbackButton>
           </DrawerHeader>
           <div className="p-4 pb-0">
             <FileUpload 

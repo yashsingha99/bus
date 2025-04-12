@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
 import Link from "next/link";
 import AdminStats from "./_components/AdminStats";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 import { FeedbackButton } from "@/components/ui/feedback-button";
 import { Component as Analytics } from "./_components/Analytics";
+
 interface DashboardData {
   totalUsers: number;
   totalTrips: number;
@@ -84,12 +84,6 @@ export default function AdminDashboard() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<AdminStats>({
-    totalUsers: 0,
-    totalTrips: 0,
-    totalBookings: 0,
-    revenue: 0,
-  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -110,49 +104,6 @@ export default function AdminDashboard() {
 
     fetchDashboardData();
   }, [isLoaded, user]);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("/api/admin/stats");
-        setStats(response.data.data);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        toast.error("Failed to fetch statistics");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "confirmed":
-        return "bg-green-500";
-      case "pending":
-        return "bg-yellow-500";
-      case "cancelled":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
-        return "bg-green-500";
-      case "pending":
-        return "bg-yellow-500";
-      case "failed":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
 
   if (!isLoaded || loading) {
     return <LoadingSkeleton />;

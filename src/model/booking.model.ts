@@ -1,18 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 // import {DateTiming} from "./trip.model"
 //---------------------------------------- Booking Model Type Define --------------------------------------------------------//
-interface PassengerDetails {
-  name: string;
-  phone: string;
-  gender: "male" | "female" | "other";
-}
 
 export interface IBooking extends Document {
   pickupAddress: string;     
   bookedBy: mongoose.Types.ObjectId; 
   destination: mongoose.Types.ObjectId;
   time: string;
-  passengerDetails: PassengerDetails[];
   status: "pending" | "confirmed" | "cancelled";
   totalAmount: number;
   paymentStatus: "pending" | "completed" | "failed";
@@ -50,16 +44,6 @@ const bookingSchema: Schema<IBooking> = new Schema(
       type: String,
       required: [true, "Pickup address is required"],
       trim: true
-    },
-    passengerDetails: {
-      type: [passengerSchema],
-      required: [true, "At least one passenger is required"],
-      validate: {
-        validator: function(v: PassengerDetails[]) {
-          return v.length > 0;
-        },
-        message: "At least one passenger is required"
-      }
     },
     time: {
       type: String,

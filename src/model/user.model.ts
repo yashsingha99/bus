@@ -8,10 +8,10 @@ export enum ROLE {
 
 export interface IUser extends Document {
   fullName: string;
-  email: string;
-  phoneNumber: string;
-  clerkId: string;
+  phone: string;
   notifications: mongoose.Types.ObjectId[];
+  email: string;
+  dob: string;
   role: ROLE;
 }
 
@@ -22,21 +22,20 @@ const userSchema: Schema<IUser> = new Schema(
       required: true,
     },
 
+    phone: {
+      type: String,
+      required: true,
+    },
+
     email: {
       type: String,
       required: true,
       unique: true,
     },
 
-    phoneNumber: {
+    dob: {
       type: String,
       required: true,
-    },
-
-    clerkId: {
-      type: String,
-      required: true,
-      unique: true,
     },
 
     role: {

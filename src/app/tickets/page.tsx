@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
+// import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
+import Auth from "@/components/model/auth";
+// import { format } from "date-fns";
 
 interface Ticket {
   _id: string;
@@ -36,18 +37,20 @@ interface Ticket {
 }
 
 export default function TicketsPage() {
-  const { user, isLoaded } = useUser();
+  // const { user, isLoaded } = useUser();
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const userString = localStorage.getItem("user");
+  const user = userString ? JSON.parse(userString) : null;
 
   useEffect(() => {
     const fetchTickets = async () => {
-      if (!isLoaded || !user) return;
+      if (!user || !user._id) return;
 
       try {
-        const response = await axios.get(`/api/passanger/booking?userId=${user.id}`);
+        const response = await axios.get(`/api/passanger/booking?userId=${user._id}`);
         setTickets(response.data.data);
       } catch (err) {
         setError("Failed to fetch tickets. Please try again later.");
@@ -58,7 +61,7 @@ export default function TicketsPage() {
     };
 
     fetchTickets();
-  }, [isLoaded, user]);
+  }, [user]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -86,20 +89,24 @@ export default function TicketsPage() {
     }
   };
 
-  if (!isLoaded || loading) {
-    return <LoadingSkeleton />;
-  }
-
   if (!user) {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Please sign in to view your tickets</h1>
-          <Button onClick={() => router.push("/sign-in")}>Sign In</Button>
+
+          <Auth navigateRoute="" callback={() => {window.location.reload();}}>
+            <Button>Sign In</Button>
+          </Auth>
         </div>
       </div>
     );
   }
+
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
+
 
   if (error) {
     return (

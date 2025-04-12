@@ -56,10 +56,12 @@ export function FileUpload({
         <p className="text-sm text-center text-muted-foreground">
           {isDragActive
             ? "Drop the file here"
-            : "Drag & drop a file here, or click to select"}
+            : "Upload your payment screenshot by dragging it here or clicking to browse."}
         </p>
         <p className="text-xs text-center text-muted-foreground mt-1">
           Supported formats: JPG, PNG, PDF
+          <br />
+
         </p>
       </div>
 

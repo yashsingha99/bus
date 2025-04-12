@@ -1,31 +1,49 @@
-import { NextResponse } from 'next/server';
-import { dbConnection } from '@/lib/db';
-import { UserModel } from '@/model/user.model';
+import { NextResponse } from "next/server";
+import { dbConnection } from "@/lib/db";
+import { UserModel } from "@/model/user.model";
 
 export async function POST(req: Request) {
   try {
-    const { clerkId } = await req.json();
-
-    if (!clerkId) {
+    const { email, dob } = await req.json();
+    console.log(email, dob);
+    if (!email || !dob) {
       return NextResponse.json(
-        { error: 'Clerk ID is required' },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    await dbConnection();
+    try {
+      await dbConnection();
+    } catch (dbError) {
+      console.error("Database connection error:", dbError);
+      return NextResponse.json(
+        { error: "Database connection failed" },
+        { status: 500 }
+      );
+    }
 
     // Check if user exists
-    const user = await UserModel.findOne({ clerkId });
-
-    return NextResponse.json({
-      exists: !!user
+    const user = await UserModel.findOne({
+      $and: [
+        { $or: [{ email: email }, { phoneNumber: email }] },
+        { dob: dob },
+      ],
     });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ exists: user }, { status: 200 });
   } catch (error) {
-    console.error('Check user error:', error);
+    console.error("Check user error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
-} 
+}

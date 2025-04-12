@@ -140,7 +140,7 @@ export default function BusSearchPage() {
               <div className="space-y-4">
                 <div>
                   <h3 className="mb-2 font-medium">Available Dates:</h3>
-                  <div className="space-y-2">
+                  <div onClick={() => router.push(`/searchBus/source?destination=${trip._id}`)} className="space-y-2">
                     {trip.Trips.map((singleTrip) => (
                       <div key={singleTrip._id} className="rounded-md border p-2">
                         <div className="flex items-center justify-between">

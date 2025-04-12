@@ -1,10 +1,8 @@
 import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
 import { TripModel } from "@/model/trip.model";
-import { NextRequest, NextResponse } from "next/server";
-import { IBooking } from "@/model/booking.model";
+import { NextResponse } from "next/server";
 import { UserModel } from "@/model/user.model";
-import mongoose from "mongoose";
 
 export async function POST(request: Request) {
   await dbConnection(); 
@@ -17,7 +15,6 @@ export async function POST(request: Request) {
       'bookedBy', // This will be the Clerk ID
       'destination', 
       'time', 
-      'passengerDetails',
       'totalAmount',
       'paymentId'
     ];
@@ -31,13 +28,6 @@ export async function POST(request: Request) {
       );
     }
     
-    // Validate passenger details
-    if (!bookingData.passengerDetails || bookingData.passengerDetails.length === 0) {
-      return NextResponse.json(
-        { message: "At least one passenger is required" },
-        { status: 400 }
-      );
-    }
     
     // Validate trip exists
     const trip = await TripModel.findById(bookingData.destination);

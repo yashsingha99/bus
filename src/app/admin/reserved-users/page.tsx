@@ -13,7 +13,7 @@ import UserDetailsDrawer from "./_components/userDetailsDrawer";
 import axios from "axios";
 import { toast, Toaster } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
+import { Input } from "@/components/ui/input";
 
 export interface User {
   _id: string;
@@ -37,14 +37,8 @@ export interface PopulatedBooking {
   paymentId: string | null;
   createdAt: string;
   updatedAt: string;
-  passengerDetails: {
-    name: string;
-    phone: string;
-    gender: "male" | "female" | "other";
-  }[];
 }
 
-const URL = process.env.NEXT_PUBLIC_API_URL;
 
 function ReservedUsersSkeleton() {
   return (
@@ -88,8 +82,8 @@ export default function ReservedUsersPage() {
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState<PopulatedBooking | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  // const [selectedBooking, setSelectedBooking] = useState<PopulatedBooking | null>(null);
+  // const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const fetchBookings = async () => {
     try {
@@ -98,7 +92,7 @@ export default function ReservedUsersPage() {
       console.log(response.data.data );
       
       setBookings(response.data.data);
-    } catch (error) {
+    } catch (err) {
       toast.error("Failed to fetch bookings");
     } finally {
       setLoading(false);
@@ -108,36 +102,39 @@ export default function ReservedUsersPage() {
     fetchBookings();
   }, []);
 
-  // const filteredBookings = bookings?.filter((booking) =>
-  //   booking.bookedBy.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //   booking.bookedBy.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //   booking.bookedBy.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //   booking.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //   booking.pickupAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //   booking.time.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
+  // const filteredBookings = bookings.filter((booking) => {
+  //   const searchLower = searchTerm.toLowerCase();
+  //   return (
+  //     booking.bookedBy.fullName.toLowerCase().includes(searchLower) ||
+  //     booking.bookedBy.email.toLowerCase().includes(searchLower) ||
+  //     booking.bookedBy.phone.toLowerCase().includes(searchLower) ||
+  //     booking.destination.toLowerCase().includes(searchLower) ||
+  //     booking.pickupAddress.toLowerCase().includes(searchLower) ||
+  //     booking.time.toLowerCase().includes(searchLower)
+  //   );
+  // });
 
-  const handleUpdateBooking = async (updatedBooking: PopulatedBooking) => {
-    try {
-      await axios.put(`${URL}/api/admin/bookings/${updatedBooking._id}`, updatedBooking);
-      await fetchBookings();
-      setIsDrawerOpen(false);
-      toast.success("Booking updated successfully");
-    } catch (error) {
-      toast.error("Failed to update booking");
-    }
-  };
+  // const handleUpdateBooking = async (updatedBooking: PopulatedBooking) => {
+  //   try {
+  //     await axios.put(`/api/admin/bookings/${updatedBooking._id}`, updatedBooking);
+  //     await fetchBookings();
+  //     setIsDrawerOpen(false);
+  //     toast.success("Booking updated successfully");
+  //   } catch (error) {
+  //     toast.error("Failed to update booking");
+  //   }
+  // };
 
-  const handleDeleteBooking = async (bookingId: string) => {
-    try {
-      await axios.delete(`${URL}/api/admin/bookings/${bookingId}`);
-      await fetchBookings();
-      setIsDrawerOpen(false);
-      toast.success("Booking deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete booking");
-    }
-  };
+  // const handleDeleteBooking = async (bookingId: string) => {
+  //   try {
+  //     await axios.delete(`/api/admin/bookings/${bookingId}`);
+  //     await fetchBookings();
+  //     setIsDrawerOpen(false);
+  //     toast.success("Booking deleted successfully");
+  //   } catch (error) {
+  //     toast.error("Failed to delete booking");
+  //   }
+  // };
 
   return (
     <>
@@ -147,11 +144,10 @@ export default function ReservedUsersPage() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
-              <PlaceholdersAndVanishInput
-                placeholders={["Search by name, email, or phone..."]}
+              <Input
+                placeholder="Search by name, email, or phone..."
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                onSubmit={() => fetchBookings()}
-                styleInput="w-[90%]"
+                className="w-[90%]"
               />
             </div>
 

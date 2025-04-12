@@ -5,9 +5,10 @@ import jwt from "jsonwebtoken";
 
 export async function POST(req: Request) {
   try {
-    const { fullName, email, phoneNumber, clerkId } = await req.json();
-
-    if (!email || !fullName || !clerkId) {
+    const { phone, fullName, dob, email } = await req.json();
+    
+    console.log(phone, fullName, dob, email);
+    if (!phone || !fullName || !dob || !email) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -25,36 +26,35 @@ export async function POST(req: Request) {
     }
 
     try {
-      const existingUser = await UserModel.findOne({ clerkId });
+      const existingUser = await UserModel.findOne(
+        { $or: [{ phoneNumber: phone }, { email: email }] }
+      );
       if (existingUser) {
-        return NextResponse.json({
-          user: {
-            id: existingUser._id,
-            fullName: existingUser.fullName,
-            email: existingUser.email,
-            phoneNumber: existingUser.phoneNumber,
-            role: existingUser.role
-          }
-        });
+        return NextResponse.json(
+          { error: "User already exists" },
+          { status: 400 }
+        );
       }
 
       const newUser = await UserModel.create({
-        fullName,
-        email,
-        phoneNumber: phoneNumber || "",
-        clerkId,
+        fullName: fullName,
+        phoneNumber: phone || "",
+        email: email || "",
+        dob: dob,
         role: "USER",
         notifications: [],
       });
-
+      // console.log(newUser);
+      
       return NextResponse.json({
         user: {
           id: newUser._id,
           fullName: newUser.fullName,
-          email: newUser.email,
           phoneNumber: newUser.phoneNumber,
-          role: newUser.role
-        }
+          role: newUser.role,
+          email: newUser.email,
+          dob: newUser.dob,
+        },
       });
     } catch (modelError) {
       console.error("Model operation error:", modelError);

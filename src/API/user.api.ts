@@ -5,18 +5,16 @@ type User = {
   fullName: string;
   email: string;
   phoneNumber: string;
-  clerkId: string;
-};
-
-export const getUser = async (clerkId: string) => {
-  const response = await axios.get(`/api/user/${clerkId}`);
-  return response.data;
+  dob: string;
 };
 
 export const createUser = async (user: User) => {
-  const response = await axios.post(`/api/user`, user);
+  const response = await axios.post(`/api/auth`, user);
   return response.data;
 };
 
-
+export const login = async (user: User) => {
+  const response = await axios.post(`/api/auth/check`, user);
+  return response.data;
+};
 

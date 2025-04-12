@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from "next/image";
 
 function TripCardSkeleton() {
   return (
@@ -311,7 +312,16 @@ export default function TripManagementPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold">Trip Management</h1>
+        <div className="flex items-center gap-4">
+          <Image
+            src="/bus-title-log.png"
+            alt="Bus Logo"
+            width={40}
+            height={40}
+            className="object-contain"
+          />
+          <h1 className="text-3xl font-bold">Trip Management</h1>
+        </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
           <div className="relative flex-1 md:flex-none">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

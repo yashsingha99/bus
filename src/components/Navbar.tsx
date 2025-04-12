@@ -10,12 +10,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useNavigation } from "@/utils/navigation";
-// import LightEffectSpread from '@/subcomponents/Light-Effect';
+import Auth from "./model/auth";
 const Navbar = () => {
   const { isOpen, openDrawer } = useDrawerContext();
   const { navigate } = useNavigation();
-  const { isSignedIn, user } = useUser();
 
+  const user = localStorage.getItem("user");
+  console.log(user);
+  
   return (
     <header className="w-full ">
       <div className="container mx-auto px-4 ">
@@ -29,7 +31,7 @@ const Navbar = () => {
             </Link>
 
             <div className="flex items-center gap-4">
-              {isSignedIn && (
+              {user !== null ? (
                 <div className="flex items-center gap-2">
                   <Button
                     onClick={() => navigate("/tickets")}
@@ -39,6 +41,15 @@ const Navbar = () => {
                     My Tickets
                   </Button>
                 </div>
+              ) : (
+                <Auth navigateRoute="/tickets" callback={() => {}}>
+                  <Button
+                    variant="outline"
+                    className="sm:inline-flex rounded-3xl border-[#5157C1] py-5 px-6 text-md font-medium"
+                  >
+                    My Tickets
+                  </Button>
+                </Auth>
               )}
 
               <button
@@ -59,3 +70,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

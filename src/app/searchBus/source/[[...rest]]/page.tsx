@@ -65,12 +65,12 @@ export default function BusDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [openPassenger, setOpenPassenger] = useState(-1);
   const [selectedPassenger, setSelectedPassenger] = useState([1]);
-  const [passengerDetails, setPassengerDetails] = useState([
-    { name: "", phone: "", gender: "" },
-  ]);
-  const [error, setError] = useState([
-    { name: false, phone: false, gender: false },
-  ]);
+  // const [passengerDetails, setPassengerDetails] = useState([
+  //   { name: "", phone: "", gender: "" },
+  // ]);
+  // const [error, setError] = useState([
+  //   { name: false, phone: false, gender: false },
+  // ]);
   const [errorDateTime, setErrorDateTime] = useState({
     date: false,
     time: false,
@@ -99,10 +99,12 @@ export default function BusDetailsPage() {
   const handlePaymentByManual = async () => {
     setIsLoading(true);
     try {
-      let shouldAdd = isValidateInfo();
+      // let shouldAdd = isValidateInfo();
       let shouldProcced = isValidateDateTime();
 
-      if (!shouldAdd || !shouldProcced || !paymentProof) {
+      if (
+        // !shouldAdd ||
+         !shouldProcced || !paymentProof) {
         alert("Please fill all required fields correctly");
         setIsLoading(false);
         return;
@@ -129,7 +131,7 @@ export default function BusDetailsPage() {
         bookedBy: userData.clerkId,
         destination: tripId,
         time: selectedTime,
-        passengerDetails: passengerDetails,
+        // passengerDetails: passengerDetails,
         totalAmount: finalPrice,
         status: "pending",
         paymentStatus: "pending",
@@ -166,21 +168,23 @@ export default function BusDetailsPage() {
     setIsLoading(true);
     try {
       // Validate passenger details and date/time
-      let shouldAdd = isValidateInfo();
+      // let shouldAdd = isValidateInfo();
       let shouldProcced = isValidateDateTime();
 
-      if (!shouldAdd || !shouldProcced) {
+      if (
+        // !shouldAdd ||
+         !shouldProcced) {
         alert("Please fill all required fields correctly");
         setIsLoading(false);
         return;
       }
 
       // Format passenger details for the booking
-      const formattedPassengerDetails = passengerDetails.map((passenger) => ({
-        name: passenger.name,
-        phone: passenger.phone,
-        gender: passenger.gender.toLowerCase() as "male" | "female" | "other",
-      }));
+      // const formattedPassengerDetails = passengerDetails.map((passenger) => ({
+      //   name: passenger.name,
+      //   phone: passenger.phone,
+      //   gender: passenger.gender.toLowerCase() as "male" | "female" | "other",
+      // }));
 
       // Create order ID for payment
       const orderId: string = await createOrderId(finalPrice, "INR");
@@ -212,7 +216,7 @@ export default function BusDetailsPage() {
               bookedBy: userData.clerkId,
               destination: tripId,
               time: selectedTime,
-              passengerDetails: formattedPassengerDetails,
+              // passengerDetails: formattedPassengerDetails,
               totalAmount: finalPrice,
               status: "pending",
               paymentStatus: "pending",
@@ -337,20 +341,20 @@ export default function BusDetailsPage() {
   };
 
   //--------------------------- VALIDATE PASSENGER DETAILS -----------------------------
-  const isValidateInfo = () => {
-    const newError = passengerDetails.map(({ name, phone, gender }) => ({
-      name: name === "",
-      phone: phone.length !== 10,
-      gender: gender === "",
-    }));
+  // const isValidateInfo = () => {
+  //   const newError = passengerDetails.map(({ name, phone, gender }) => ({
+  //     name: name === "",
+  //     phone: phone.length !== 10,
+  //     gender: gender === "",
+  //   }));
 
-    setError(newError);
+  //   setError(newError);
 
-    const shouldAdd = newError.every(
-      (err) => !err.name && !err.phone && !err.gender
-    );
-    return shouldAdd;
-  };
+  //   const shouldAdd = newError.every(
+  //     (err) => !err.name && !err.phone && !err.gender
+  //   );
+  //   return shouldAdd;
+  // };
 
   //--------------------------- VALIDATE DATE AND TIME -----------------------------
   const isValidateDateTime = () => {
@@ -369,57 +373,59 @@ export default function BusDetailsPage() {
   };
 
   //--------------------------- HANDLE ADD PASSENGER -----------------------------
-  const handleAddPassenger = () => {
-    let shouldAdd = isValidateInfo();
+  // const handleAddPassenger = () => {
+  //   // let shouldAdd = isValidateInfo();
 
-    if (shouldAdd) {
-      setSelectedPassenger((prev) => [...prev, prev.length + 1]);
-      setPassengerDetails((prev) => [
-        ...prev,
-        { name: "", phone: "", gender: "" },
-      ]);
-      setError((prev) => [
-        ...prev,
-        { name: false, phone: false, gender: false },
-      ]);
-    }
-  };
+  //   if (shouldAdd) {
+  //     setSelectedPassenger((prev) => [...prev, prev.length + 1]);
+  //     setPassengerDetails((prev) => [
+  //       ...prev,
+  //       { name: "", phone: "", gender: "" },
+  //     ]);
+  //     setError((prev) => [
+  //       ...prev,
+  //       { name: false, phone: false, gender: false },
+  //     ]);
+  //   }
+  // };
 
   //--------------------------- UPDATE PASSENGER DETAILS -----------------------------
-  const updatePassengerDetail = (
-    index: number,
-    field: string,
-    value: string
-  ) => {
-    const updatedDetails = [...passengerDetails];
-    updatedDetails[index] = { ...updatedDetails[index], [field]: value };
-    setPassengerDetails(updatedDetails);
-  };
+  // const updatePassengerDetail = (
+  //   index: number,
+  //   field: string,
+  //   value: string
+  // ) => {
+  //   const updatedDetails = [...passengerDetails];
+  //   updatedDetails[index] = { ...updatedDetails[index], [field]: value };
+  //   setPassengerDetails(updatedDetails);
+  // };
 
   //--------------------------- HANDLE REMOVE PASSENGER -----------------------------
-  const handleRemovePassenger = (index: number) => {
-    if (passengerDetails.length > 1) {
-      const newSelectedPassenger = [...selectedPassenger];
-      newSelectedPassenger.pop();
-      setSelectedPassenger(newSelectedPassenger);
+  // const handleRemovePassenger = (index: number) => {
+  //   if (passengerDetails.length > 1) {
+  //     const newSelectedPassenger = [...selectedPassenger];
+  //     newSelectedPassenger.pop();
+  //     setSelectedPassenger(newSelectedPassenger);
 
-      const newPassengerDetails = passengerDetails.filter(
-        (_, idx) => idx !== index
-      );
-      setPassengerDetails(newPassengerDetails);
+  //     const newPassengerDetails = passengerDetails.filter(
+  //       (_, idx) => idx !== index
+  //     );
+  //     setPassengerDetails(newPassengerDetails);
 
-      const newError = error.filter((_, idx) => idx !== index);
-      setError(newError);
-    } else {
-      alert("At least one passenger is required");
-    }
-  };
+  //     const newError = error.filter((_, idx) => idx !== index);
+  //     setError(newError);
+  //   } else {
+  //     alert("At least one passenger is required");
+  //   }
+  // };
 
   //--------------------------- PROCEED TO PAYMENT -----------------------------
   const proceedToPayment = () => {
-    let shouldAdd = isValidateInfo();
+    // let shouldAdd = isValidateInfo();
     let shouldProcced = isValidateDateTime();
-    if (shouldAdd && shouldProcced) {
+    if (
+      // shouldAdd  && 
+      shouldProcced) {
       // // payment gateway
       // router.push(
       //   `/payment?busId=${tripId}&seats=${selectedPassenger.join(",")}&amount=${finalPrice}`
@@ -618,7 +624,7 @@ export default function BusDetailsPage() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-[1fr_350px]">
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           {selectedPassenger.length > 0 && (
             <Card>
               <CardHeader>
@@ -757,7 +763,7 @@ export default function BusDetailsPage() {
               </CardContent>
             </Card>
           )}
-        </div>
+        </div> */}
 
         <div>
           <Card className="sticky top-6">

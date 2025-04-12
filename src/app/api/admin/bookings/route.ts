@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
-import { Types } from "mongoose";
+// import { Types } from "mongoose";
 
 interface QueryParams {
   page?: string;
