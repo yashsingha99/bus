@@ -217,7 +217,8 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
         if (state) {
           state(response.data.exists);
         }
-        localStorage.setItem("user", JSON.stringify(response.data.exists));
+        console.log(response.data)
+        localStorage.setItem("user", JSON.stringify(response.data.user));
         toast.success(
           isSignIn ? "Signed in successfully!" : "Registered successfully!"
         );

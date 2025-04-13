@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ exists: user }, { status: 200 });
+    return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
     console.error("Check user error:", error);
     return NextResponse.json(
