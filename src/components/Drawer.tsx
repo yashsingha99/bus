@@ -16,7 +16,7 @@ const Drawer = () => {
   const userData = userDataString ? JSON.parse(userDataString || "{}") : null;
   const navigation = [
     { page: "Home", navigate: "/" },
-    { page: "Book", navigate: "book" },
+    { page: "Book", navigate: "/searchBus" },
     { page: "Ticket", navigate: "/tickets" },
     { page: "News", navigate: "/" },
     { page: "About", navigate: "/" },
