@@ -41,8 +41,8 @@ interface SignUpErrors {
   phone: string;
 }
 
-interface dataType {
-  _id: string;
+interface DataType {
+  id: string;
   fullName: string;
   email: string;
   phone: string;
@@ -53,7 +53,7 @@ type AuthProps = {
   children: React.ReactNode;
   navigateRoute: string;
   callback: (() => void)[];
-  state: (data: dataType) => void;
+  state: (data: DataType | null) => void;
 };
 
 function Auth({ children, navigateRoute, callback, state }: AuthProps) {
@@ -215,9 +215,9 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
 
       if (response.data) {
         if (state) {
-          state(response.data.exists);
+          state(response.data.user);
         }
-        console.log(response.data)
+        // console.log(response.data)
         const userD = {
           email: response.data.user.email,
           fullName: response.data.user.fullname,
@@ -246,6 +246,8 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       setIsLoading(false);
     }
   };
+
+  
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

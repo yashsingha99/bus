@@ -41,6 +41,7 @@ const Drawer = () => {
   const handleSignOut = () => {
     localStorage.removeItem("user");
     closeDrawer();
+    window.location.reload()
   };
 
   if (!isVisible) return null;
