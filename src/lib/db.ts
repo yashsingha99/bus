@@ -17,7 +17,7 @@ export const dbConnection = async (): Promise<void> => {
     const URI = process.env.NEXT_MONGODB_URI 
     // || "mongodb://localhost:27017"
     
-    const db = await mongoose.connect(URI);
+    const db = await mongoose.connect(URI!);
     connection.isConnected = db.connections[0].readyState;
     console.log("Connected to the database");
   } catch (error) {
