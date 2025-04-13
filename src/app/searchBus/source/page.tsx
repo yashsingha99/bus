@@ -38,7 +38,7 @@ import axios from "axios";
 import Script from "next/script";
 import { toast, Toaster } from "sonner";
 import LoadingSkeleton from "../_components/loading-skeleton";
-import PaymentDrawer from "../_components/paymentDrawer";
+// import PaymentDrawer from "../_components/paymentDrawer";
 import Auth from "@/components/model/auth";
 
 interface RazorpayResponse {
@@ -86,7 +86,7 @@ interface RazorpayInstance {
 }
 
   interface User {
-  id: string;
+  id?: string;
   fullName: string;
   email: string;
   phone: string;
@@ -109,8 +109,9 @@ export default function BusDetailsPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedPickup, setSelectedPickup] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [paymentProof, setPaymentProof] = useState<File>();
+  // const [paymentProof, setPaymentProof] = useState<File>();
   const [user, setUser] = useState<User | null>(null);
+  const [userDetails, setUserDetails] = useState<User | null>(null);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
@@ -128,66 +129,66 @@ export default function BusDetailsPage() {
   const isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
 
   //--------------------------------------- HANDLE PAYMENT BY MANUAL -----------------------------------
-  const handlePaymentByManual = async () => {
-    setIsLoading(true);
-    try {
-      const shouldProcced = isValidateDateTime();
+  // const handlePaymentByManual = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const shouldProcced = isValidateDateTime();
 
-      if (!shouldProcced || !paymentProof) {
-        alert("Please fill all required fields correctly");
-        setIsLoading(false);
-        return;
-      }
+  //     if (!shouldProcced || !paymentProof) {
+  //       alert("Please fill all required fields correctly");
+  //       setIsLoading(false);
+  //       return;
+  //     }
 
-      const formData = new FormData();
-      formData.append("file", paymentProof);
+  //     const formData = new FormData();
+  //     formData.append("file", paymentProof);
 
-      const uploadResponse = await axios.post(`/api/upload`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+  //     const uploadResponse = await axios.post(`/api/upload`, formData, {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //       },
+  //     });
 
-      if (!uploadResponse.data.url) {
-        throw new Error("Failed to upload payment proof");
-      }
+  //     if (!uploadResponse.data.url) {
+  //       throw new Error("Failed to upload payment proof");
+  //     }
 
-      const paymentProofUrl = uploadResponse.data.url;
-      const bookingResponse = await axios.post(`/api/passanger/bookingManual`, {
-        pickupAddress: pickup || selectedPickup,
-        bookedBy: user?.id,
-        destination: tripId,
-        time: selectedTime,
-        totalAmount: finalPrice,
-        status: "pending",
-        paymentStatus: "pending",
-        paymentProof: paymentProofUrl,
-      });
-      console.log(bookingResponse);
-      const booking = bookingResponse.data.data;
+  //     const paymentProofUrl = uploadResponse.data.url;
+  //     const bookingResponse = await axios.post(`/api/passanger/bookingManual`, {
+  //       pickupAddress: pickup || selectedPickup,
+  //       bookedBy: user?.id,
+  //       destination: tripId,
+  //       time: selectedTime,
+  //       totalAmount: finalPrice,
+  //       status: "pending",
+  //       paymentStatus: "pending",
+  //       paymentProof: paymentProofUrl,
+  //     });
+  //     console.log(bookingResponse);
+  //     const booking = bookingResponse.data.data;
 
-      if (booking && booking._id) {
-        toast("Booking Successful!", {
-          description: "Your booking has been confirmed",
-          action: {
-            label: "View Booking",
-            onClick: () =>
-              router.push(`/booking-confirmation?bookingId=${booking._id}`),
-          },
-        });
-        router.push(`/booking-confirmation?bookingId=${booking._id}`);
-      } else {
-        throw new Error("Failed to create booking");
-      }
-    } catch (error) {
-      console.error("Error processing payment:", error);
-      toast("Payment Failed!", {
-        description: "Please try again or contact support.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     if (booking && booking._id) {
+  //       toast("Booking Successful!", {
+  //         description: "Your booking has been confirmed",
+  //         action: {
+  //           label: "View Booking",
+  //           onClick: () =>
+  //             router.push(`/booking-confirmation?bookingId=${booking._id}`),
+  //         },
+  //       });
+  //       router.push(`/booking-confirmation?bookingId=${booking._id}`);
+  //     } else {
+  //       throw new Error("Failed to create booking");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error processing payment:", error);
+  //     toast("Payment Failed!", {
+  //       description: "Please try again or contact support.",
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   //-------------------------------------- HANDLE PAYMENT BY RAZORPAY ----------------------------------
   const handlePaymentByRazorpay = async () => {
@@ -196,12 +197,12 @@ export default function BusDetailsPage() {
       const shouldProcced = isValidateDateTime();
       if (!shouldProcced) return;
 
-      const orderId: string = await createOrderId(1, "INR");
-      console.log("Order ID:", orderId);
+      const orderId: string = await createOrderId( finalPrice, "INR");
+      // console.log("Order ID:", orderId);
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
-        amount: 1 * 100,
+        amount: finalPrice * 100,
         currency: "INR",
         name: "Bustify Ticket Booking",
         description: `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"}`,
@@ -225,7 +226,7 @@ export default function BusDetailsPage() {
               bookedBy: user?.id,
               destination: tripId,
               time: selectedTime,
-              totalAmount: 1,
+              totalAmount: finalPrice,
               status: "pending",
               paymentStatus: "pending",
               paymentId: response.razorpay_payment_id,
@@ -346,6 +347,8 @@ export default function BusDetailsPage() {
 
   const proceedToPayment = () => {
     const shouldProcced = isValidateDateTime();
+    console.log(userDetails);
+    
     if (!user) {
       toast.error("Please sign in to proceed with payment");
       return;
@@ -602,15 +605,15 @@ export default function BusDetailsPage() {
                 <Auth
                   navigateRoute=""
                   callback={[() => {}]}
-                  state={() => {
-                    // if (data) {
-                    //   setUserDetails({
-                    //     fullName: data.fullName,
-                    //     email: data.email,
-                    //     phone: data.phone,
-                    //     userId: data._id,
-                    //   });
-                    // }
+                  state={(data) => {
+                    if (data) {
+                      setUserDetails({
+                        fullName: data.fullName,
+                        email: data.email,
+                        phone: data.phone,
+                        id: data._id,
+                      });
+                    }
                   }}
                 >
                   <FeedbackButton
@@ -629,7 +632,7 @@ export default function BusDetailsPage() {
 
               {/* //------------------------------ MANUAL PAYMENT -----------------------------------*/}
 
-              {user ? (
+              {/* {user ? (
                 <PaymentDrawer
                   amount={finalPrice}
                   isDisabled={
@@ -667,7 +670,7 @@ export default function BusDetailsPage() {
                     Proceed to Payment Manual
                   </FeedbackButton>
                 </Auth>
-              )}
+              )} */}
             </CardFooter>
           </Card>
 

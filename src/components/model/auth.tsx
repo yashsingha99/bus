@@ -315,7 +315,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="dob">Date of Birth</Label>
+            <Label htmlFor="dob">Date of Birth (Use as Password) </Label>
             <Input
               id="dob"
               name="dob"
