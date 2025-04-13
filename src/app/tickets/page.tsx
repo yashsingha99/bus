@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Auth from "@/components/model/auth";
-import { User } from "@/types/user.type";
 // import { format } from "date-fns";
 
 interface Ticket {
@@ -44,12 +43,19 @@ interface Ticket {
   }>;
   createdAt: string;
 }
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role?: string;
+}
 
 export default function TicketsPage() {
   // const { user, isLoaded } = useUser();
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   useEffect(() => {
@@ -60,18 +66,16 @@ export default function TicketsPage() {
     }
   }, []);
   const fetchTickets = useCallback(async () => {
-    if (!user || !user._id) return;
-
+    if (!user || !user.id) return;
     try {
+      setLoading(true);
       const response = await axios.get(
-        `/api/passanger/booking?userId=${user._id}`
+        `/api/passanger/booking?userId=${user.id}`
       );
-      console.log(response.data.data);
-
       setTickets(response.data.data);
     } catch (err) {
-      setError("Failed to fetch tickets. Please try again later.");
       console.error("Error fetching tickets:", err);
+      setError("You haven't booked your seat.");
     } finally {
       setLoading(false);
     }
@@ -105,8 +109,7 @@ export default function TicketsPage() {
         return "bg-gray-500";
     }
   };
-
-  if (!user) {
+  if (user === null) {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center">
@@ -137,7 +140,7 @@ export default function TicketsPage() {
   if (error) {
     return (
       <div className="container mx-auto p-4">
-        <div className="text-center text-red-500">
+        <div className="text-center text-black">
           <h1 className="text-2xl font-bold mb-4">{error}</h1>
           <Button onClick={() => window.location.reload()}>Try Again</Button>
         </div>

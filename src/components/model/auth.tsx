@@ -218,7 +218,14 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
           state(response.data.exists);
         }
         console.log(response.data)
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        const userD = {
+          email: response.data.user.email,
+          fullName: response.data.user.fullname,
+          phone: response.data.user.phone,
+          role: response.data.user.role,
+          id: response.data.user._id,
+        };
+        localStorage.setItem("user", JSON.stringify(userD));
         toast.success(
           isSignIn ? "Signed in successfully!" : "Registered successfully!"
         );

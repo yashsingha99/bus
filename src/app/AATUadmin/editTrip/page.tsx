@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { ITrip, SingleTrip } from "@/model/trip.model";
 import mongoose from "mongoose";
-import { User } from "@/types/user.type";
 
 // Interface matching the server data structure
 // interface ITripItem {
@@ -171,14 +170,17 @@ export default function EditTripPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [activeTab, setActiveTab] = useState("0");
   const [error, setError] = useState<string | null>(null);
- const [user, setUser] = useState<User | null>(null);
+//  const [user, setUser] = useState<User | null>(null);
  useEffect(() => {
    if (typeof window !== "undefined") {
      const userString = localStorage.getItem("user");
      const userData = userString ? JSON.parse(userString) : null;
-     setUser(userData);
+     if(userData.role !== "ADMIN"){
+      router.push("/")
+     }
+    //  setUser(userData);
    }
- }, []);
+ }, [router]);
 
   function createEmptyTrip(): SingleTrip {
     return {
@@ -191,11 +193,6 @@ export default function EditTripPage() {
     };
   }
 
-  useEffect(() => {
-    if (!user || user.role !== "ADMIN") {
-      router.push("/");
-    }
-  }, [user, router]);
 
   useEffect(() => {
     if (!tripId) {
@@ -335,7 +332,8 @@ export default function EditTripPage() {
     const updatedTrips = [...formData.Trips];
     updatedTrips[tripIndex] = {
       ...updatedTrips[tripIndex],
-      Timing: [""] as [string],
+      // @ts-expect-error-ignore
+      Timing: [...updatedTrips[tripIndex].Timing, ""],
     };
     setFormData({ ...formData, Trips: updatedTrips });
   };
@@ -348,10 +346,8 @@ export default function EditTripPage() {
     if (!formData) return;
 
     const updatedTrips = [...formData.Trips];
-    updatedTrips[tripIndex] = {
-      ...updatedTrips[tripIndex],
-      Timing: [value] as [string],
-    };
+    updatedTrips[tripIndex].Timing[timingIndex] = value;
+
     setFormData({ ...formData, Trips: updatedTrips });
   };
 
@@ -440,7 +436,7 @@ export default function EditTripPage() {
 
   const handleDeleteDestination = async () => {
     if (!tripId || tripId === "newTrip") {
-      router.push("/admin/trips");
+      router.push("/AATUadmin/trips");
       return;
     }
 
@@ -448,7 +444,7 @@ export default function EditTripPage() {
       setIsSubmitting(true);
       await tripApi.deleteTrip(tripId);
       toast.success("Destination deleted successfully");
-      router.push("/admin/trips");
+      router.push("/AATUadmin/trips");
     } catch (err) {
       console.error("Error deleting destination:", err);
       toast.error("Failed to delete destination. Please try again.");
@@ -468,7 +464,7 @@ export default function EditTripPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
         <div className="mt-4">
-          <Button onClick={() => router.push("/admin/trips")}>
+          <Button onClick={() => router.push("/AATUadmin/trips")}>
             Back to Trips
           </Button>
         </div>
@@ -485,7 +481,7 @@ export default function EditTripPage() {
           <AlertDescription>No trip data available</AlertDescription>
         </Alert>
         <div className="mt-4">
-          <Button onClick={() => router.push("/admin/trips")}>
+          <Button onClick={() => router.push("/AATUadmin/trips")}>
             Back to Trips
           </Button>
         </div>

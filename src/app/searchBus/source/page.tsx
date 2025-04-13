@@ -40,7 +40,6 @@ import { toast, Toaster } from "sonner";
 import LoadingSkeleton from "../_components/loading-skeleton";
 import PaymentDrawer from "../_components/paymentDrawer";
 import Auth from "@/components/model/auth";
-import { User } from "@/types/user.type";
 
 interface RazorpayResponse {
   razorpay_payment_id: string;
@@ -86,18 +85,21 @@ interface RazorpayInstance {
   open: () => void;
 }
 
+  interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role?: string;
+}
+
 export default function BusDetailsPage() {
   const searchParams = useSearchParams();
   const pickup = searchParams.get("pickup");
   const tripId = searchParams.get("destination") as string;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [userDetails, setUserDetails] = useState<{
-    fullName: string;
-    email: string;
-    phone: string;
-    userId: string;
-  } | null>(null);
+
   const [errorDateTime, setErrorDateTime] = useState({
     date: false,
     time: false,
@@ -120,7 +122,7 @@ export default function BusDetailsPage() {
     fullName: user?.fullName,
     email: user?.email,
     phone: user?.phone || "",
-    userId: user?._id,
+    userId: user?.id,
   };
 
   const isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
@@ -153,7 +155,7 @@ export default function BusDetailsPage() {
       const paymentProofUrl = uploadResponse.data.url;
       const bookingResponse = await axios.post(`/api/passanger/bookingManual`, {
         pickupAddress: pickup || selectedPickup,
-        bookedBy: userData.userId,
+        bookedBy: user?.id,
         destination: tripId,
         time: selectedTime,
         totalAmount: finalPrice,
@@ -194,12 +196,12 @@ export default function BusDetailsPage() {
       const shouldProcced = isValidateDateTime();
       if (!shouldProcced) return;
 
-      const orderId: string = await createOrderId(finalPrice, "INR");
+      const orderId: string = await createOrderId(1, "INR");
       console.log("Order ID:", orderId);
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
-        amount: finalPrice * 100,
+        amount: 1 * 100,
         currency: "INR",
         name: "Bustify Ticket Booking",
         description: `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"}`,
@@ -220,10 +222,10 @@ export default function BusDetailsPage() {
 
             const bookingResponse = await axios.post(`/api/passanger/booking`, {
               pickupAddress: pickup || selectedPickup,
-              bookedBy: userData.userId,
+              bookedBy: user?.id,
               destination: tripId,
               time: selectedTime,
-              totalAmount: finalPrice,
+              totalAmount: 1,
               status: "pending",
               paymentStatus: "pending",
               paymentId: response.razorpay_payment_id,
@@ -344,7 +346,7 @@ export default function BusDetailsPage() {
 
   const proceedToPayment = () => {
     const shouldProcced = isValidateDateTime();
-    if (!userDetails) {
+    if (!user) {
       toast.error("Please sign in to proceed with payment");
       return;
     }
@@ -355,10 +357,7 @@ export default function BusDetailsPage() {
 
   const handleTimeChange = useCallback((time: string) => {
     setSelectedTime(time);
-    if (tripId) {
-      router.push(`/searchBus/source?destination=${tripId}&time=${time}`);
-    }
-  }, [router, tripId]);
+  }, []);
 
   //--------------------------- LOADING SKELETON -----------------------------
   if (isLoading) {
@@ -550,147 +549,6 @@ export default function BusDetailsPage() {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-[1fr_350px]">
-        {/* <div className="space-y-6">
-          {selectedPassenger.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Passenger Details</CardTitle>
-                <CardDescription>
-                  Enter details for each passenger
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="details">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="details">Passenger Details</TabsTrigger>
-                    <TabsTrigger value="bus-info">Bus Information</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="details" className="space-y-4 pt-4">
-                    {selectedPassenger.map((pId, index) => (
-                      <div key={index} className="rounded-lg border p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                          <div
-                            className="w-[80%]"
-                            onClick={() => handleDropDown(index)}
-                          >
-                            <h4 className="font-medium">
-                              Passenger {index + 1}
-                            </h4>
-                          </div>
-                          <div className="w-[15%]">
-                            <FeedbackButton
-                              onClick={() => handleRemovePassenger(index)}
-                              className="bg-gray-50 hover:bg-gray-100 rounded-full"
-                            >
-                              <Trash2 color="red" />
-                            </FeedbackButton>
-                          </div>
-                        </div>
-                        <div
-                          className={`grid gap-4 md:grid-cols-3 ${
-                            openPassenger === index
-                              ? "max-h-0 opacity-0"
-                              : "opacity-100"
-                          }`}
-                        >
-                          <div className="space-y-2">
-                            <Label htmlFor={`name-${index}`}>Full Name</Label>
-                            <Input
-                              id={`name-${index}`}
-                              value={passengerDetails[index]?.name || ""}
-                              onChange={(e) =>
-                                updatePassengerDetail(
-                                  index,
-                                  "name",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="John Doe"
-                            />
-                            {error[index]?.name && (
-                              <p className="text-red-600 text-sm">
-                                Full Name is Required
-                              </p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`phone-${index}`}>
-                              Phone Number
-                            </Label>
-                            <Input
-                              id={`phone-${index}`}
-                              value={passengerDetails[index]?.phone || ""}
-                              onChange={(e) =>
-                                updatePassengerDetail(
-                                  index,
-                                  "phone",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="1234567890"
-                            />
-                            {error[index]?.phone && (
-                              <p className="text-red-600 text-sm">
-                                Phone Number must be 10 digits
-                              </p>
-                            )}
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`gender-${index}`}>Gender</Label>
-                            <select
-                              id={`gender-${index}`}
-                              value={passengerDetails[index]?.gender || ""}
-                              onChange={(e) =>
-                                updatePassengerDetail(
-                                  index,
-                                  "gender",
-                                  e.target.value
-                                )
-                              }
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              <option value="">Select Gender</option>
-                              <option value="male">Male</option>
-                              <option value="female">Female</option>
-                            </select>
-                            {error[index]?.gender && (
-                              <p className="text-red-600 text-sm">
-                                Gender is Required
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="w-full active:underline flex justify-end ">
-                      <div
-                        className="text-black cursor-pointer text-sm"
-                        onClick={handleAddPassenger}
-                      >
-                        +{" "} Add Another Passenger
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="bus-info" className="space-y-4 pt-4">
-                    <div className="rounded-lg border p-4">
-                      <h4 className="mb-4 font-medium">Bus Tracking</h4>
-                      <div className="flex items-center justify-center rounded-lg bg-muted/30 p-6">
-                        <div className="text-center">
-                          <Clock className="mx-auto h-10 w-10 text-muted-foreground" />
-                          <p className="mt-2">
-                            Live tracking will be available 2 hours before
-                            departure
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          )}
-        </div> */}
-
         <div>
           <Card className="sticky top-6">
             <CardHeader>
@@ -744,15 +602,15 @@ export default function BusDetailsPage() {
                 <Auth
                   navigateRoute=""
                   callback={[() => {}]}
-                  state={(data) => {
-                    if (data) {
-                      setUserDetails({
-                        fullName: data.fullName,
-                        email: data.email,
-                        phone: data.phone,
-                        userId: data._id,
-                      });
-                    }
+                  state={() => {
+                    // if (data) {
+                    //   setUserDetails({
+                    //     fullName: data.fullName,
+                    //     email: data.email,
+                    //     phone: data.phone,
+                    //     userId: data._id,
+                    //   });
+                    // }
                   }}
                 >
                   <FeedbackButton
@@ -786,15 +644,15 @@ export default function BusDetailsPage() {
                 <Auth
                   navigateRoute=""
                   callback={[() => {}]}
-                  state={(data) => {
-                    if (data) {
-                      setUserDetails({
-                        fullName: data.fullName,
-                        email: data.email,
-                        phone: data.phone,
-                        userId: data._id,
-                      });
-                    }
+                  state={() => {
+                    // if (data) {
+                    //   setUserDetails({
+                    //     fullName: data.fullName,
+                    //     email: data.email,
+                    //     phone: data.phone,
+                    //     userId: data._id,
+                    //   });
+                    // }
                   }}
                 >
                   <FeedbackButton

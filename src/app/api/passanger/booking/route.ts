@@ -10,8 +10,9 @@ interface BookingData {
   destination: string;
   time: string;
   totalAmount: number;
-  paymentId: string;
-  [key: string]: unknown;
+  paymentId: string; 
+  status: string;
+  paymentStatus: string;
 }
 
 interface ValidationError extends Error {
@@ -32,16 +33,17 @@ export async function POST(request: Request) {
   try {
     const bookingData = await request.json() as BookingData;
 
-    // Validate required fields
     const requiredFields = [
       "pickupAddress",
-      "bookedBy", // This will be the Clerk ID
+      "bookedBy",  
       "destination",
       "time",
       "totalAmount",
       "paymentId",
+      "status",
+      "paymentStatus"
     ];
-
+   // @ts-expect-error-ignore
     const missingFields = requiredFields.filter((field) => !bookingData[field]);
 
     if (missingFields.length > 0) {
@@ -58,7 +60,9 @@ export async function POST(request: Request) {
     }
 
     // Find user by Clerk ID
-    const user = await UserModel.findOne({ clerkId: bookingData.bookedBy });
+    const user = await UserModel.findById(bookingData.bookedBy);
+    console.log(user);
+    
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
@@ -133,8 +137,9 @@ export async function GET(request: Request) {
 
       if (!booking) {
         return NextResponse.json(
-          { message: "Booking not found!" },
-          { status: 404 }
+          { message: "Booking not found!" ,
+           status: 200, error: true
+          }
         );
       }
 

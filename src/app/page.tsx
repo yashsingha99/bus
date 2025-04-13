@@ -1,8 +1,9 @@
-"use client"
+"use client";
 
 import Hero from "@/components/Hero/Hero";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import axios from "axios";
 
 function HomeSkeleton() {
   return (
@@ -30,6 +31,34 @@ function HomeSkeleton() {
 }
 
 export default function Home() {
+  const fetchUser = async (userId: string) => {
+    if (!userId) return;
+    try {
+      const res = await axios.get(`/api/User/${userId}`);
+      console.log(res);
+      if (res.data.status === 200) {
+        const userD = {
+          email: res.data.user.email,
+          fullName: res.data.user.fullname,
+          phone: res.data.user.phone,
+          role: res.data.user.role,
+          id: res.data.user._id,
+        };
+        localStorage.setItem("user", JSON.stringify(userD));
+      }
+    } catch (error: unknown) {
+      console.log("ERROR", error);
+    }
+  };
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user) {
+      fetchUser(user.id);
+    }
+    //  localStorage.setItem("user", JSON.stringify(user));
+  }, []);
+
   return (
     <Suspense fallback={<HomeSkeleton />}>
       <div className="w-full h-full flex items-center">

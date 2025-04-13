@@ -7,7 +7,6 @@ export async function GET() {
     await dbConnection();
   
     try {
-
       const users = await UserModel.find({
         $and: [
           { $or: [{ role: "USER" }, { role: "COORDINATE" }] },
@@ -32,7 +31,7 @@ export async function GET() {
         { status: 500 }
       );
     }
-  }
+}
   
   // ****************** Update User (Update User Details) ****************** //
   export async function PUT(request: Request) {

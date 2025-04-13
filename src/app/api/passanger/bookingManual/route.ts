@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log(body);
     // Validate required fields
-    if (!body.pickupAddress || !body.bookedBy || !body.time || !body.totalAmount || !body.paymentProof) {
+    if (!body.pickupAddress || !body.destination || !body.bookedBy || !body.time || !body.totalAmount || !body.paymentProof) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }

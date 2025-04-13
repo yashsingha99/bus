@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
 import { User } from "@/types/user.type";
+import Auth from "@/components/model/auth";
 
 function TripCardSkeleton() {
   return (
@@ -167,19 +168,22 @@ export default function TripManagementPage() {
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
+      if(userData.role !== "ADMIN"){
+        router.push("/");
+      }
       setUser(userData);
     }
-  }, []);
+  }, [router]);
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
   
   const handleEditTrip = (tripId: string) => {
-    router.push(`/admin/editTrip?tripId=${tripId}`);
+    router.push(`/AATUadmin/editTrip?tripId=${tripId}`);
   };
   
   const handleAddTrip = () => {
-    router.push(`/admin/editTrip?tripId=newTrip`);
+    router.push(`/AATUadmin/editTrip?tripId=newTrip`);
   };
   
   const fetchTrips = async () => {
@@ -256,10 +260,29 @@ export default function TripManagementPage() {
   
   }, [trips]);
 
-  
-  if (user?.role !== "ADMIN") {
-    router.push("/");
-  }
+    if (user === null) {
+      return (
+        <div className="container mx-auto p-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">
+              Please sign in to view your tickets
+            </h1>
+
+            <Auth
+              navigateRoute=""
+              callback={[
+                () => {
+                  window.location.reload();
+                },
+              ]}
+              state={() => {}}
+            >
+              <Button>Sign In</Button>
+            </Auth>
+          </div>
+        </div>
+      );
+    }
 
   if (error) {
     return (
