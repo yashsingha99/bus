@@ -85,7 +85,7 @@ interface RazorpayInstance {
   open: () => void;
 }
 
-  interface User {
+interface User {
   id?: string;
   fullName: string;
   email: string;
@@ -99,7 +99,6 @@ export default function BusDetailsPage() {
   const tripId = searchParams.get("destination") as string;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-
   const [errorDateTime, setErrorDateTime] = useState({
     date: false,
     time: false,
@@ -111,14 +110,16 @@ export default function BusDetailsPage() {
   const [selectedTime, setSelectedTime] = useState("");
   // const [paymentProof, setPaymentProof] = useState<File>();
   const [user, setUser] = useState<User | null>(null);
-  const [userDetails, setUserDetails] = useState<User | null>(null);
+  
+  // Fix the infinite update loop by removing user and route from dependencies
   useEffect(() => {
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
       setUser(userData);
     }
-  }, []);
+  }, []); // Remove user and route from dependencies
+
   const userData = {
     fullName: user?.fullName,
     email: user?.email,
@@ -126,7 +127,9 @@ export default function BusDetailsPage() {
     userId: user?.id,
   };
 
-  const isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
+  const isPickUpLocationExist = pickup
+    ? pickupLocations.includes(pickup)
+    : false;
 
   //--------------------------------------- HANDLE PAYMENT BY MANUAL -----------------------------------
   // const handlePaymentByManual = async () => {
@@ -197,7 +200,7 @@ export default function BusDetailsPage() {
       const shouldProcced = isValidateDateTime();
       if (!shouldProcced) return;
 
-      const orderId: string = await createOrderId( finalPrice, "INR");
+      const orderId: string = await createOrderId(finalPrice, "INR");
       // console.log("Order ID:", orderId);
 
       const options: RazorpayOptions = {
@@ -272,7 +275,9 @@ export default function BusDetailsPage() {
         },
       };
 
-      const razorpay = new ((window as unknown) as RazorpayWindow).Razorpay(options);
+      const razorpay = new (window as unknown as RazorpayWindow).Razorpay(
+        options
+      );
       razorpay.on("payment.failed", function (response: RazorpayError) {
         alert("Payment failed. Please try again.");
         console.error("Payment failed:", response.error);
@@ -304,7 +309,7 @@ export default function BusDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  },[tripId]);
+  }, [tripId]);
 
   //------------------------------------- FETCH TRIP DATA BY PAGE LOAD  ---------------------------------
   useEffect(() => {
@@ -345,10 +350,19 @@ export default function BusDetailsPage() {
     return shouldProcced;
   };
 
+  const handleUserData = useCallback((data: User | null) => {
+    if (data) {
+      setUser({
+        id: data.id,
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+      });
+    }
+  }, []);
+
   const proceedToPayment = () => {
     const shouldProcced = isValidateDateTime();
-    console.log(userDetails);
-    
     if (!user) {
       toast.error("Please sign in to proceed with payment");
       return;
@@ -573,7 +587,9 @@ export default function BusDetailsPage() {
 
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span>{formatPrice({ price: finalPrice, currency: "INR" })}</span>
+                    <span>
+                      {formatPrice({ price: finalPrice, currency: "INR" })}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -605,22 +621,7 @@ export default function BusDetailsPage() {
                 <Auth
                   navigateRoute=""
                   callback={[() => {}]}
-                  state={(data) => {
-                    if (data) {
-                      setUserDetails({
-                        fullName: data.fullName,
-                        email: data.email,
-                        phone: data.phone,
-                        id: data._id,
-                      });
-                      setUser({
-                        fullName: data.fullName,
-                        email: data.email,
-                        phone: data.phone,
-                        id: data._id,
-                      });
-                    }
-                  }}
+                  state={handleUserData}
                 >
                   <FeedbackButton
                     className="w-full"
