@@ -24,7 +24,7 @@ export const tripApi = {
   },
 
   // Create new trip
-  createTrip: async (tripData: Omit<ITrip, "_id">): Promise<ITrip> => {
+  createTrip: async (tripData: ITrip): Promise<ITrip> => {
     try {
       const response = await axios.post<{ data: ITrip }>(`/api/admin/trip`, tripData);
       return response.data.data;
@@ -35,9 +35,9 @@ export const tripApi = {
   },
 
   // Update trip
-  updateTrip: async (tripId: string, tripData: Partial<ITrip>): Promise<ITrip> => {
+  updateTrip: async (tripData: ITrip): Promise<ITrip> => {
     try {
-      const response = await axios.put<{ data: ITrip }>(`/api/admin/trip/${tripId}`, tripData);
+      const response = await axios.put<{ data: ITrip }>(`/api/admin/trip/`, tripData);
       return response.data.data;
     } catch (error) {
       console.error("Error updating trip:", error);

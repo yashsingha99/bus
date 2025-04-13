@@ -1,16 +1,10 @@
-import { sendVerificationEmail } from "@/helper/sendVerificationEmail";
 import { dbConnection } from "@/lib/db";
 import { UserModel } from "../../../model/user.model";
-import { nullable } from "zod";
 
 // ****************** Get All Users ****************** //
 
-export async function GET(request: Request) {
+export async function GET() {
     await dbConnection();
-  
-    // const { searchParams } = new URL(request.url);
-    // const role = searchParams.get("role");
-    // const isVerified = searchParams.get("isVerified");
   
     try {
 

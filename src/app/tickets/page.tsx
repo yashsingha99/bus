@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 // import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Auth from "@/components/model/auth";
+import { User } from "@/types/user.type";
 // import { format } from "date-fns";
 
 interface Ticket {
@@ -50,31 +51,34 @@ export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const userString = localStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : null;
-
+  const [user, setUser] = useState<User | null>(null);
   useEffect(() => {
-    const fetchTickets = async () => {
-      if (!user || !user._id) return;
-      // console.log(user);
-
-      try {
-        const response = await axios.get(
-          `/api/passanger/booking?userId=${user._id}`
-        );
-        console.log(response.data.data);
-
-        setTickets(response.data.data);
-      } catch (err) {
-        setError("Failed to fetch tickets. Please try again later.");
-        console.error("Error fetching tickets:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTickets();
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      const userData = userString ? JSON.parse(userString) : null;
+      setUser(userData);
+    }
   }, []);
+  const fetchTickets = useCallback(async () => {
+    if (!user || !user._id) return;
+
+    try {
+      const response = await axios.get(
+        `/api/passanger/booking?userId=${user._id}`
+      );
+      console.log(response.data.data);
+
+      setTickets(response.data.data);
+    } catch (err) {
+      setError("Failed to fetch tickets. Please try again later.");
+      console.error("Error fetching tickets:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -146,8 +150,8 @@ export default function TicketsPage() {
       <div className="container mx-auto p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">No Tickets Found</h1>
-          <p className="text-gray-600 mb-4">
-            You haven't booked any tickets yet.
+          <p className="text-muted-foreground">
+            You haven&apos;t booked any tickets yet
           </p>
           <Button onClick={() => router.push("/")}>Book a Ticket</Button>
         </div>

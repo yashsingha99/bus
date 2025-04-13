@@ -41,17 +41,25 @@ interface SignUpErrors {
   phone: string;
 }
 
+interface dataType {
+  _id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  userId: string;
+}
+
 type AuthProps = {
   children: React.ReactNode;
   navigateRoute: string;
   callback: (() => void)[];
-  state: (data: any) => void;
+  state: (data: dataType) => void;
 };
 
 function Auth({ children, navigateRoute, callback, state }: AuthProps) {
-   const handleAllCallbacks = () => {
-     callback.forEach((fn) => fn());
-   };
+  const handleAllCallbacks = () => {
+    callback.forEach((fn) => fn());
+  };
 
   const [signInFormData, setSignInFormData] = useState<SignInFormData>({
     email: "",
@@ -65,10 +73,18 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
     phone: "",
   });
 
-  const [errorSignIn, setErrorSignIn] = useState<SignInErrors>({email: "", dob: ""});
-  const [errorSignUp, setErrorSignUp] = useState<SignUpErrors>({phone: "", email: "", dob: "", fullName: ""});
+  const [errorSignIn, setErrorSignIn] = useState<SignInErrors>({
+    email: "",
+    dob: "",
+  });
+  const [errorSignUp, setErrorSignUp] = useState<SignUpErrors>({
+    phone: "",
+    email: "",
+    dob: "",
+    fullName: "",
+  });
 
-  const [isSignIn, setIsSignIn] = useState(true); 
+  const [isSignIn, setIsSignIn] = useState(true);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -76,42 +92,42 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
 
   const handleSignInInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSignInFormData(prev => ({
+    setSignInFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user types
-    setErrorSignIn(prev => ({
+    setErrorSignIn((prev) => ({
       ...prev,
-      [name]: ""
+      [name]: "",
     }));
   };
 
   const handleSignUpInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setSignUpFormData(prev => ({
+    setSignUpFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user types
-    setErrorSignUp(prev => ({
+    setErrorSignUp((prev) => ({
       ...prev,
-      [name]: ""
+      [name]: "",
     }));
   };
 
   const toggleMode = () => {
-    setIsSignIn(prev => !prev);
+    setIsSignIn((prev) => !prev);
     // Clear errors when toggling between sign in and sign up
-    setErrorSignIn({email: "", dob: ""});
-    setErrorSignUp({phone: "", email: "", dob: "", fullName: ""});
+    setErrorSignIn({ email: "", dob: "" });
+    setErrorSignUp({ phone: "", email: "", dob: "", fullName: "" });
   };
 
   const validateForm = () => {
     let hasErrors = false;
     const newErrorSignIn = { ...errorSignIn };
     const newErrorSignUp = { ...errorSignUp };
-    
+
     if (isSignIn) {
       if (!signInFormData.email) {
         newErrorSignIn.email = "Email is required";
@@ -124,7 +140,11 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       if (!signInFormData.dob) {
         newErrorSignIn.dob = "Date of Birth is required";
         hasErrors = true;
-      } else if (!/^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{4}$/.test(signInFormData.dob)) {
+      } else if (
+        !/^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{4}$/.test(
+          signInFormData.dob
+        )
+      ) {
         newErrorSignIn.dob = "Invalid DOB format. Use DDMMYYYY";
         hasErrors = true;
       }
@@ -140,7 +160,11 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       if (!signUpFormData.dob) {
         newErrorSignUp.dob = "Date of Birth is required";
         hasErrors = true;
-      } else if (!/^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{4}$/.test(signUpFormData.dob)) {
+      } else if (
+        !/^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[0-2])\d{4}$/.test(
+          signUpFormData.dob
+        )
+      ) {
         newErrorSignUp.dob = "Invalid DOB format. Use DDMMYYYY";
         hasErrors = true;
       }
@@ -149,7 +173,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
         newErrorSignUp.fullName = "Full name is required for registration";
         hasErrors = true;
       }
-      
+
       if (!signUpFormData.phone) {
         newErrorSignUp.phone = "Phone number is required for registration";
         hasErrors = true;
@@ -161,7 +185,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
 
     setErrorSignIn(newErrorSignIn);
     setErrorSignUp(newErrorSignUp);
-    
+
     return !hasErrors;
   };
 
@@ -172,36 +196,44 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       }
 
       setIsLoading(true);
-      const endpoint = isSignIn ? '/api/auth/check' : '/api/auth';
-      
-      const payload = isSignIn ? {
-        email: signInFormData.email,
-        dob: signInFormData.dob
-      } : {
-        email: signUpFormData.email,
-        dob: signUpFormData.dob,
-        fullName: signUpFormData.fullName,
-        phone: signUpFormData.phone
-      };
+      const endpoint = isSignIn ? "/api/auth/check" : "/api/auth";
+
+      const payload = isSignIn
+        ? {
+            email: signInFormData.email,
+            dob: signInFormData.dob,
+          }
+        : {
+            email: signUpFormData.email,
+            dob: signUpFormData.dob,
+            fullName: signUpFormData.fullName,
+            phone: signUpFormData.phone,
+          };
 
       const response = await axios.post(endpoint, payload);
       console.log(response.data);
-      
+
       if (response.data) {
-        if(state) {
+        if (state) {
           state(response.data.exists);
         }
-        localStorage.setItem('user', JSON.stringify(response.data.exists));
-        toast.success(isSignIn ? 'Signed in successfully!' : 'Registered successfully!');
+        localStorage.setItem("user", JSON.stringify(response.data.exists));
+        toast.success(
+          isSignIn ? "Signed in successfully!" : "Registered successfully!"
+        );
         setIsOpen(false);
-        if(navigateRoute === "") {
+        if (navigateRoute === "") {
           handleAllCallbacks();
         } else {
           router.push(navigateRoute);
         }
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Invalid Email or DOB');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error("Invalid Email or DOB");
+      } else {
+        console.error("Unknown error", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -209,19 +241,17 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-          <DialogTitle>{isSignIn ? 'Sign In' : 'Register'}</DialogTitle>
-              <DialogDescription>
-            {isSignIn 
-              ? 'Sign in with your email and date of birth' 
-              : 'Create a new account'}
-              </DialogDescription>
-            </DialogHeader>
-        
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{isSignIn ? "Sign In" : "Register"}</DialogTitle>
+          <DialogDescription>
+            {isSignIn
+              ? "Sign in with your email and date of birth"
+              : "Create a new account"}
+          </DialogDescription>
+        </DialogHeader>
+
         <div className="grid gap-4 py-4">
           {!isSignIn && (
             <>
@@ -234,7 +264,9 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
                   value={signUpFormData.fullName}
                   onChange={handleSignUpInputChange}
                 />
-                {errorSignUp.fullName && <p className="text-red-500 text-sm">{errorSignUp.fullName}</p>}
+                {errorSignUp.fullName && (
+                  <p className="text-red-500 text-sm">{errorSignUp.fullName}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -246,11 +278,13 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
                   value={signUpFormData.phone}
                   onChange={handleSignUpInputChange}
                 />
-                {errorSignUp.phone && <p className="text-red-500 text-sm">{errorSignUp.phone}</p>}
+                {errorSignUp.phone && (
+                  <p className="text-red-500 text-sm">{errorSignUp.phone}</p>
+                )}
               </div>
             </>
           )}
-          
+
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -259,13 +293,18 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
               type="email"
               placeholder="example@example.com"
               value={isSignIn ? signInFormData.email : signUpFormData.email}
-              onChange={isSignIn ? handleSignInInputChange : handleSignUpInputChange}
+              onChange={
+                isSignIn ? handleSignInInputChange : handleSignUpInputChange
+              }
             />
-            {isSignIn 
-              ? errorSignIn.email && <p className="text-red-500 text-sm">{errorSignIn.email}</p>
-              : errorSignUp.email && <p className="text-red-500 text-sm">{errorSignUp.email}</p>
-            }
-            </div>
+            {isSignIn
+              ? errorSignIn.email && (
+                  <p className="text-red-500 text-sm">{errorSignIn.email}</p>
+                )
+              : errorSignUp.email && (
+                  <p className="text-red-500 text-sm">{errorSignUp.email}</p>
+                )}
+          </div>
 
           <div className="grid gap-2">
             <Label htmlFor="dob">Date of Birth</Label>
@@ -275,27 +314,30 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
               placeholder="DDMMYYYY"
               maxLength={8}
               value={isSignIn ? signInFormData.dob : signUpFormData.dob}
-              onChange={isSignIn ? handleSignInInputChange : handleSignUpInputChange}
+              onChange={
+                isSignIn ? handleSignInInputChange : handleSignUpInputChange
+              }
             />
             {isSignIn
-              ? errorSignIn.dob && <p className="text-red-500 text-sm">{errorSignIn.dob}</p>
-              : errorSignUp.dob && <p className="text-red-500 text-sm">{errorSignUp.dob}</p>
-            }
-            <span className="text-xs text-gray-500">Format: DDMMYYYY (e.g., 27052000)</span>
+              ? errorSignIn.dob && (
+                  <p className="text-red-500 text-sm">{errorSignIn.dob}</p>
+                )
+              : errorSignUp.dob && (
+                  <p className="text-red-500 text-sm">{errorSignUp.dob}</p>
+                )}
+            <span className="text-xs text-gray-500">
+              Format: DDMMYYYY (e.g., 27052000)
+            </span>
           </div>
         </div>
 
         <DialogFooter className="flex flex-col gap-2">
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={isLoading}
             className="w-full"
           >
-            {isLoading 
-              ? 'Processing...' 
-              : isSignIn 
-                ? 'Sign In' 
-                : 'Register'}
+            {isLoading ? "Processing..." : isSignIn ? "Sign In" : "Register"}
           </Button>
           <Button
             variant="outline"
@@ -303,13 +345,13 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
             disabled={isLoading}
             className="w-full"
           >
-            {isSignIn 
-              ? "Don't have an account? Register" 
-              : 'Already have an account? Sign In'}
+            {isSignIn
+              ? "Don't have an account? Register"
+              : "Already have an account? Sign In"}
           </Button>
         </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { TripModel } from "../../../../model/trip.model";
 import { dbConnection } from "@/lib/db";
-import { SingleTrip } from "../../../../model/trip.model";
 
 export async function POST(request: NextRequest) {
   await dbConnection();
@@ -15,9 +14,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    // const existingTrip = await TripModel.findOne({
-    //   $and: [{ destinationAddress }],
-    // });
+   
     const existingTrip = await TripModel.findOne({ destinationAddress });
 
     if (existingTrip) {
@@ -33,7 +30,6 @@ export async function POST(request: NextRequest) {
     const newTrip = await TripModel.create({
       Trips,
       destinationAddress,
-      // owner,
     });
 
     return NextResponse.json(
@@ -56,7 +52,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   await dbConnection();
 
   try {

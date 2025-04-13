@@ -1,9 +1,6 @@
 "use client"
 
-import ClientFeedback from "@/components/ClientFeedback";
 import Hero from "@/components/Hero/Hero";
-import { useUser } from "@clerk/nextjs";
-import Image from "next/image";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 

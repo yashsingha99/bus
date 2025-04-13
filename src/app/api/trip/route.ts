@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { TripModel } from "../../../model/trip.model";
 import { dbConnection } from "@/lib/db";
-import { SingleTrip } from "../../../model/trip.model";
 
 export async function POST(request: NextRequest) {
   await dbConnection();
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET( ) {
   await dbConnection();
 
   try {

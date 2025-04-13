@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error) {
+  } catch(err) {
     return NextResponse.json(
-      { error: "An error occurred", success: false },
+      { error: err, success: false },
       { status: 500 }
     );
   }

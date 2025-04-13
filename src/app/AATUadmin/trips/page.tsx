@@ -1,9 +1,8 @@
 "use client";
 
-import { Pencil, Plus, Search, MapPin, Calendar, Clock, Users, AlertCircle, Loader2 } from "lucide-react";
+import { Pencil, Plus, Search, MapPin, Calendar, Clock, Users, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React, { useEffect, useState, useMemo } from "react";
-import useScreenSize from "@/hooks/use-screen-size";
 import { ITrip } from "@/model/trip.model";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -13,8 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Image from "next/image";
+import { User } from "@/types/user.type";
 
 function TripCardSkeleton() {
   return (
@@ -155,14 +155,21 @@ function TripCard({ trip, onEdit }: { trip: ITrip; onEdit: (id: string) => void 
 }
 
 export default function TripManagementPage() {
-  const isMobile = useScreenSize();
+  // const isMobile = useScreenSize();
   const router = useRouter();
   const [trips, setTrips] = useState<ITrip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      const userData = userString ? JSON.parse(userString) : null;
+      setUser(userData);
+    }
+  }, []);
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
@@ -180,7 +187,7 @@ export default function TripManagementPage() {
       setIsLoading(true);
       setError(null);
       const data = await tripApi.getAllTrips();
-      
+       console.log(data)
       if (!Array.isArray(data)) {
         throw new Error('Invalid data format received');
       }
@@ -246,8 +253,14 @@ export default function TripManagementPage() {
     });
     
     return counts;
-  }, [trips]);
   
+  }, [trips]);
+
+  
+  if (user?.role !== "ADMIN") {
+    router.push("/");
+  }
+
   if (error) {
     return (
       <div className="container mx-auto p-4">

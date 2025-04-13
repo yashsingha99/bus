@@ -1,20 +1,38 @@
 "use client";
 
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { Menu } from "lucide-react";
 import { Button } from "../components/ui/button";
 import Drawer from "./Drawer";
 import { useDrawerContext } from "@/context/DrawerContext";
-import { MainNav } from "./main-nav";
-import { useRouter } from "next/navigation";
+// import { MainNav } from "./main-nav";
+// import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useNavigation } from "@/utils/navigation";
 import Auth from "./model/auth";
+
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  role: "USER" | "ADMIN"; 
+}
+
+
 const Navbar = () => {
   const { isOpen, openDrawer } = useDrawerContext();
   const { navigate } = useNavigation();
+const [user, setUser] = useState<User | null>(null);
 
-  const user = localStorage.getItem("user");
+
+  useEffect(()=>{
+  const userData = JSON.parse(localStorage.getItem("user")?? "{}");
+  console.log(userData)
+    if(userData){
+      setUser(userData);
+    }
+  }, [])
   // console.log(user);
   
   return (

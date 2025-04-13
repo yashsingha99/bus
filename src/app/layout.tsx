@@ -3,27 +3,27 @@
 import "./globals.css"; // Global styles
 import { DrawerProvider } from "@/context/DrawerContext"; // Drawer context provider
 import Navbar from "@/components/Navbar"; // Navbar component
-import localFont from "next/font/local";
+// import localFont from "next/font/local";
 import { ClerkProvider } from "@clerk/nextjs";
-import RouteGuard from "@/components/RouteGuard";
+// import RouteGuard from "@/components/RouteGuard";
 import SignUpRedirect from "@/components/SignUpRedirect";
-import type { Metadata } from "next";
+// import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-  display: "swap",
-});
+// const geistSans = localFont({
+//   src: "./fonts/GeistVF.woff",
+//   variable: "--font-geist-sans",
+//   weight: "100 900",
+//   display: "swap",
+// });
 
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-  display: "swap",
-});
+// const geistMono = localFont({
+//   src: "./fonts/GeistMonoVF.woff",
+//   variable: "--font-geist-mono",
+//   weight: "100 900",
+//   display: "swap",
+// });
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -152,9 +152,9 @@ export default function RootLayout({
           <DrawerProvider>
             <Navbar />
             <SignUpRedirect />
-            <RouteGuard>
+            {/* <RouteGuard> */}
               <main>{children}</main>
-            </RouteGuard>
+            {/* </RouteGuard> */}
           </DrawerProvider>
           <Toaster />
         </body>

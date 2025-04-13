@@ -24,7 +24,7 @@ import {
 import { ITrip } from "@/model/trip.model";
 import { formatPrice } from "@/utils/priceUtils";
 import { Toaster } from "sonner";
-import { PlaceholdersAndVanishInput } from "@/components/ui/placeholders-and-vanish-input";
+import { Input } from "@/components/ui/input";
 
 export default function BusSearchPage() {
   const router = useRouter();
@@ -112,14 +112,13 @@ export default function BusSearchPage() {
         </Link>
       </div>
       <Toaster />
-      <PlaceholdersAndVanishInput 
-        placeholders={["Search Your Trip"]}
+      <Input
+        placeholder="Search Your Trip"
         onChange={(e) => setSearchQuery(e.target.value)}
         onSubmit={(e) => {
           e.preventDefault();
-          // Search is already happening in real-time
         }}
-        styleInput="w-full mb-6"
+        className="w-full mb-6"
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -153,7 +152,7 @@ export default function BusSearchPage() {
                             </span>
                           </div>
                           <div className="font-medium">
-                            {formatPrice(singleTrip.price)}
+                            {formatPrice({ price: singleTrip.price, currency: "INR" })}
                           </div>
                         </div>
                         <div className="mt-2 flex items-center gap-2">

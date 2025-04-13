@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, Clock, Clock4, MapPin } from "lucide-react";
 import axios from "axios";
+import {Suspense} from 'react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,12 +18,37 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface Booking {
+  _id: string;
+  bookingId: string;
+  status: string;
+  paymentStatus: string;
+  totalAmount: number;
+  passengerCount: number;
+  selectedDate: string;
+  selectedTime: string;
+  time: string;
+  pickupAddress: string;
+  destination: {
+    _id: string;
+    name: string;
+    destinationAddress: string;
+  };
+  bookedBy: {
+    _id: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+  };
+  createdAt: string;
+}
+
 export default function BookingConfirmationPage() {
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("bookingId");
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [booking, setBooking] = useState<any>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -34,7 +60,7 @@ export default function BookingConfirmationPage() {
       }
 
       try {
-        const response = await axios.get(
+        const response = await axios.get<{ data: Booking }>(
           `/api/passanger/booking?bookingId=${bookingId}`
         );
         // console.log(response);
@@ -80,6 +106,8 @@ export default function BookingConfirmationPage() {
   }
 
   return (
+        <Suspense>
+
     <div className="container mx-auto py-6">
       <div className="mb-6 flex items-center">
         <Link href="/searchBus">
@@ -169,6 +197,8 @@ export default function BookingConfirmationPage() {
         </CardFooter>
       </Card>
     </div>
+        </Suspense>
+
   );
 }
 

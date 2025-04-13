@@ -3,6 +3,12 @@ import { BookingModel } from "@/model/booking.model";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 
+interface QueryParams {
+  refundRequested: boolean;
+  $or?: Array<{ [key: string]: { $regex: string; $options: string } }>;
+  refundStatus?: string;
+}
+
 // Get all refunds with pagination
 export async function GET(request: NextRequest) {
   await dbConnection();
@@ -17,7 +23,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     // Build query
-    const query: any = {
+    const query: QueryParams = {
       refundRequested: true
     };
     
@@ -55,10 +61,11 @@ export async function GET(request: NextRequest) {
         }
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching refunds:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { success: false, message: "Failed to fetch refunds", error: error.message },
+      { success: false, message: "Failed to fetch refunds", error: errorMessage },
       { status: 500 }
     );
   }
@@ -128,7 +135,6 @@ export async function POST(request: Request) {
       { new: true }
     );
     
-    // If refund is approved, update booking status to cancelled
     if (refundStatus === "approved") {
       await BookingModel.findByIdAndUpdate(
         bookingId,
@@ -141,10 +147,11 @@ export async function POST(request: Request) {
       message: `Refund ${refundStatus} successfully`,
       data: updatedBooking
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error processing refund:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return NextResponse.json(
-      { success: false, message: "Failed to process refund", error: error.message },
+      { success: false, message: "Failed to process refund", error: errorMessage },
       { status: 500 }
     );
   }

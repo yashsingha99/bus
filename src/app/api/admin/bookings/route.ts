@@ -3,12 +3,12 @@ import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
 // import { Types } from "mongoose";
 
-interface QueryParams {
-  page?: string;
-  limit?: string;
-  status?: string;
-  search?: string;
-}
+// interface QueryParams {
+//   page?: string;
+//   limit?: string;
+//   status?: string;
+//   search?: string;
+// }
 
 export async function GET(request: Request) {
   try {

@@ -1,6 +1,12 @@
 import { dbConnection } from "@/lib/db";
 import { BookingModel } from "@/model/booking.model";
 import { NextResponse } from "next/server";
+// import mongoose from "mongoose";
+
+interface BookingQuery {
+  bookedBy: string;
+  status?: string;
+}
 
 export async function GET(request: Request) {
   await dbConnection();
@@ -18,7 +24,7 @@ export async function GET(request: Request) {
     }
     
     // Build query
-    const query: any = { bookedBy: userId };
+    const query: BookingQuery = { bookedBy: userId };
     
     // Add status filter if provided
     if (status) {
@@ -45,10 +51,14 @@ export async function GET(request: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error retrieving user bookings:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { message: "Something went wrong!", error: error.message },
+      { 
+        message: "Failed to retrieve user bookings",
+        error: errorMessage
+      },
       { status: 500 }
     );
   }

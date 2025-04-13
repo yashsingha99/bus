@@ -13,6 +13,7 @@ import AdminStats from "./_components/AdminStats";
 import { FeedbackButton } from "@/components/ui/feedback-button";
 import { Component as Analytics } from "./_components/Analytics";
 import Auth from "@/components/model/auth";
+import { User } from "@/types/user.type";
 
 interface DashboardData {
   totalUsers: number;
@@ -83,8 +84,14 @@ export default function AdminDashboard() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const userString = localStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : null;
+   const [user, setUser] = useState<User | null>(null);
+   useEffect(() => {
+     if (typeof window !== "undefined") {
+       const userString = localStorage.getItem("user");
+       const userData = userString ? JSON.parse(userString) : null;
+       setUser(userData);
+     }
+   }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -93,10 +100,15 @@ export default function AdminDashboard() {
       try {
         const response = await axios.get("/api/admin/dashboard");
         // console.log(response.data.data);
-
+      
         setDashboardData(response.data.data);
       } catch (err) {
-        setError("Failed to fetch dashboard data. Please try again later.");
+        if(err){
+          setError("Failed to fetch dashboard data. Please try again later.");
+        }
+        else {
+          setError("Failed to fetch dashboard data. Please try again later.");
+        }
         // console.error("Error fetching dashboard data:", err);
       } finally {
         setLoading(false);
@@ -104,31 +116,35 @@ export default function AdminDashboard() {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
-  if (!user) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">
-            Please sign in to view your tickets
-          </h1>
 
-          <Auth
-            navigateRoute=""
-            callback={[
-              () => {
-                window.location.reload();
-              },
-            ]}
-            state={() => {}}
-          >
-            <Button>Sign In</Button>
-          </Auth>
-        </div>
-      </div>
-    );
+  if (user?.role !== "ADMIN"){
+     router.push('/');
   }
+    if (!user) {
+      return (
+        <div className="container mx-auto p-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">
+              Please sign in to view your tickets
+            </h1>
+
+            <Auth
+              navigateRoute=""
+              callback={[
+                () => {
+                  window.location.reload();
+                },
+              ]}
+              state={() => {}}
+            >
+              <Button>Sign In</Button>
+            </Auth>
+          </div>
+        </div>
+      );
+    }
 
   if (!dashboardData || loading) {
     return <LoadingSkeleton />;

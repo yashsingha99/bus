@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import multer from 'multer';
 import cloudinary from '@/lib/cloudinery';
 import streamifier from 'streamifier';
+
+interface CloudinaryUploadResult {
+  secure_url: string;
+  [key: string]: unknown;
+}
 
 // This is a workaround for handling file uploads in Next.js App Router
 export async function POST(request: NextRequest) {
@@ -18,16 +22,16 @@ export async function POST(request: NextRequest) {
 
     // Upload to Cloudinary
     const streamUpload = () =>
-      new Promise((resolve, reject) => {
+      new Promise<CloudinaryUploadResult>((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream((error, result) => {
-          if (result) resolve(result);
+          if (result) resolve(result as CloudinaryUploadResult);
           else reject(error);
         });
         streamifier.createReadStream(buffer).pipe(stream);
       });
 
     const result = await streamUpload();
-    return NextResponse.json({ url: (result as any).secure_url });
+    return NextResponse.json({ url: result.secure_url });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });

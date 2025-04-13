@@ -4,6 +4,32 @@ import { TripModel } from "@/model/trip.model";
 import { UserModel } from "@/model/user.model";
 import { NextResponse } from "next/server";
 
+interface BookingStat {
+  _id: string;
+  count: number;
+}
+
+interface PaymentStat {
+  _id: string;
+  count: number;
+  totalAmount: number;
+}
+
+interface RevenueData {
+  date: string;
+  amount: number;
+}
+
+interface DashboardData {
+  totalUsers: number;
+  totalTrips: number;
+  totalBookings: number;
+  recentBookings: {fullName : string, email: string}[]; // TODO: Define proper type for bookings
+  bookingStats: BookingStat[];
+  paymentStats: PaymentStat[];
+  revenueData: RevenueData[];
+}
+
 export async function GET() {
   await dbConnection();
 
@@ -25,7 +51,7 @@ export async function GET() {
     // .populate('destination', ' ');
 
     // Get booking statistics
-    const bookingStats = await BookingModel.aggregate([
+    const bookingStats = await BookingModel.aggregate<BookingStat>([
       {
         $group: {
           _id: "$status",
@@ -35,7 +61,7 @@ export async function GET() {
     ]);
 
     // Get payment statistics
-    const paymentStats = await BookingModel.aggregate([
+    const paymentStats = await BookingModel.aggregate<PaymentStat>([
       {
         $group: {
           _id: "$paymentStatus",
@@ -49,64 +75,50 @@ export async function GET() {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const dayByRevenue = await BookingModel.aggregate([
+    const revenueData = await BookingModel.aggregate<RevenueData>([
       {
         $match: {
+          createdAt: { $gte: sevenDaysAgo },
           paymentStatus: "completed",
         },
       },
       {
         $group: {
           _id: {
-            $dateToString: {
-              format: "%Y-%m-%d",
-              date: "$createdAt",
-            },
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
           },
-          revenue: { $sum: "$totalAmount" },
-          count: { $sum: 1 },
+          amount: { $sum: "$totalAmount" },
         },
       },
       {
-        $sort: { _id: 1 },
-      },
-    ]);
-
-    const totalRevenue = dayByRevenue.reduce(
-      (sum, item) => sum + item.revenue,
-      0
-    );
-
-    const dailyUserRegistrations = await UserModel.aggregate([
-      {
-        $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 },
+        $project: {
+          _id: 0,
+          date: "$_id",
+          amount: 1,
         },
       },
+      { $sort: { date: 1 } },
     ]);
+
+    const dashboardData: DashboardData = {
+      totalUsers,
+      totalTrips,
+      totalBookings,
+      recentBookings,
+      bookingStats,
+      paymentStats,
+      revenueData,
+    };
 
     return NextResponse.json({
       success: true,
-      data: {
-        totalUsers,
-        totalTrips,
-        totalBookings,
-        recentBookings,
-        bookingStats,
-        paymentStats,
-        revenue: { dayByRevenue, totalRevenue },
-        dailyUserRegistrations,
-      },
+      data: dashboardData,
     });
-  } catch (error: any) {
-    console.error("Error fetching admin dashboard data:", error);
+  } catch (error: unknown) {
+    console.error("Error fetching dashboard data:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to fetch dashboard data",
-        error: error.message,
-      },
+      { success: false, message: "Failed to fetch dashboard data", error: errorMessage },
       { status: 500 }
     );
   }

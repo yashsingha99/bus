@@ -13,13 +13,15 @@ import UserDetailsDrawer from "./_components/userDetailsDrawer";
 import axios from "axios";
 import { toast, Toaster } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+// import { Input } from "@/components/ui/input";
 
 export interface User {
   _id: string;
   fullName: string;
   email: string;
   phone: string;
+  role?: string;
 }
 
 export interface PopulatedBooking {
@@ -79,12 +81,22 @@ function ReservedUsersSkeleton() {
 }
 
 export default function ReservedUsersPage() {
+  const router = useRouter();
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  // const [searchTerm, setSearchTerm] = useState("");
   // const [selectedBooking, setSelectedBooking] = useState<PopulatedBooking | null>(null);
   // const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
+  useEffect(() => {
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const userString = localStorage.getItem("user");
+      const userData = userString ? JSON.parse(userString) : null;
+      setUser(userData);
+    }
+  }, []);
+ 
   const fetchBookings = async () => {
     try {
       setLoading(true);
@@ -93,7 +105,12 @@ export default function ReservedUsersPage() {
       
       setBookings(response.data.data);
     } catch (err) {
-      toast.error("Failed to fetch bookings");
+      if(err){
+        toast.error("Failed to fetch bookings");
+      } else {
+        toast.error("Failed to fetch bookings");
+      }
+      
     } finally {
       setLoading(false);
     }
@@ -136,6 +153,10 @@ export default function ReservedUsersPage() {
   //   }
   // };
 
+  if (user?.role !== "ADMIN"){
+     router.push('/');
+  }
+
   return (
     <>
       <div className=" py-10">
@@ -143,13 +164,13 @@ export default function ReservedUsersPage() {
           <ReservedUsersSkeleton />
         ) : (
           <>
-            <div className="flex items-center justify-between mb-6">
+            {/* <div className="flex items-center justify-between mb-6">
               <Input
                 placeholder="Search by name, email, or phone..."
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="w-[90%]"
               />
-            </div>
+          </div> */}
 
             <div className="rounded-md border">
               <Table>

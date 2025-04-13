@@ -18,13 +18,11 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+// import { Separator } from "@/components/ui/separator";
 import {
   Clock,
   MapPin,
   CreditCard,
-  User,
-  Phone,
   X,
 } from "lucide-react";
 import axios from "axios";
@@ -48,12 +46,12 @@ interface UserDetailsDrawerProps {
   isLoading?: boolean;
 }
 
-interface User {
-  _id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-}
+// interface User {
+//   _id: string;
+//   fullName: string;
+//   email: string;
+//   phone: string;
+// }
 
 export default function UserDetailsDrawer({
   booking,

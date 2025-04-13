@@ -20,36 +20,66 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ITrip, SingleTrip } from "@/model/trip.model";
+import mongoose from "mongoose";
+import { User } from "@/types/user.type";
 
 // Interface matching the server data structure
-interface ITripItem {
-  _id?: string;
-  price: number;
-  Timing: string[];
-  date: string;
-  Status: string;
-  SeatsLimit: number;
+// interface ITripItem {
+//   _id?: string;
+//   price: number;
+//   Timing: string[];
+//   date: string;
+//   Status: string;
+//   SeatsLimit: number;
+// }
+
+enum Status {
+  Active = "Active",
+  Upcoming = "Upcoming",
+  Expiry = "Expiry",
 }
 
-interface ITrip {
-  _id?: string;
-  destinationAddress: string;
-  Trips: ITripItem[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+// interface SingleTrip {
+//   _id: string;
+//   price: number;
+//   Timing: [string];
+//   date: string;
+//   Status: Status;
+//   SeatsLimit: number;
+// }
+
+// interface ITripUpdate {
+//   _id: string;
+//   destinationAddress: string;
+//   Trips: SingleTrip[];
+// }
+// interface ITrip {
+//   _id: string;
+//   destinationAddress: string;
+//   Trips: SingleTrip[];
+// }
+
+// interface ITrip {
+//   _id?: string;
+//   destinationAddress: string;
+//   Trips: ITripItem[];
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
 
 // Interface for API data
-interface ITripApiData {
-  destinationAddress: string;
-  Trips: {
-    price: number;
-    Timing: string[];
-    date: string;
-    Status: string;
-    SeatsLimit: number;
-  }[];
-}
+
+// interface ITripApiData {
+//   destinationAddress: string;
+//   Trips: {
+//     price: number;
+//     Timing: string[];
+//     date: string;
+//     Status: string;
+//     SeatsLimit: number;
+//   }[];
+// }
 
 interface ValidationErrors {
   _id?: string;
@@ -141,16 +171,31 @@ export default function EditTripPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [activeTab, setActiveTab] = useState("0");
   const [error, setError] = useState<string | null>(null);
+ const [user, setUser] = useState<User | null>(null);
+ useEffect(() => {
+   if (typeof window !== "undefined") {
+     const userString = localStorage.getItem("user");
+     const userData = userString ? JSON.parse(userString) : null;
+     setUser(userData);
+   }
+ }, []);
 
-  function createEmptyTrip(): ITripItem {
+  function createEmptyTrip(): SingleTrip {
     return {
+      _id: new mongoose.Types.ObjectId().toString(),
       price: 0,
-      Timing: ["forenoon"],
-      date: new Date().toISOString().split("T")[0],
-      Status: "Active",
+      Timing: ["forenoon"] as [string],
+      date: new Date(),
+      Status: Status.Active,
       SeatsLimit: 0,
     };
   }
+
+  useEffect(() => {
+    if (!user || user.role !== "ADMIN") {
+      router.push("/");
+    }
+  }, [user, router]);
 
   useEffect(() => {
     if (!tripId) {
@@ -176,21 +221,23 @@ export default function EditTripPage() {
         setIsLoading(true);
         setError(null);
         const data = await tripApi.getTripById(tripId);
+        console.log(data);
+        
+        // const formattedData: ITrip = {
+        //   _id: String(data._id),
+        //   destinationAddress: data.destinationAddress,
+          
+        //   Trips: data.Trips.map((trip) => ({
+        //     ...trip,
+        //     date:
+        //       trip.date instanceof Date
+        //         ? trip.date.toISOString().split("T")[0]
+        //         : new Date(trip.date).toISOString().split("T")[0],
+        //     SeatsLimit: Number(trip.SeatsLimit),
+        //   })),
+        // };
 
-        const formattedData: ITrip = {
-          _id: String(data._id),
-          destinationAddress: data.destinationAddress,
-          Trips: data.Trips.map((trip) => ({
-            ...trip,
-            date:
-              trip.date instanceof Date
-                ? trip.date.toISOString().split("T")[0]
-                : new Date(trip.date).toISOString().split("T")[0],
-            SeatsLimit: Number(trip.SeatsLimit),
-          })),
-        };
-
-        setFormData(formattedData);
+        setFormData(data);
       } catch (err) {
         console.error("Trip fetch error:", err);
         setError("Failed to load trip data. Please try again later.");
@@ -203,13 +250,16 @@ export default function EditTripPage() {
     fetchTrip();
   }, [tripId]);
 
-  const validateTrip = (trip: ITripItem) => {
+  const validateTrip = (trip: SingleTrip) => {
     const validationErrors: ValidationErrors = {};
-    if (!trip.price && trip.price !== 0) validationErrors.price = "Price is required";
+    if (!trip.price && trip.price !== 0)
+      validationErrors.price = "Price is required";
     if (!trip.date) validationErrors.date = "Date is required";
     if (!trip.Status) validationErrors.Status = "Status is required";
-    if (!trip.SeatsLimit) validationErrors.SeatsLimit = "Seats limit is required";
-    if (!trip.Timing || trip.Timing.length === 0) validationErrors.Timing = "At least one timing is required";
+    if (!trip.SeatsLimit)
+      validationErrors.SeatsLimit = "Seats limit is required";
+    if (!trip.Timing)
+      validationErrors.Timing = "At least one timing is required";
     return validationErrors;
   };
 
@@ -222,14 +272,15 @@ export default function EditTripPage() {
 
     formData.Trips.forEach((trip, index) => {
       const tripValidationErrors = validateTrip(trip);
-      if (Object.keys(tripValidationErrors).length) formValidationErrors[`trip-${index}`] = tripValidationErrors;
+      if (Object.keys(tripValidationErrors).length)
+        formValidationErrors[`trip-${index}`] = tripValidationErrors;
     });
     return formValidationErrors;
   };
 
   const handleChange = (
     index: number,
-    field: Exclude<keyof ITripItem, '_id'>,
+    field: Exclude<keyof SingleTrip, "_id">,
     value: string | number | string[]
   ) => {
     if (!formData) return;
@@ -282,10 +333,9 @@ export default function EditTripPage() {
     if (!formData) return;
 
     const updatedTrips = [...formData.Trips];
-    const currentTimings = updatedTrips[tripIndex].Timing || [""];
     updatedTrips[tripIndex] = {
       ...updatedTrips[tripIndex],
-      Timing: [...currentTimings, ""],
+      Timing: [""] as [string],
     };
     setFormData({ ...formData, Trips: updatedTrips });
   };
@@ -298,27 +348,19 @@ export default function EditTripPage() {
     if (!formData) return;
 
     const updatedTrips = [...formData.Trips];
-    const currentTimings = [...updatedTrips[tripIndex].Timing];
-    currentTimings[timingIndex] = value;
     updatedTrips[tripIndex] = {
       ...updatedTrips[tripIndex],
-      Timing: currentTimings,
+      Timing: [value] as [string],
     };
     setFormData({ ...formData, Trips: updatedTrips });
   };
 
-  const handleDeleteTiming = (tripIndex: number, timingIndex: number) => {
+  const handleDeleteTiming = (tripIndex: number) => {
     if (!formData) return;
-
     const updatedTrips = [...formData.Trips];
-    const currentTimings = [...updatedTrips[tripIndex].Timing];
-
-    if (currentTimings.length <= 1) return;
-
-    currentTimings.splice(timingIndex, 1);
     updatedTrips[tripIndex] = {
       ...updatedTrips[tripIndex],
-      Timing: currentTimings,
+      Timing: [""] as [string],
     };
     setFormData({ ...formData, Trips: updatedTrips });
   };
@@ -327,9 +369,11 @@ export default function EditTripPage() {
     if (!formData) return null;
 
     // Create a trip object for the API
-    const apiTrip: ITripApiData = {
+    const apiTrip: ITrip = {
+      // _id: "d23",
       destinationAddress: formData.destinationAddress,
       Trips: formData.Trips.map((trip) => ({
+        // _id: String(trip._id),
         price: Number(trip.price),
         Timing: trip.Timing,
         date: trip.date,
@@ -340,6 +384,26 @@ export default function EditTripPage() {
 
     return apiTrip;
   };
+
+  // const prepareDataForUpdateing = () => {
+  //   if (!formData) return null;
+
+  //   // Create a trip object for the API
+  //   const apiTrip: ITripUpdate = {
+  //     _id:formData._id,
+  //     destinationAddress: formData.destinationAddress,
+  //     Trips: formData.Trips.map((trip) => ({
+  //       price: Number(trip.price),
+  //       Timing: trip.Timing,
+  //       date: trip.date,
+  //       Status: trip.Status,
+  //       SeatsLimit: Number(trip.SeatsLimit),
+  //     })),
+  //   };
+
+  //   return apiTrip;
+  // };
+ 
 
   const handleSubmit = async () => {
     const validationErrors = validateForm();
@@ -357,14 +421,14 @@ export default function EditTripPage() {
 
       if (tripId === "newTrip") {
         // Create new trip
-        await tripApi.createTrip(dataToSave as any);
+        await tripApi.createTrip(dataToSave);
         toast.success("Trip created successfully");
-        router.push("/admin/trips");
+        router.push("/AATUadmin/trips");
       } else if (tripId) {
         // Update existing trip
-        await tripApi.updateTrip(tripId, dataToSave as any);
+        await tripApi.updateTrip(dataToSave);
         toast.success("Trip updated successfully");
-        router.push("/admin/trips");
+        router.push("/AATUadmin/trips");
       }
     } catch (err) {
       console.error("Error submitting trip:", err);
@@ -523,7 +587,7 @@ export default function EditTripPage() {
                       <Input
                         id={`date-${index}`}
                         type="date"
-                        value={trip.date}
+                        value={new Date(trip.date).toISOString().split('T')[0]}
                         onChange={(e) =>
                           handleChange(index, "date", e.target.value)
                         }
@@ -619,7 +683,7 @@ export default function EditTripPage() {
                             variant="outline"
                             size="icon"
                             onClick={() =>
-                              handleDeleteTiming(index, timingIndex)
+                              handleDeleteTiming(index)
                             }
                           >
                             <X className="h-4 w-4" />

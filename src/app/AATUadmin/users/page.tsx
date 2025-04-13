@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { UserDetailsDrawer } from "./_components/UserDetailsDrawer";
 
 interface User {
@@ -95,7 +95,7 @@ export default function UsersPage() {
     totalPages: 0,
   });
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
@@ -120,7 +120,7 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pagination.page, search, role, pagination.limit]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
@@ -153,7 +153,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.page, search, role]);
+  }, [fetchUsers]);
 
   if (isLoading) {
     return <UsersSkeleton />;

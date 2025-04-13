@@ -37,10 +37,11 @@ export async function GET(
       success: true,
       data: booking
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching booking details:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to fetch booking details", error: error.message },
+      { success: false, message: "Failed to fetch booking details", error: errorMessage },
       { status: 500 }
     );
   }
@@ -87,10 +88,11 @@ export async function PUT(
       message: "Booking updated successfully",
       data: updatedBooking
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating booking:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to update booking", error: error.message },
+      { success: false, message: "Failed to update booking", error: errorMessage },
       { status: 500 }
     );
   }
@@ -131,10 +133,11 @@ export async function DELETE(
       success: true,
       message: "Booking deleted successfully"
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting booking:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to delete booking", error: error.message },
+      { success: false, message: "Failed to delete booking", error: errorMessage },
       { status: 500 }
     );
   }

@@ -70,7 +70,6 @@ function SearchCardSkeleton() {
 
 function SearchCard() {
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [roundTripData, setRoundTripData] = useState<DataSchema>({
     pickUp: "",
     destination: "",
@@ -103,18 +102,18 @@ function SearchCard() {
   const fetchTripsName = async () => {
     try {
       setIsLoading(true);
-      setError(null);
+      // setError(null);
       const res = await tripApi.getTripNames();
     //  console.log(res);
      
       if (Array.isArray(res)) {
         setDestinationData(res);
       } else {
-        setError("Failed to load destinations");
+        // setError("Failed to load destinations");
         console.error("Unexpected API response format:", res);
       }
     } catch (error) {
-      setError("Failed to load destinations");
+      // setError("Failed to load destinations");
       console.error("Error fetching trips:", error);
     } finally {
       setIsLoading(false);

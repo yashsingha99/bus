@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 enum Status {
   Active = "Active",
@@ -7,7 +7,7 @@ enum Status {
 }
 
 export interface SingleTrip {
-  _id: string
+  _id?: string
   price: number;
   Timing: [string];
   date: Date;
@@ -15,7 +15,8 @@ export interface SingleTrip {
   SeatsLimit: number;
 }
 
-export interface ITrip extends Document {
+export interface ITrip {
+  _id?: string
   destinationAddress: string;
   Trips: SingleTrip[];
 }

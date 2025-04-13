@@ -1,20 +1,11 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { tripApi } from "@/API/trip.api";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ChevronLeft,
-  Clock,
-  Info,
-  MapPin,
-  Plus,
-  Star,
-  Trash2,
-  User,
-} from "lucide-react";
-
+import { ChevronLeft, MapPin, Info } from "lucide-react";
+import { pickupLocations } from "@/components/search-card";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,10 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FeedbackButton } from "@/components/ui/feedback-button";
 import { ITrip, SingleTrip } from "@/model/trip.model";
 import {
@@ -42,21 +30,61 @@ import { SelectGroup } from "@radix-ui/react-select";
 
 import {
   calculateTotalPrice,
-  applyPromoCode,
   formatPrice,
   getPriceFromTripData,
 } from "@/utils/priceUtils";
 import { createOrderId } from "@/API/orderId";
 import axios from "axios";
-// import { useUser } from "@clerk/nextjs";
 import Script from "next/script";
-import Razorpay from "razorpay";
-import { bookingApi } from "@/API/booking.api";
 import { toast, Toaster } from "sonner";
-import LoadingSkeleton from "../../_components/loading-skeleton";
-import PaymentDrawer from "../../_components/paymentDrawer";
-import { pickupLocations } from "@/components/search-card";
+import LoadingSkeleton from "../_components/loading-skeleton";
+import PaymentDrawer from "../_components/paymentDrawer";
 import Auth from "@/components/model/auth";
+import { User } from "@/types/user.type";
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+  [key: string]: unknown;
+}
+
+interface RazorpayError {
+  error: {
+    code: string;
+    description: string;
+    source: string;
+    step: string;
+    reason: string;
+    metadata: Record<string, unknown>;
+  };
+}
+
+interface RazorpayWindow extends Window {
+  Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
+}
+
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => Promise<void>;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  theme: {
+    color: string;
+  };
+}
+
+interface RazorpayInstance {
+  on: (event: string, callback: (response: RazorpayError) => void) => void;
+  open: () => void;
+}
 
 export default function BusDetailsPage() {
   const searchParams = useSearchParams();
@@ -64,63 +92,46 @@ export default function BusDetailsPage() {
   const tripId = searchParams.get("destination") as string;
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [openPassenger, setOpenPassenger] = useState(-1);
-  const [selectedPassenger, setSelectedPassenger] = useState([1]);
-  const [userDetails, setUserDetails] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    userId: "",
-  });
-  // const [passengerDetails, setPassengerDetails] = useState([
-  //   { name: "", phone: "", gender: "" },
-  // ]);
-  // const [error, setError] = useState([
-  //   { name: false, phone: false, gender: false },
-  // ]);
+  const [userDetails, setUserDetails] = useState<{
+    fullName: string;
+    email: string;
+    phone: string;
+    userId: string;
+  } | null>(null);
   const [errorDateTime, setErrorDateTime] = useState({
     date: false,
     time: false,
   });
   const [price, setPrice] = useState(0);
-  // const [discount, setDiscount] = useState(0);
-  // const [promoCode, setPromoCode] = useState("");
-  // const [promoError, setPromoError] = useState("");
   const [tripData, setTripData] = useState<ITrip>();
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedPickup, setSelectedPickup] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  // const [openManualPaymentDrawer, setOpenManualPaymentDrawer] = useState(false);
   const [paymentProof, setPaymentProof] = useState<File>();
-  // const { user } = useUser();
-  const userString = localStorage.getItem("user");
-  const user = userString ? JSON.parse(userString) : null;
+  const [user, setUser] = useState<User | null>(null);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userString = localStorage.getItem("user");
+      const userData = userString ? JSON.parse(userString) : null;
+      setUser(userData);
+    }
+  }, []);
   const userData = {
     fullName: user?.fullName,
     email: user?.email,
     phone: user?.phone || "",
     userId: user?._id,
   };
-  // useEffect(() => {
-  //   if (user) {
-  //     setUserDetails(userData);
-  //   }
-  // }, [user]);
 
-  let isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
+  const isPickUpLocationExist = pickup ? pickupLocations.includes(pickup) : false;
 
   //--------------------------------------- HANDLE PAYMENT BY MANUAL -----------------------------------
   const handlePaymentByManual = async () => {
     setIsLoading(true);
     try {
-      // let shouldAdd = isValidateInfo();
-      let shouldProcced = isValidateDateTime();
+      const shouldProcced = isValidateDateTime();
 
-      if (
-        // !shouldAdd ||
-        !shouldProcced ||
-        !paymentProof
-      ) {
+      if (!shouldProcced || !paymentProof) {
         alert("Please fill all required fields correctly");
         setIsLoading(false);
         return;
@@ -140,14 +151,11 @@ export default function BusDetailsPage() {
       }
 
       const paymentProofUrl = uploadResponse.data.url;
-    // console.log(userData);  
-      // Now create the booking with the payment proof URL
       const bookingResponse = await axios.post(`/api/passanger/bookingManual`, {
         pickupAddress: pickup || selectedPickup,
         bookedBy: userData.userId,
         destination: tripId,
         time: selectedTime,
-        // passengerDetails: passengerDetails,
         totalAmount: finalPrice,
         status: "pending",
         paymentStatus: "pending",
@@ -183,38 +191,20 @@ export default function BusDetailsPage() {
   const handlePaymentByRazorpay = async () => {
     setIsLoading(true);
     try {
-      // Validate passenger details and date/time
-      // let shouldAdd = isValidateInfo();
-      let shouldProcced = isValidateDateTime();
+      const shouldProcced = isValidateDateTime();
+      if (!shouldProcced) return;
 
-      if (
-        // !shouldAdd ||
-        !shouldProcced
-      ) {
-        alert("Please fill all required fields correctly");
-        setIsLoading(false);
-        return;
-      }
-
-      // Format passenger details for the booking
-      // const formattedPassengerDetails = passengerDetails.map((passenger) => ({
-      //   name: passenger.name,
-      //   phone: passenger.phone,
-      //   gender: passenger.gender.toLowerCase() as "male" | "female" | "other",
-      // }));
-
-      // Create order ID for payment
       const orderId: string = await createOrderId(finalPrice, "INR");
       console.log("Order ID:", orderId);
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      const options: RazorpayOptions = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         amount: finalPrice * 100,
         currency: "INR",
         name: "Bustify Ticket Booking",
         description: `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"}`,
         order_id: orderId,
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayResponse) {
           try {
             const paymentResponse = await axios.post(`/api/verifyOrder`, {
               razorpay_order_id: orderId,
@@ -233,7 +223,6 @@ export default function BusDetailsPage() {
               bookedBy: userData.userId,
               destination: tripId,
               time: selectedTime,
-              // passengerDetails: formattedPassengerDetails,
               totalAmount: finalPrice,
               status: "pending",
               paymentStatus: "pending",
@@ -271,8 +260,8 @@ export default function BusDetailsPage() {
           }
         },
         prefill: {
-          name: userData.fullName,
-          email: userData.email,
+          name: userData?.fullName || "john deo",
+          email: userData?.email || "email@gmail.com",
           contact: userData.phone,
         },
         theme: {
@@ -280,8 +269,8 @@ export default function BusDetailsPage() {
         },
       };
 
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.on("payment.failed", function (response: any) {
+      const razorpay = new ((window as unknown) as RazorpayWindow).Razorpay(options);
+      razorpay.on("payment.failed", function (response: RazorpayError) {
         alert("Payment failed. Please try again.");
         console.error("Payment failed:", response.error);
       });
@@ -295,12 +284,11 @@ export default function BusDetailsPage() {
   };
 
   //-------------------------------------- FETCH TRIP DATA ----------------------------------------------
-  const fetchTrips = async () => {
+  const fetchTrips = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await tripApi.getTripById(tripId);
 
-      // Filter out expired trips
       const filteredTrips = {
         ...res,
         Trips: res.Trips.filter((t) => t.Status !== "Expiry"),
@@ -313,12 +301,14 @@ export default function BusDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  },[tripId]);
 
   //------------------------------------- FETCH TRIP DATA BY PAGE LOAD  ---------------------------------
   useEffect(() => {
-    fetchTrips();
-  }, []);
+    if (tripId) {
+      fetchTrips();
+    }
+  }, [tripId, fetchTrips]);
 
   //------------------------------------ SET PRICE BY DATE AND TIME OF TRIP  -----------------------------
   useEffect(() => {
@@ -334,47 +324,9 @@ export default function BusDetailsPage() {
 
   //-------------------------------------- CALCULATE FINAL PRICE -------------------------------------
   const finalPrice = useMemo(() => {
-    return calculateTotalPrice(price, selectedPassenger.length, 0);
-  }, [price, selectedPassenger.length]);
+    return calculateTotalPrice(price, 1, 0);
+  }, [price]);
 
-  //--------------------------------------- APPLY PROMO CODE -----------------------------
-  // const handleApplyPromoCode = () => {
-  //   if (!promoCode) {
-  //     setPromoError("Please enter a promo code");
-  //     return;
-  //   }
-
-  //   const newDiscount = applyPromoCode(promoCode, selectedPassenger.length);
-  //   if (newDiscount > 0) {
-  //     setDiscount(newDiscount);
-  //     setPromoError("");
-  //   } else {
-  //     setPromoError("Invalid promo code");
-  //   }
-  // };
-
-  //--------------------------- HANDLE DROP DOWN -----------------------------
-  // const handleDropDown = (index: number) => {
-  //   setOpenPassenger((prev) => (prev === index ? -1 : index));
-  // };
-
-  //--------------------------- VALIDATE PASSENGER DETAILS -----------------------------
-  // const isValidateInfo = () => {
-  //   const newError = passengerDetails.map(({ name, phone, gender }) => ({
-  //     name: name === "",
-  //     phone: phone.length !== 10,
-  //     gender: gender === "",
-  //   }));
-
-  //   setError(newError);
-
-  //   const shouldAdd = newError.every(
-  //     (err) => !err.name && !err.phone && !err.gender
-  //   );
-  //   return shouldAdd;
-  // };
-
-  //--------------------------- VALIDATE DATE AND TIME -----------------------------
   const isValidateDateTime = () => {
     let shouldProcced = true;
     const error = errorDateTime;
@@ -390,68 +342,23 @@ export default function BusDetailsPage() {
     return shouldProcced;
   };
 
-  //--------------------------- HANDLE ADD PASSENGER -----------------------------
-  // const handleAddPassenger = () => {
-  //   // let shouldAdd = isValidateInfo();
-
-  //   if (shouldAdd) {
-  //     setSelectedPassenger((prev) => [...prev, prev.length + 1]);
-  //     setPassengerDetails((prev) => [
-  //       ...prev,
-  //       { name: "", phone: "", gender: "" },
-  //     ]);
-  //     setError((prev) => [
-  //       ...prev,
-  //       { name: false, phone: false, gender: false },
-  //     ]);
-  //   }
-  // };
-
-  //--------------------------- UPDATE PASSENGER DETAILS -----------------------------
-  // const updatePassengerDetail = (
-  //   index: number,
-  //   field: string,
-  //   value: string
-  // ) => {
-  //   const updatedDetails = [...passengerDetails];
-  //   updatedDetails[index] = { ...updatedDetails[index], [field]: value };
-  //   setPassengerDetails(updatedDetails);
-  // };
-
-  //--------------------------- HANDLE REMOVE PASSENGER -----------------------------
-  // const handleRemovePassenger = (index: number) => {
-  //   if (passengerDetails.length > 1) {
-  //     const newSelectedPassenger = [...selectedPassenger];
-  //     newSelectedPassenger.pop();
-  //     setSelectedPassenger(newSelectedPassenger);
-
-  //     const newPassengerDetails = passengerDetails.filter(
-  //       (_, idx) => idx !== index
-  //     );
-  //     setPassengerDetails(newPassengerDetails);
-
-  //     const newError = error.filter((_, idx) => idx !== index);
-  //     setError(newError);
-  //   } else {
-  //     alert("At least one passenger is required");
-  //   }
-  // };
-
-  //--------------------------- PROCEED TO PAYMENT -----------------------------
   const proceedToPayment = () => {
-    // let shouldAdd = isValidateInfo();
-    let shouldProcced = isValidateDateTime();
-    if (
-      // shouldAdd  &&
-      shouldProcced
-    ) {
-      // // payment gateway
-      // router.push(
-      //   `/payment?busId=${tripId}&seats=${selectedPassenger.join(",")}&amount=${finalPrice}`
-      // );
+    const shouldProcced = isValidateDateTime();
+    if (!userDetails) {
+      toast.error("Please sign in to proceed with payment");
+      return;
+    }
+    if (shouldProcced) {
       handlePaymentByRazorpay();
     }
   };
+
+  const handleTimeChange = useCallback((time: string) => {
+    setSelectedTime(time);
+    if (tripId) {
+      router.push(`/searchBus/source?destination=${tripId}&time=${time}`);
+    }
+  }, [router, tripId]);
 
   //--------------------------- LOADING SKELETON -----------------------------
   if (isLoading) {
@@ -467,7 +374,7 @@ export default function BusDetailsPage() {
             <div className="text-center">
               <h3 className="text-lg font-semibold">Bus not found</h3>
               <p className="text-muted-foreground">
-                The bus you're looking for doesn't exist
+                The bus you are looking for does not exist
               </p>
               <Link href="/search">
                 <Button className="mt-4">Back to Search</Button>
@@ -592,7 +499,7 @@ export default function BusDetailsPage() {
                 <div className="w-[90%]">
                   <Select
                     value={selectedTime}
-                    onValueChange={setSelectedTime}
+                    onValueChange={handleTimeChange}
                     required
                   >
                     <SelectTrigger>
@@ -792,55 +699,20 @@ export default function BusDetailsPage() {
             {selectedDate && selectedTime ? (
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium">Selected Passenger</h3>
-                    {selectedPassenger.length > 0 ? (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {selectedPassenger.map((seatId) => (
-                          <span
-                            key={seatId}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted text-sm"
-                          >
-                            {seatId}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No seats selected
-                      </p>
-                    )}
-                  </div>
-
                   <Separator />
 
                   <div className="space-y-1">
                     <div className="flex justify-between">
                       <span>Price</span>
-                      <span>{formatPrice(price)}</span>
+                      <span>{formatPrice({ price, currency: "INR" })}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Seats </span>
-                      <span> {selectedPassenger.length}</span>
-                    </div>
-                    {/* {discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount</span>
-                        <span>
-                          -
-                          {formatPrice(
-                            (price * selectedPassenger.length) / 100
-                          )}
-                        </span>
-                      </div>
-                    )} */}
                   </div>
 
                   <Separator />
 
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span>{formatPrice(finalPrice)}</span>
+                    <span>{formatPrice({ price: finalPrice, currency: "INR" })}</span>
                   </div>
                 </div>
               </CardContent>
@@ -861,35 +733,38 @@ export default function BusDetailsPage() {
                   className="w-full"
                   onClick={proceedToPayment}
                   disabled={
-                    selectedPassenger.length === 0 ||
                     selectedDate === "" ||
                     selectedTime === "" ||
                     (selectedPickup == "" && pickup === null)
                   }
                 >
-                  {selectedPassenger.length === 0
-                    ? "Select Seats"
-                    : "Proceed to Payment"}
+                  Proceed to Payment
                 </FeedbackButton>
               ) : (
                 <Auth
                   navigateRoute=""
                   callback={[() => {}]}
-                  state={setUserDetails}
+                  state={(data) => {
+                    if (data) {
+                      setUserDetails({
+                        fullName: data.fullName,
+                        email: data.email,
+                        phone: data.phone,
+                        userId: data._id,
+                      });
+                    }
+                  }}
                 >
                   <FeedbackButton
                     className="w-full"
                     variant="default"
                     disabled={
-                      selectedPassenger.length === 0 ||
                       selectedDate === "" ||
                       selectedTime === "" ||
                       (selectedPickup == "" && pickup === null)
                     }
                   >
-                    {selectedPassenger.length === 0
-                      ? "Select Seats"
-                      : "Proceed to Payment"}
+                    Proceed to Payment
                   </FeedbackButton>
                 </Auth>
               )}
@@ -900,7 +775,6 @@ export default function BusDetailsPage() {
                 <PaymentDrawer
                   amount={finalPrice}
                   isDisabled={
-                    selectedPassenger.length === 0 ||
                     selectedDate === "" ||
                     selectedTime === "" ||
                     (selectedPickup == "" && pickup === null)
@@ -912,13 +786,21 @@ export default function BusDetailsPage() {
                 <Auth
                   navigateRoute=""
                   callback={[() => {}]}
-                  state={setUserDetails}
+                  state={(data) => {
+                    if (data) {
+                      setUserDetails({
+                        fullName: data.fullName,
+                        email: data.email,
+                        phone: data.phone,
+                        userId: data._id,
+                      });
+                    }
+                  }}
                 >
                   <FeedbackButton
                     className="w-full"
                     variant="default"
                     disabled={
-                      selectedPassenger.length === 0 ||
                       selectedDate === "" ||
                       selectedTime === "" ||
                       (selectedPickup == "" && pickup === null)

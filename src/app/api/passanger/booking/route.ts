@@ -4,10 +4,33 @@ import { TripModel } from "@/model/trip.model";
 import { NextResponse } from "next/server";
 import { UserModel } from "@/model/user.model";
 
+interface BookingData {
+  pickupAddress: string;
+  bookedBy: string; // Clerk ID
+  destination: string;
+  time: string;
+  totalAmount: number;
+  paymentId: string;
+  [key: string]: unknown;
+}
+
+interface ValidationError extends Error {
+  errors: {
+    [key: string]: {
+      message: string;
+    };
+  };
+}
+
+interface CastError extends Error {
+  path: string;
+}
+
+// Get all refunds with pagination
 export async function POST(request: Request) {
   await dbConnection();
   try {
-    const bookingData = await request.json();
+    const bookingData = await request.json() as BookingData;
 
     // Validate required fields
     const requiredFields = [
@@ -55,29 +78,38 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating booking:", error);
 
     // Handle specific MongoDB errors
-    if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map(
-        (err: any) => err.message
-      );
-      return NextResponse.json(
-        { message: "Validation error", errors: validationErrors },
-        { status: 400 }
-      );
-    }
+    if (error instanceof Error) {
+      if (error.name === "ValidationError") {
+        const validationError = error as ValidationError;
+        const validationErrors = Object.values(validationError.errors).map(
+          (err) => err.message
+        );
+        return NextResponse.json(
+          { message: "Validation error", errors: validationErrors },
+          { status: 400 }
+        );
+      }
 
-    if (error.name === "CastError") {
+      if (error.name === "CastError") {
+        const castError = error as CastError;
+        return NextResponse.json(
+          { message: "Invalid ID format", field: castError.path },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { message: "Invalid ID format", field: error.path },
-        { status: 400 }
+        { message: "Something went wrong!", error: error.message },
+        { status: 500 }
       );
     }
 
     return NextResponse.json(
-      { message: "Something went wrong!", error: error.message },
+      { message: "Something went wrong!", error: "Unknown error occurred" },
       { status: 500 }
     );
   }
@@ -142,10 +174,11 @@ export async function GET(request: Request) {
       { message: "Booking ID or User ID is required!" },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error retrieving booking(s):", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { message: "Something went wrong!", error: error.message },
+      { message: "Something went wrong!", error: errorMessage },
       { status: 500 }
     );
   }
@@ -186,10 +219,11 @@ export async function PUT(request: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating booking:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { message: "Something went wrong!", error: error.message },
+      { message: "Something went wrong!", error: errorMessage },
       { status: 500 }
     );
   }
@@ -220,10 +254,11 @@ export async function DELETE(request: Request) {
       { message: "Booking deleted successfully!" },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting booking:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { message: "Something went wrong!", error: error.message },
+      { message: "Something went wrong!", error: errorMessage },
       { status: 500 }
     );
   }

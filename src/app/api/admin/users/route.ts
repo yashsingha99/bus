@@ -1,14 +1,13 @@
 import { dbConnection } from "@/lib/db";
 import { UserModel } from "@/model/user.model";
-import { NextRequest, NextResponse } from "next/server";
-import { Types } from "mongoose";
+import { NextResponse } from "next/server";
 
-interface QueryParams {
-  page?: string;
-  limit?: string;
-  role?: string;
-  search?: string;
-}
+// interface QueryParams {
+//   page?: string;
+//   limit?: string;
+//   role?: string;
+//   search?: string;
+// }
 
 // Get all users with pagination
 export async function GET(request: Request) {
@@ -21,7 +20,7 @@ export async function GET(request: Request) {
     const search = searchParams.get("search");
 
     const query: Record<string, unknown> = {};
-    
+
     if (role) {
       query.role = role;
     }
@@ -65,60 +64,79 @@ export async function GET(request: Request) {
 // Create a new user
 export async function POST(request: Request) {
   await dbConnection();
-  
+
   try {
     const userData = await request.json();
-    
+
     // Validate required fields
-    const requiredFields = ["fullName", "email", "phoneNumber", "clerkId", "role"];
-    const missingFields = requiredFields.filter(field => !userData[field]);
-    
+    const requiredFields = [
+      "fullName",
+      "email",
+      "phoneNumber",
+      "clerkId",
+      "role",
+    ];
+    const missingFields = requiredFields.filter((field) => !userData[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { success: false, message: `Missing required fields: ${missingFields.join(", ")}` },
+        {
+          success: false,
+          message: `Missing required fields: ${missingFields.join(", ")}`,
+        },
         { status: 400 }
       );
     }
-    
+
     // Check if user already exists
-    const existingUser = await UserModel.findOne({ 
+    const existingUser = await UserModel.findOne({
       $or: [
         { email: userData.email },
         { phoneNumber: userData.phoneNumber },
-        { clerkId: userData.clerkId }
-      ]
+        { clerkId: userData.clerkId },
+      ],
     });
-    
+
     if (existingUser) {
       return NextResponse.json(
         { success: false, message: "User already exists" },
         { status: 400 }
       );
     }
-    
+
     // Create new user
     const newUser = await UserModel.create(userData);
-    
-    return NextResponse.json({
-      success: true,
-      message: "User created successfully",
-      data: newUser
-    }, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating user:", error);
+
     return NextResponse.json(
-      { success: false, message: "Failed to create user", error: error.message },
-      { status: 500 }
+      {
+        success: true,
+        message: "User created successfully",
+        data: newUser,
+      },
+      { status: 201 }
     );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Failed to create user",
+          error: error.message,
+        },
+        { status: 500 }
+      );
+    } else {
+      console.error("Unknown error", error);
+    }
   }
 }
 
 export async function PATCH(request: Request) {
   await dbConnection();
-  
+
   try {
     const { userId, role } = await request.json();
-    
+
     if (!userId || !role) {
       return NextResponse.json(
         { success: false, message: "User ID and role are required" },
@@ -142,7 +160,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       success: true,
       message: "User role updated successfully",
-      data: updatedUser
+      data: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user:", error);
@@ -151,4 +169,4 @@ export async function PATCH(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

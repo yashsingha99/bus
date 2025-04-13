@@ -1,63 +1,63 @@
-import { Metadata } from 'next';
+type StructuredDataType = 'BusTrip' | 'BusReservation';
 
-interface StructuredDataProps {
-  type: 'BusTrip' | 'BusReservation';
-  data: any;
+interface BaseStructuredData {
+  "@context": "https://schema.org";
+  "@type": string;
+  [key: string]: unknown;
 }
 
-export function StructuredData({ type, data }: StructuredDataProps) {
-  const getStructuredData = () => {
-    if (type === 'BusTrip') {
-      return {
-        '@context': 'https://schema.org',
-        '@type': 'BusTrip',
-        name: data.name,
-        departureTime: data.departureTime,
-        arrivalTime: data.arrivalTime,
-        departureBusStop: {
-          '@type': 'BusStop',
-          name: data.departureBusStop,
-        },
-        arrivalBusStop: {
-          '@type': 'BusStop',
-          name: data.arrivalBusStop,
-        },
-        provider: {
-          '@type': 'Organization',
-          name: 'BusHub',
-        },
-        price: data.price,
-        priceCurrency: 'INR',
-      };
-    } else if (type === 'BusReservation') {
-      return {
-        '@context': 'https://schema.org',
-        '@type': 'Reservation',
-        reservationNumber: data.reservationNumber,
-        reservationStatus: data.status,
-        underName: {
-          '@type': 'Person',
-          name: data.passengerName,
-        },
-        reservationFor: {
-          '@type': 'BusTrip',
-          name: data.tripName,
-          departureTime: data.departureTime,
-          arrivalTime: data.arrivalTime,
-        },
-        totalPrice: {
-          '@type': 'PriceSpecification',
-          price: data.totalPrice,
-          priceCurrency: 'INR',
-        },
-      };
-    }
+interface BusTripData extends BaseStructuredData {
+  "@type": "BusTrip";
+  name: string;
+  departureTime: string;
+  arrivalTime: string;
+  departureBusStop: {
+    "@type": "BusStop";
+    name: string;
   };
+  arrivalBusStop: {
+    "@type": "BusStop";
+    name: string;
+  };
+  provider: {
+    "@type": "Organization";
+    name: string;
+  };
+  price: number;
+  priceCurrency: string;
+}
 
+interface BusReservationData extends BaseStructuredData {
+  "@type": "Reservation";
+  reservationNumber: string;
+  reservationStatus: string;
+  underName: {
+    "@type": "Person";
+    name: string;
+  };
+  reservationFor: {
+    "@type": "BusTrip";
+    name: string;
+    departureTime: string;
+    arrivalTime: string;
+  };
+  totalPrice: {
+    "@type": "PriceSpecification";
+    price: number;
+    priceCurrency: string;
+  };
+}
+
+interface StructuredDataProps {
+  type: StructuredDataType;
+  data: BusTripData | BusReservationData;
+}
+
+export function StructuredData({ data }: StructuredDataProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(getStructuredData()) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
     />
   );
 } 

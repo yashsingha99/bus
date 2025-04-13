@@ -13,9 +13,6 @@ import {
 } from "@/components/ui/drawer";
 import { FeedbackButton } from "@/components/ui/feedback-button";
 import { FileUpload } from "@/components/ui/file-upload";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Copy } from "lucide-react";
 import { useState } from "react";
 
 export default function PaymentDrawer({

@@ -1,3 +1,5 @@
+import { ITrip } from "../model/trip.model";
+
 /**
  * Calculate the total price based on base price, number of passengers, and discount
  */
@@ -6,6 +8,9 @@ export function calculateTotalPrice(
   passengerCount: number,
   discountPercentage: number = 0
 ): number {
+  if (basePrice < 0 || passengerCount < 1 || discountPercentage < 0) {
+    throw new Error("Invalid input parameters");
+  }
   const subtotal = basePrice * passengerCount;
   const discountAmount = subtotal * (discountPercentage / 100);
   return subtotal - discountAmount;
@@ -18,8 +23,12 @@ export function applyPromoCode(
   promoCode: string,
   passengerCount: number
 ): number {
+  if (!promoCode || passengerCount < 1) {
+    return 0;
+  }
+
   // Group discount - 10% off for 4 or more passengers
-  if (promoCode === "GROUP10" && passengerCount >= 4) {
+  if (promoCode.toUpperCase() === "GROUP10" && passengerCount >= 4) {
     return 10;
   }
   
@@ -28,35 +37,61 @@ export function applyPromoCode(
   return 0;
 }
 
-/**
- * Format price with currency symbol
- */
-export function formatPrice(price: number, currency: string = "₹"): string {
-  return `${currency}${price.toFixed(2)}`;
+export interface PriceData {
+  price: number;
+  currency: string;
 }
+
+export const formatPrice = (data: PriceData): string => {
+  if (!data || typeof data.price !== 'number') {
+    throw new Error("Invalid price data");
+  }
+
+  const { price, currency = 'USD' } = data;
+  
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(price);
+  } catch (error) {
+    console.error('Error formatting price:', error);
+    return `${currency} ${price.toFixed(2)}`;
+  }
+};
 
 /**
  * Get price from trip data based on selected date and time
  */
 export function getPriceFromTripData(
-  tripData: any,
+  tripData: ITrip,
   selectedDate: string,
   selectedTime: string
 ): number {
-  if (!tripData?.Trips || !selectedDate || !selectedTime) {
+  if (!tripData?.Trips || !Array.isArray(tripData.Trips)) {
+    throw new Error("Invalid trip data");
+  }
+
+  if (!selectedDate || !selectedTime) {
+    throw new Error("Date and time must be provided");
+  }
+
+  try {
+    const selectedDateObj = new Date(selectedDate);
+    if (isNaN(selectedDateObj.getTime())) {
+      throw new Error("Invalid date format");
+    }
+
+    const selectedDateStr = selectedDateObj.toISOString().split("T")[0];
+
+    const matchingTrip = tripData.Trips.find(trip => {
+      const tripDate = new Date(trip.date).toISOString().split("T")[0];
+      return tripDate === selectedDateStr && trip.Timing.includes(selectedTime);
+    });
+
+    return matchingTrip?.price ?? 0;
+  } catch (error) {
+    console.error('Error getting price from trip data:', error);
     return 0;
   }
-
-  const selectedDateObj = new Date(selectedDate);
-  const selectedDateStr = selectedDateObj.toISOString().split("T")[0];
-
-  for (const trip of tripData.Trips) {
-    const tripDate = new Date(trip.date).toISOString().split("T")[0];
-    
-    if (tripDate === selectedDateStr && trip.Timing.includes(selectedTime)) {
-      return trip.price;
-    }
-  }
-
-  return 0;
 } 

@@ -4,6 +4,16 @@ import { BookingModel } from "@/model/booking.model";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 
+interface UserUpdateData {
+  name?: string;
+  email?: string;
+  phoneNumber?: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
+
+
 // Get user details
 export async function GET(
   request: NextRequest,
@@ -45,10 +55,11 @@ export async function GET(
         bookings
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching user details:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to fetch user details", error: error.message },
+      { success: false, message: "Failed to fetch user details", error: errorMessage },
       { status: 500 }
     );
   }
@@ -63,7 +74,7 @@ export async function PUT(
   
   try {
     const { userId } = params;
-    const updateData = await request.json();
+    const updateData = await request.json() as UserUpdateData;
     
     // Validate user ID
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -95,10 +106,11 @@ export async function PUT(
       message: "User updated successfully",
       data: updatedUser
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating user:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to update user", error: error.message },
+      { success: false, message: "Failed to update user", error: errorMessage },
       { status: 500 }
     );
   }
@@ -152,10 +164,11 @@ export async function DELETE(
       success: true,
       message: "User deleted successfully"
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting user:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to delete user", error: error.message },
+      { success: false, message: "Failed to delete user", error: errorMessage },
       { status: 500 }
     );
   }
@@ -168,7 +181,7 @@ export async function PATCH(
   try {
     await dbConnection();
     const { userId } = params;
-    const body = await request.json();
+    const body = await request.json() as UserUpdateData;
 
     const { name, email, phoneNumber, role } = body;
 
@@ -199,10 +212,11 @@ export async function PATCH(
       message: "User updated successfully",
       data: updatedUser,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error updating user:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
-      { success: false, message: "Failed to update user" },
+      { success: false, message: "Failed to update user", error: errorMessage },
       { status: 500 }
     );
   }
