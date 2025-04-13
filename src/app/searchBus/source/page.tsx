@@ -613,6 +613,12 @@ export default function BusDetailsPage() {
                         phone: data.phone,
                         id: data._id,
                       });
+                      setUser({
+                        fullName: data.fullName,
+                        email: data.email,
+                        phone: data.phone,
+                        id: data._id,
+                      });
                     }
                   }}
                 >

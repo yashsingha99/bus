@@ -238,7 +238,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        toast.error("Invalid Email or DOB");
+        toast.error(isSignIn  ? "Email With DOB does not Exist!" : "User Aready Exist With this Email or Phone Number!");
       } else {
         console.error("Unknown error", error);
       }
