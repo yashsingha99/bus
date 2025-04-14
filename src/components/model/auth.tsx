@@ -177,7 +177,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       if (!signUpFormData.phone) {
         newErrorSignUp.phone = "Phone number is required for registration";
         hasErrors = true;
-      } else if (!/^\+?[1-9]\d{9,11}$/.test(signUpFormData.phone)) {
+      } else if (!/^\d{10}$/.test(signUpFormData.phone)) {
         newErrorSignUp.phone = "Invalid phone number";
         hasErrors = true;
       }
@@ -246,8 +246,6 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       setIsLoading(false);
     }
   };
-
-  
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -83,7 +83,7 @@ const Drawer = () => {
             </div>
             <div className="flex flex-col gap-4">
               {userData &&
-                userData.role === "ADMIN" &&
+                userData.role === "IAMADMINROCK" &&
                 adminNavigation.map((link) => (
                   <button
                     key={link.page}

@@ -254,7 +254,7 @@ export default function BusDetailsPage() {
                 },
               });
               router.push(`/booking-confirmation?bookingId=${booking._id}`);
-              console.log("Booking created:", booking);
+              // console.log("Booking created:", booking);
             } else {
               throw new Error("Failed to create booking");
             }

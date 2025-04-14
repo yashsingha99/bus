@@ -19,6 +19,6 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Search Bus Tickets | Bustify - Compare Prices with Abhibus, Redbus',
     description: 'Search and compare bus ticket prices across multiple platforms. Find the best deals on bus tickets, compare with Abhibus, Redbus, and other providers. Fast and easy bus booking.',
-    images: ['/search-bus-twitter.jpg'],
+    images: ['/search-bus-og.jpg'],
   },
 }; 

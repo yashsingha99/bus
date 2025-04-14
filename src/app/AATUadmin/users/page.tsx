@@ -22,6 +22,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { UserDetailsDrawer } from "./_components/UserDetailsDrawer";
+import Auth from "@/components/model/auth";
+import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
@@ -60,11 +62,21 @@ function UsersSkeleton() {
           <TableBody>
             {[...Array(5)].map((_, i) => (
               <TableRow key={i}>
-                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                <TableCell><Skeleton className="h-8 w-[100px]" /></TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[100px]" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[150px]" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[100px]" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-[80px]" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-8 w-[100px]" />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -82,6 +94,7 @@ function UsersSkeleton() {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -94,7 +107,7 @@ export default function UsersPage() {
     limit: 10,
     totalPages: 0,
   });
-
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -122,6 +135,21 @@ export default function UsersPage() {
     }
   }, [pagination.page, search, role, pagination.limit]);
 
+   useEffect(() => {
+     fetchUsers();
+   }, [fetchUsers]);
+
+  useEffect(() => {
+    const userString = localStorage.getItem("user");
+    const userData = userString ? JSON.parse(userString) : null;
+
+    if (!userData) {
+      router.push("/");
+    }
+    setCurrentUser(userData);
+  }, [router]);
+
+  
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
       const response = await fetch("/api/admin/users", {
@@ -151,9 +179,31 @@ export default function UsersPage() {
     setIsDrawerOpen(true);
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  if (!currentUser) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">
+            Please sign in to view your DashBoard
+          </h1>
+
+          <Auth
+            navigateRoute=""
+            callback={[
+              () => {
+                window.location.reload();
+              },
+            ]}
+            state={() => {}}
+          >
+            <Button>Sign In</Button>
+          </Auth>
+        </div>
+      </div>
+    );
+  }
+
+ 
 
   if (isLoading) {
     return <UsersSkeleton />;
@@ -176,8 +226,8 @@ export default function UsersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="USER">User</SelectItem>
+                <SelectItem value="IAMADMINROCK">Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -203,14 +253,16 @@ export default function UsersPage() {
                   <TableCell>
                     <Select
                       value={user.role}
-                      onValueChange={(value) => handleRoleChange(user._id, value)}
+                      onValueChange={(value) =>
+                        handleRoleChange(user._id, value)
+                      }
                     >
                       <SelectTrigger className="w-[120px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">User</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="USER">User</SelectItem>
+                        <SelectItem value="IAMADMINROCK">Admin</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
@@ -237,7 +289,9 @@ export default function UsersPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPagination((prev) => ({ ...prev, page: prev.page - 1 }))}
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+              }
               disabled={pagination.page === 1}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -245,7 +299,9 @@ export default function UsersPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setPagination((prev) => ({ ...prev, page: prev.page + 1 }))}
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+              }
               disabled={pagination.page === pagination.totalPages}
             >
               <ChevronRight className="h-4 w-4" />
@@ -265,4 +321,4 @@ export default function UsersPage() {
       />
     </div>
   );
-} 
+}

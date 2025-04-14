@@ -81,17 +81,21 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
-  );
+  ); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
    const [user, setUser] = useState<User | null>(null);
+
    useEffect(() => {
      if (typeof window !== "undefined") {
        const userString = localStorage.getItem("user");
        const userData = userString ? JSON.parse(userString) : null;
+       if (userData?.role !== "IAMADMINROCK") {
+         router.push("/");
+       }
        setUser(userData);
      }
-   }, []);
+   }, [router]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -99,7 +103,6 @@ export default function AdminDashboard() {
 
       try {
         const response = await axios.get("/api/admin/dashboard");
-        // console.log(response.data.data);
       
         setDashboardData(response.data.data);
       } catch (err) {
@@ -109,7 +112,6 @@ export default function AdminDashboard() {
         else {
           setError("Failed to fetch dashboard data. Please try again later.");
         }
-        // console.error("Error fetching dashboard data:", err);
       } finally {
         setLoading(false);
       }
@@ -118,16 +120,12 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, [user]);
 
-
-  if (user?.role !== "ADMIN"){
-     router.push('/');
-  }
     if (!user) {
       return (
         <div className="container mx-auto p-4">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">
-              Please sign in to view your tickets
+              Please sign in to view your DashBoard
             </h1>
 
             <Auth
@@ -161,17 +159,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // if (!dashboardData) {
-  //   return (
-  //     <div className="container mx-auto p-4">
-  //       <div className="text-center">
-  //         <h1 className="text-2xl font-bold mb-4">No data available</h1>
-  //         <Button onClick={() => window.location.reload()}>Refresh</Button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
@@ -203,7 +190,7 @@ export default function AdminDashboard() {
               totalUsers: dashboardData?.totalUsers || 0,
               totalTrips: dashboardData?.totalTrips || 0,
               totalBookings: dashboardData?.totalBookings || 0,
-              revenue: dashboardData?.revenue.totalRevenue || 0,
+              revenue: dashboardData?.revenue?.totalRevenue || 0,
             }}
             isLoading={loading}
           />
@@ -246,8 +233,8 @@ export default function AdminDashboard() {
         </TabsContent>
         <TabsContent value="analytics">
           <Analytics
-            dayByRevenue={dashboardData?.revenue.dayByRevenue}
-            dailyUserRegistrations={dashboardData?.dailyUserRegistrations}
+            dayByRevenue={dashboardData?.revenue?.dayByRevenue || 0}
+            dailyUserRegistrations={dashboardData?.dailyUserRegistrations || 0}
           />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>

@@ -46,7 +46,7 @@ export function FeedbackButton({
     (e: React.MouseEvent<HTMLButtonElement>) => {
       playSound()
       onClick?.(e)
-
+      e.preventDefault()
       // Trigger vibration if supported
       if (vibration && "vibrate" in navigator) {
         navigator.vibrate(40)
@@ -65,4 +65,3 @@ export function FeedbackButton({
     </Button>
   )
 }
-
