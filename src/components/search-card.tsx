@@ -22,7 +22,7 @@ import {
   SelectGroup,
 } from "./ui/select";
 import { tripApi } from "@/API/trip.api";
-import { Skeleton } from "@/components/ui/skeleton";
+// import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster, toast } from "sonner";
 interface DataSchema {
   pickUp: string;
@@ -42,34 +42,34 @@ export const pickupLocations = [
     "Goverdhan Choraha (GOV CH)",
   ];
 
-function SearchCardSkeleton() {
-  return (
-    <div className="flex items-center justify-center">
-      <Card className="w-full">
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48 mt-2" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Skeleton className="h-10 w-1/2" />
-              <Skeleton className="h-10 w-1/2" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <Skeleton className="h-10 w-full" />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+// function SearchCardSkeleton() {
+//   return (
+//     <div className="flex items-center justify-center">
+//       <Card className="w-full">
+//         <CardHeader>
+//           <Skeleton className="h-6 w-32" />
+//           <Skeleton className="h-4 w-48 mt-2" />
+//         </CardHeader>
+//         <CardContent>
+//           <div className="space-y-4">
+//             <div className="flex gap-2">
+//               <Skeleton className="h-10 w-1/2" />
+//               <Skeleton className="h-10 w-1/2" />
+//             </div>
+//             <div className="space-y-2">
+//               <Skeleton className="h-10 w-full" />
+//               <Skeleton className="h-10 w-full" />
+//             </div>
+//             <Skeleton className="h-10 w-full" />
+//           </div>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }
 
 function SearchCard() {
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
   const [roundTripData, setRoundTripData] = useState<DataSchema>({
     pickUp: "",
     destination: "",
@@ -101,7 +101,7 @@ function SearchCard() {
 
   const fetchTripsName = async () => {
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       // setError(null);
       const res = await tripApi.getTripNames();
     //  console.log(res);
@@ -115,18 +115,19 @@ function SearchCard() {
     } catch (error) {
       // setError("Failed to load destinations");
       console.error("Error fetching trips:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    } 
+    // finally {
+    //   setIsLoading(false);
+    // }
   };
 
   useEffect(() => {
     fetchTripsName();
   }, []);
 
-  if (isLoading) {
-    return <SearchCardSkeleton />;
-  }
+  // if (isLoading) {
+  //   return <SearchCardSkeleton />;
+  // }
 
   // if (error) {
   //   return (
