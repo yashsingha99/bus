@@ -40,7 +40,7 @@ export default function Home() {
     if (!userId) return;
     try {
       const res = await axios.get(`/api/User/${userId}`);
-      console.log(res);
+      // console.log(res);
       if (res.data.status === 200) {
         const userD = {
           email: res.data.user.email,

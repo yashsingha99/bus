@@ -27,9 +27,9 @@ import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
-  name: string;
+  fullName: string;
   email: string;
-  phoneNumber: string;
+  phone: string;
   role: string;
   createdAt: string;
 }
@@ -238,7 +238,7 @@ export default function UsersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
+                {/* <TableHead>Email</TableHead> */}
                 <TableHead>Phone</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Actions</TableHead>
@@ -247,9 +247,9 @@ export default function UsersPage() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user._id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.phoneNumber}</TableCell>
+                  <TableCell>{user.fullName}</TableCell>
+                  {/* <TableCell>{user.email}</TableCell> */}
+                  <TableCell>{user.phone}</TableCell>
                   <TableCell>
                     <Select
                       value={user.role}

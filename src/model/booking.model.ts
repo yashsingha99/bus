@@ -3,10 +3,11 @@ import mongoose, { Schema, Document } from "mongoose";
 //---------------------------------------- Booking Model Type Define --------------------------------------------------------//
 
 export interface IBooking extends Document {
-  pickupAddress: string;     
-  bookedBy: mongoose.Types.ObjectId; 
+  pickupAddress: string;
+  bookedBy: mongoose.Types.ObjectId;
   destination: mongoose.Types.ObjectId;
   time: string;
+  date: string;
   status: "pending" | "confirmed" | "cancelled";
   totalAmount: number;
   paymentStatus: "pending" | "completed" | "failed";
@@ -17,57 +18,60 @@ export interface IBooking extends Document {
   // DateTIme: DateTiming
 }
 
-
 //---------------------------------------- Booking Model --------------------------------------------------------//
-
 
 const bookingSchema: Schema<IBooking> = new Schema(
   {
     pickupAddress: {
       type: String,
       required: [true, "Pickup address is required"],
-      trim: true
+      trim: true,
     },
     time: {
       type: String,
-      required: [true, "Time is required"]
+      required: [true, "Time is required"],
     },
+    date: {
+      type: String,
+      required: [true, "date is required"],
+    },
+
     bookedBy: {
       type: Schema.Types.ObjectId,
-      ref: "UserModel", 
-      required: [true, "User reference is required"]
+      ref: "UserModel",
+      required: [true, "User reference is required"],
     },
     destination: {
       type: Schema.Types.ObjectId,
       ref: "TripModel",
-      required: [true, "Destination reference is required"]
+      required: [true, "Destination reference is required"],
     },
     status: {
       type: String,
       enum: ["pending", "confirmed", "cancelled"],
-      default: "pending"
+      default: "pending",
     },
     totalAmount: {
       type: Number,
       required: [true, "Total amount is required"],
-      min: [0, "Amount cannot be negative"]
+      min: [0, "Amount cannot be negative"],
     },
     paymentStatus: {
       type: String,
       enum: ["pending", "completed", "failed"],
-      default: "pending"
+      default: "pending",
     },
     paymentProof: {
       type: String,
     },
     paymentId: {
       type: String,
-    }
+    },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
   }
 );
 
@@ -77,4 +81,6 @@ bookingSchema.index({ destination: 1 });
 bookingSchema.index({ status: 1 });
 bookingSchema.index({ createdAt: 1 });
 
-export const BookingModel = mongoose.models.BookingModel || mongoose.model<IBooking>("BookingModel", bookingSchema);
+export const BookingModel =
+  mongoose.models.BookingModel ||
+  mongoose.model<IBooking>("BookingModel", bookingSchema);

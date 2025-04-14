@@ -218,7 +218,7 @@ export default function EditTripPage() {
         setIsLoading(true);
         setError(null);
         const data = await tripApi.getTripById(tripId);
-        console.log(data);
+        // console.log(data);
         
         // const formattedData: ITrip = {
         //   _id: String(data._id),

@@ -22,9 +22,9 @@ import { toast } from "sonner";
 
 interface User {
   _id: string;
-  name: string;
+  fullName: string;
   email: string;
-  phoneNumber: string;
+  phone: string;
   role: string;
   createdAt: string;
 }
@@ -99,13 +99,13 @@ export function UserDetailsDrawer({
               {isEditing ? (
                 <Input
                   id="name"
-                  value={formData.name}
+                  value={formData.fullName}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({ ...formData, fullName: e.target.value })
                   }
                 />
               ) : (
-                <p className="text-sm">{user.name}</p>
+                <p className="text-sm">{user.fullName}</p>
               )}
             </div>
 
@@ -130,13 +130,13 @@ export function UserDetailsDrawer({
               {isEditing ? (
                 <Input
                   id="phone"
-                  value={formData.phoneNumber}
+                  value={formData.phone}
                   onChange={(e) =>
-                    setFormData({ ...formData, phoneNumber: e.target.value })
+                    setFormData({ ...formData, phone: e.target.value })
                   }
                 />
               ) : (
-                <p className="text-sm">{user.phoneNumber}</p>
+                <p className="text-sm">{user.phone}</p>
               )}
             </div>
 

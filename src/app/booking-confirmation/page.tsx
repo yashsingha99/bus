@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, Clock, Clock4, MapPin } from "lucide-react";
 import axios from "axios";
-import {Suspense} from 'react';
+import { Suspense } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +28,7 @@ interface Booking {
   selectedDate: string;
   selectedTime: string;
   time: string;
+  date: string;
   pickupAddress: string;
   destination: {
     _id: string;
@@ -106,99 +107,98 @@ export default function BookingConfirmationPage() {
   }
 
   return (
-        <Suspense>
-
-    <div className="container mx-auto py-6">
-      <div className="mb-6 flex items-center">
-        <Link href="/searchBus">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="ml-2 h-4 w-4" />
-            {" "}
-            Back to Search
-          </Button>
-        </Link>
-      </div>
-      <Card className="mb-6">
-        {booking.paymentStatus === "pending" ? (
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Clock4 className="h-6 w-6 text-yellow-500" />
-              <CardTitle className="text-2xl">
-                Your Ticket Is Almost Confirmed!
-              </CardTitle>
-            </div>
-            <CardDescription>
-              Passengers trust us even while their booking is being verified.
-              Your ticket will be confirmed shortly after payment verification.
-            </CardDescription>
-          </CardHeader>
-        ) : (
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-6 w-6 text-green-500" />
-              <CardTitle className="text-2xl">Booking Confirmed!</CardTitle>
-            </div>
-            <CardDescription>
-              Your booking has been successfully confirmed.
-            </CardDescription>
-          </CardHeader>
-        )}
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="flex items-center text-sm">
-                <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>
-                  {booking.pickupAddress} to{" "}
-                  {booking.destination?.destinationAddress || "Destination"}
-                </span>
+    <Suspense>
+      <div className="container mx-auto py-6">
+        <div className="mb-6 flex items-center">
+          <Link href="/searchBus">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="ml-2 h-4 w-4" /> Back to Search
+            </Button>
+          </Link>
+        </div>
+        <Card className="mb-6">
+          {booking.paymentStatus === "pending" ? (
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Clock4 className="h-6 w-6 text-yellow-500" />
+                <CardTitle className="text-2xl">
+                  Your Ticket Is Almost Confirmed!
+                </CardTitle>
               </div>
-              <div className="flex items-center text-sm">
-                <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                <span>Time: {booking.time}</span>
+              <CardDescription>
+                Passengers trust us even while their booking is being verified.
+                Your ticket will be confirmed shortly after payment
+                verification.
+              </CardDescription>
+            </CardHeader>
+          ) : (
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+                <CardTitle className="text-2xl">Booking Confirmed!</CardTitle>
               </div>
-            </div>
-            <div className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <h4 className="mb-2 font-medium">Booking Details</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <span className="font-medium capitalize">
-                      {booking.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Payment Status:</span>
-                    <span className="font-medium capitalize">
-                      {booking.paymentStatus}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Total Amount:</span>
-                    <span className="font-medium">₹{booking.totalAmount}</span>
+              <CardDescription>
+                Your booking has been successfully confirmed.
+              </CardDescription>
+            </CardHeader>
+          )}
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="flex items-center text-sm">
+                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {booking.pickupAddress} to{" "}
+                    {booking.destination?.destinationAddress || "Destination"}
+                  </span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Time: {booking.time}</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span>Date: {booking.date}</span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-lg border p-4">
+                  <h4 className="mb-2 font-medium">Booking Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Status:</span>
+                      <span className="font-medium capitalize">
+                        {booking.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Payment Status:</span>
+                      <span className="font-medium capitalize">
+                        {booking.paymentStatus}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total Amount:</span>
+                      <span className="font-medium">
+                        ₹{booking.totalAmount}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push("/searchBus")}>
-            Book Another Trip
-          </Button>
-          <Button
-            onClick={() =>
-              router.push(`/tickets`)
-            }
-          >
-            View Tickets
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
-        </Suspense>
-
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button variant="outline" onClick={() => router.push("/searchBus")}>
+              Book Another Trip
+            </Button>
+            <Button onClick={() => router.push(`/tickets`)}>
+              View Tickets
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </Suspense>
   );
 }
 

@@ -108,17 +108,15 @@ export default function BusDetailsPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedPickup, setSelectedPickup] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  // const [paymentProof, setPaymentProof] = useState<File>();
   const [user, setUser] = useState<User | null>(null);
-  
-  // Fix the infinite update loop by removing user and route from dependencies
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
       setUser(userData);
     }
-  }, []); // Remove user and route from dependencies
+  }, []);
 
   const userData = {
     fullName: user?.fullName,
@@ -202,6 +200,14 @@ export default function BusDetailsPage() {
 
       const orderId: string = await createOrderId(finalPrice, "INR");
       // console.log("Order ID:", orderId);
+      // console.log(
+      //   "selectedDate",
+      //   new Date(selectedDate).toLocaleString("en-IN", {
+      //     weekday: "short",
+      //     month: "short",
+      //     day: "numeric",
+      //   })
+      // );
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
@@ -212,23 +218,28 @@ export default function BusDetailsPage() {
         order_id: orderId,
         handler: async function (response: RazorpayResponse) {
           try {
-            const paymentResponse = await axios.post(`/api/verifyOrder`, {
+            await axios.post(`/api/verifyOrder`, {
               razorpay_order_id: orderId,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
             });
-            console.log(
-              "Payment Response:",
-              paymentResponse,
-              "response",
-              response
-            );
+            // console.log(
+            //   "Payment Response:",
+            //   paymentResponse,
+            //   "response",
+            //   response
+            // );
 
             const bookingResponse = await axios.post(`/api/passanger/booking`, {
               pickupAddress: pickup || selectedPickup,
               bookedBy: user?.id,
               destination: tripId,
               time: selectedTime,
+              date: new Date(selectedDate).toLocaleString("en-IN", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              }),
               totalAmount: finalPrice,
               status: "pending",
               paymentStatus: "pending",
@@ -426,14 +437,17 @@ export default function BusDetailsPage() {
             Select your preferred {!isPickUpLocationExist && "Pickup Location,"}{" "}
             date and time
           </CardDescription>
+         { !isPickUpLocationExist && <CardDescription className="text-yellow-600 text-md">
+            You are book for {tripData?.destinationAddress}
+          </CardDescription>}
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-4">
               {isPickUpLocationExist && (
-                <div className="flex items-center text-sm">
-                  <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span>
+                <div className="flex items-center text-sm text-yellow-600 text-md">
+                  <MapPin className="mr-2 h-4 w-4 " />
+                  <span >
                     {pickup} to {tripData?.destinationAddress}
                   </span>
                 </div>

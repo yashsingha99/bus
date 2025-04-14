@@ -105,7 +105,7 @@ export default function ReservedUsersPage() {
     try {
       setLoading(true);
       const response = await axios.get(`/api/admin/bookings`);
-      console.log(response.data.data );
+      // console.log(response.data.data );
       
       setBookings(response.data.data);
     } catch (err) {
@@ -188,7 +188,7 @@ export default function ReservedUsersPage() {
                   {bookings.map((booking) => (
                     <TableRow key={booking._id}>
                       <TableCell>{booking.bookedBy.fullName}</TableCell>
-                      {/* <TableCell>{booking.bookedBy?.phoneNumber}</TableCell> */}
+                       <TableCell>{booking.bookedBy?.phone}</TableCell> 
                       <TableCell>{new Date(booking.date).toLocaleDateString()}</TableCell>
                                              
                       <TableCell>

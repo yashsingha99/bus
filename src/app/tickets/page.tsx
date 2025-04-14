@@ -97,18 +97,18 @@ export default function TicketsPage() {
     }
   };
 
-  const getPaymentStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "paid":
-        return "bg-green-500";
-      case "pending":
-        return "bg-yellow-500";
-      case "failed":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+  // const getPaymentStatusColor = (status: string) => {
+  //   switch (status.toLowerCase()) {
+  //     case "paid":
+  //       return "bg-green-500";
+  //     case "pending":
+  //       return "bg-yellow-500";
+  //     case "failed":
+  //       return "bg-red-500";
+  //     default:
+  //       return "bg-gray-500";
+  //   }
+  // };
   if (user === null) {
     return (
       <div className="container mx-auto p-4">
@@ -178,11 +178,11 @@ export default function TicketsPage() {
                   <Badge className={getStatusColor(ticket?.status)}>
                     {ticket.status}
                   </Badge>
-                  <Badge
+                  {/* <Badge
                     className={getPaymentStatusColor(ticket?.paymentStatus)}
                   >
                     {ticket?.paymentStatus}
-                  </Badge>
+                  </Badge> */}
                 </div>
               </div>
             </CardHeader>
@@ -193,7 +193,7 @@ export default function TicketsPage() {
                   <span className="font-medium">{ticket.pickupAddress}</span>
                 </div>
 
-                {ticket?.destination?.Trips?.length > 0 ? (
+                {/* {ticket?.destination?.Trips?.length > 0 ? (
                   ticket.destination.Trips.map((trip, index) => (
                     <div
                       key={trip._id || index}
@@ -211,17 +211,13 @@ export default function TicketsPage() {
                           {trip.Timing.join(", ")}
                         </span>
                       </div>
-                      {/* <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Price:</span>
-                        <span className="font-medium">₹{trip.price}</span>
-                      </div> */}
                     </div>
                   ))
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
                     No trips found for this destination.
                   </p>
-                )}
+                )} */}
 
                 {/* <div className="flex justify-between mt-2">
                   <span className="text-gray-600">Passengers:</span>

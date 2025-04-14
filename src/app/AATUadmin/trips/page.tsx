@@ -168,7 +168,7 @@ export default function TripManagementPage() {
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
-      if(userData.role !== "ADMIN"){
+      if(userData?.role !== "IAMADMINROCK"){
         router.push("/");
       }
       setUser(userData);
@@ -191,7 +191,7 @@ export default function TripManagementPage() {
       setIsLoading(true);
       setError(null);
       const data = await tripApi.getAllTrips();
-       console.log(data)
+      //  console.log(data)
       if (!Array.isArray(data)) {
         throw new Error('Invalid data format received');
       }

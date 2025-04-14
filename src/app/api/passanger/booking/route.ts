@@ -9,8 +9,9 @@ interface BookingData {
   bookedBy: string; // Clerk ID
   destination: string;
   time: string;
+  date: string;
   totalAmount: number;
-  paymentId: string; 
+  paymentId: string;
   status: string;
   paymentStatus: string;
 }
@@ -27,23 +28,24 @@ interface CastError extends Error {
   path: string;
 }
 
-// Get all refunds with pagination
 export async function POST(request: Request) {
   await dbConnection();
   try {
-    const bookingData = await request.json() as BookingData;
+    const bookingData = (await request.json()) as BookingData;
+    // console.log("bookingData", bookingData);
 
     const requiredFields = [
       "pickupAddress",
-      "bookedBy",  
+      "bookedBy",
       "destination",
       "time",
+      "date",
       "totalAmount",
       "paymentId",
       "status",
-      "paymentStatus"
+      "paymentStatus",
     ];
-   // @ts-expect-error-ignore
+    // @ts-expect-error-ignore
     const missingFields = requiredFields.filter((field) => !bookingData[field]);
 
     if (missingFields.length > 0) {
@@ -61,19 +63,26 @@ export async function POST(request: Request) {
 
     // Find user by Clerk ID
     const user = await UserModel.findById(bookingData.bookedBy);
-    console.log(user);
-    
+    // console.log(user);
+
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     // Create the booking with the user's MongoDB ID
     const newBooking = await BookingModel.create({
-      ...bookingData,
-      bookedBy: user._id, // Use the MongoDB user ID
+      date: bookingData.date,
+      time: bookingData.time,
+      destination: bookingData.destination,
+      totalAmount: bookingData.totalAmount,
+      paymentId: bookingData.paymentId,
+      pickupAddress: bookingData.pickupAddress,
+      bookedBy: user._id,  
       status: "pending",
       paymentStatus: "pending",
     });
+
+    // console.log("newBooking", newBooking);
 
     return NextResponse.json(
       {
@@ -85,7 +94,6 @@ export async function POST(request: Request) {
   } catch (error: unknown) {
     console.error("Error creating booking:", error);
 
-    // Handle specific MongoDB errors
     if (error instanceof Error) {
       if (error.name === "ValidationError") {
         const validationError = error as ValidationError;
@@ -128,19 +136,19 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId");
 
     // Get booking by ID
-    console.log(userId);
+    // console.log(userId);
 
     if (bookingId) {
       const booking = await BookingModel.findById(bookingId)
-        .populate("destination")
+        .populate("destination", "destinationAddress")
         .populate("bookedBy", "name email");
 
       if (!booking) {
-        return NextResponse.json(
-          { message: "Booking not found!" ,
-           status: 200, error: true
-          }
-        );
+        return NextResponse.json({
+          message: "Booking not found!",
+          status: 200,
+          error: true,
+        });
       }
 
       return NextResponse.json(
@@ -162,8 +170,8 @@ export async function GET(request: Request) {
         );
       }
       const bookings = await BookingModel.find({ bookedBy: user._id })
-        .select("pickupAddress destination status paymentStatus")
-        .populate("destination")
+        // .select("pickupAddress destination date status paymentStatus")
+        .populate("destination", "destinationAddress")
         .sort({ createdAt: -1 });
 
       return NextResponse.json(
@@ -181,7 +189,8 @@ export async function GET(request: Request) {
     );
   } catch (error: unknown) {
     console.error("Error retrieving booking(s):", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
       { message: "Something went wrong!", error: errorMessage },
       { status: 500 }
@@ -226,7 +235,8 @@ export async function PUT(request: Request) {
     );
   } catch (error: unknown) {
     console.error("Error updating booking:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
       { message: "Something went wrong!", error: errorMessage },
       { status: 500 }
@@ -261,7 +271,8 @@ export async function DELETE(request: Request) {
     );
   } catch (error: unknown) {
     console.error("Error deleting booking:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json(
       { message: "Something went wrong!", error: errorMessage },
       { status: 500 }

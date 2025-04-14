@@ -38,8 +38,8 @@ export async function GET(request: Request) {
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
-      .populate("bookedBy", "name email phoneNumber")
-      .populate("destination", "tripName source destination");
+      .populate("bookedBy", "fullName email phone")
+      .populate("destination", "destinationAddress source destination");
 
     const totalBookings = await BookingModel.countDocuments(query);
 
