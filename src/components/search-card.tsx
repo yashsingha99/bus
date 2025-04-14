@@ -35,11 +35,12 @@ interface TripData {
 }
 
 export const pickupLocations = [
-    "GLA University (GLAU)",
-    "Jait (JAIT)",
-    "Krishana Vally (KV)",
-    "Chattikara  (CK)",
-    "Goverdhan Choraha (GOV CH)",
+    "GLA University",
+    "Krishna Valley",
+    "Chattikara",
+    "Maheshwari Chauraha",
+    "Goverdhan Chauraha",
+    "Township"
   ];
 
 // function SearchCardSkeleton() {
@@ -187,7 +188,7 @@ function SearchCard() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectLabel>Neptel Centers</SelectLabel>
+                        <SelectLabel>Nptel Center</SelectLabel>
                         {destinationData?.map((dest) => (
                           <SelectItem key={dest._id} value={dest._id}>
                             {dest.destinationAddress}

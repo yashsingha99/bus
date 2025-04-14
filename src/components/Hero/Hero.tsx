@@ -131,7 +131,7 @@ function Hero() {
               <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start animate-fade-in-up">
                 <Link href="/searchBus">
                   <FeedbackButton
-                    onClick={() => setIsSearch(true)}
+                    onClick={() =>{ setIsSearch(true); router.push('/searchBus')}}
                     className="w-full group relative overflow-hidden px-6 py-3 transition-all duration-300 ease-out hover:scale-105"
                   >
                     <span className="relative z-10">
