@@ -84,7 +84,7 @@ export default function ReservedUsersPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  // const [user, setUser] = useState<User | null>(null);
   // const [searchTerm, setSearchTerm] = useState("");
   // const [selectedBooking, setSelectedBooking] = useState<PopulatedBooking | null>(null);
   // const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -93,9 +93,13 @@ export default function ReservedUsersPage() {
     if (typeof window !== 'undefined') {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
-      setUser(userData);
+       if (userData?.role !== "IAMADMINROCK"){
+          router.push('/');
+       }
+
+      // setUser(userData);
     }
-  }, []);
+  }, [router]);
  
   const fetchBookings = async () => {
     try {
@@ -153,10 +157,7 @@ export default function ReservedUsersPage() {
   //   }
   // };
 
-  if (user?.role !== "ADMIN"){
-     router.push('/');
-  }
-
+ 
   return (
     <>
       <div className=" py-10">

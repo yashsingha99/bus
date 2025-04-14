@@ -175,9 +175,9 @@ export default function EditTripPage() {
    if (typeof window !== "undefined") {
      const userString = localStorage.getItem("user");
      const userData = userString ? JSON.parse(userString) : null;
-     if(userData.role !== "ADMIN"){
-      router.push("/")
-     }
+      if (userData?.role !== "IAMADMINROCK") {
+        router.push("/");
+      }
     //  setUser(userData);
    }
  }, [router]);
