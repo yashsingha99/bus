@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       .limit(limit)
       .sort({ createdAt: -1 })
       .populate("bookedBy", "fullName email phone")
-      .populate("destination", "destinationAddress source destination");
+      .populate("destination");
 
     const totalBookings = await BookingModel.countDocuments(query);
 

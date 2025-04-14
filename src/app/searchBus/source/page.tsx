@@ -200,14 +200,15 @@ export default function BusDetailsPage() {
 
       const orderId: string = await createOrderId(finalPrice, "INR");
       // console.log("Order ID:", orderId);
-      // console.log(
-      //   "selectedDate",
-      //   new Date(selectedDate).toLocaleString("en-IN", {
-      //     weekday: "short",
-      //     month: "short",
-      //     day: "numeric",
-      //   })
-      // );
+      console.log(
+        "selectedDate",
+        new Date(selectedDate).toLocaleDateString("en-IN", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      );
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
@@ -235,10 +236,11 @@ export default function BusDetailsPage() {
               bookedBy: user?.id,
               destination: tripId,
               time: selectedTime,
-              date: new Date(selectedDate).toLocaleString("en-IN", {
+              date: new Date(selectedDate).toLocaleDateString("en-IN", {
                 weekday: "short",
                 month: "short",
                 day: "numeric",
+                year: "numeric",
               }),
               totalAmount: finalPrice,
               status: "pending",
@@ -437,9 +439,11 @@ export default function BusDetailsPage() {
             Select your preferred {!isPickUpLocationExist && "Pickup Location,"}{" "}
             date and time
           </CardDescription>
-         { !isPickUpLocationExist && <CardDescription className="text-yellow-600 text-md">
-            You are book for {tripData?.destinationAddress}
-          </CardDescription>}
+          {!isPickUpLocationExist && (
+            <CardDescription className="text-yellow-600 text-md">
+              You are book for {tripData?.destinationAddress}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
@@ -447,7 +451,7 @@ export default function BusDetailsPage() {
               {isPickUpLocationExist && (
                 <div className="flex items-center text-sm text-yellow-600 text-md">
                   <MapPin className="mr-2 h-4 w-4 " />
-                  <span >
+                  <span>
                     {pickup} to {tripData?.destinationAddress}
                   </span>
                 </div>

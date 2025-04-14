@@ -38,7 +38,7 @@ export default function BusSearchPage() {
     try {
       setIsLoading(true);
       const res = await tripApi.getAllTrips();
-      console.log(res);
+      // console.log(res);
       
       // Filter out expired trips
       const filteredTrips = res.map(trip => ({

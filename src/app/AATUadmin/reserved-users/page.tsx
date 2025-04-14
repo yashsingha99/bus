@@ -24,13 +24,19 @@ export interface User {
   role?: string;
 }
 
+
+interface Destination {
+  destinationAddress: string;
+}
+
 export interface PopulatedBooking {
   _id: string;
   pickupAddress: string;
   dropoffAddress: string;
+  destination : Destination;
   date: string;
   time: string;
-  destination: string;
+  // destination: string;
   status: string;
   paymentStatus: string;
   totalAmount: number;
@@ -105,7 +111,7 @@ export default function ReservedUsersPage() {
     try {
       setLoading(true);
       const response = await axios.get(`/api/admin/bookings`);
-      // console.log(response.data.data );
+      // console.log(response  );
       
       setBookings(response.data.data);
     } catch (err) {
@@ -122,6 +128,8 @@ export default function ReservedUsersPage() {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  
 
   // const filteredBookings = bookings.filter((booking) => {
   //   const searchLower = searchTerm.toLowerCase();
