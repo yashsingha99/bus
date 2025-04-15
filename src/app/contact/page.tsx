@@ -471,7 +471,7 @@ export default function ContactPage() {
                     <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
                       {resource.description}
                     </p>
-                    <Link href={resource.link}>
+                    {/* <Link href={resource.link}> */}
                       <Button
                         variant="outline"
                         className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
@@ -481,7 +481,7 @@ export default function ContactPage() {
                           <ArrowRight className="h-3 w-3 md:h-4 md:w-4 group-hover:translate-x-1 transition-transform" />
                         </span>
                       </Button>
-                    </Link>
+                    {/* </Link> */}
                   </div>
                 </div>
               ))}
