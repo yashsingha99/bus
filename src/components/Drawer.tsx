@@ -18,8 +18,8 @@ const Drawer = () => {
     { page: "Home", navigate: "/" },
     { page: "Book", navigate: "/searchBus" },
     { page: "Ticket", navigate: "/tickets" },
-    { page: "News", navigate: "/" },
-    { page: "About", navigate: "/" },
+    { page: "Contact", navigate: "/contact" },
+    { page: "About", navigate: "/about" },
   ];
 
   const adminNavigation = [
@@ -27,7 +27,7 @@ const Drawer = () => {
     { page: "Trips", navigate: "/AATUadmin/trips" },
     { page: "Users", navigate: "/AATUadmin/users" },
     { page: "Reserved", navigate: "/AATUadmin/reserved-users" },
-    { page: "Settings", navigate: "/AATUadmin/settings" },
+    // { page: "Settings", navigate: "/AATUadmin/settings" },
   ];
   useEffect(() => {
     if (isOpen) {
@@ -68,14 +68,17 @@ const Drawer = () => {
               <X className="h-6 w-6" />
             </button>
           </div>
+          {userData && (
+            <div className="text-sm"> Hey, {userData?.fullName}</div>
+          )}
 
-          <nav className="mt-12 w-full flex justify-around overflow-auto scrollbar-none lg:space-y-6 space-y-4 lg:text-5xl text-3xl">
+          <nav className="mt-4 w-full flex justify-around overflow-auto scrollbar-none lg:space-y-6 space-y-4 lg:text-5xl text-3xl">
             <div className="flex flex-col gap-4">
               {navigation.map((link) => (
                 <button
                   key={link.page}
                   onClick={() => navigate(link.navigate)}
-                  className="block lg:text-4xl  text-[25px] font-medium hover:text-white/80 text-left w-full"
+                  className="block lg:text-4xl  text-[20px] font-medium hover:text-white/80 text-left w-full"
                 >
                   {link.page}
                 </button>
@@ -88,7 +91,7 @@ const Drawer = () => {
                   <button
                     key={link.page}
                     onClick={() => navigate(link.navigate)}
-                    className="block text-[25px] font-medium hover:text-white/80 text-left w-full"
+                    className="block lg:text-4xl  text-[20px] font-medium hover:text-white/80 text-left w-full"
                   >
                     {link.page}
                   </button>
@@ -109,7 +112,7 @@ const Drawer = () => {
                     </button>
                   </>
                 )}
-                 {/* : (
+                {/* : (
                   <>
                     <Auth
                       navigateRoute=""

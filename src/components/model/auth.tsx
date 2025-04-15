@@ -220,7 +220,7 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
         // console.log(response.data)
         const userD = {
           email: response.data.user.email,
-          fullName: response.data.user.fullname,
+          fullName: response.data.user.fullName,
           phone: response.data.user.phone,
           role: response.data.user.role,
           id: response.data.user._id,

@@ -82,6 +82,7 @@ export async function POST(request: Request) {
       paymentStatus: "pending",
     });
 
+    
     // console.log("newBooking", newBooking);
 
     return NextResponse.json(

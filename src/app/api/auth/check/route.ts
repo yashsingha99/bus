@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     // Check if user exists
     const user = await UserModel.findOne({
       $and: [
-        { $or: [{ email: email }, { phoneNumber: email }] },
+        { $or: [{ email: email }, { phone: email }] },
         { dob: dob },
       ],
     });

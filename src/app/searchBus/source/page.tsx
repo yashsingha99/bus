@@ -256,6 +256,9 @@ export default function BusDetailsPage() {
                 paymentStatus: "completed",
               });
 
+              // const added = await axios.get("/api/saveToSheet");
+              //  console.log(added);
+               
               toast("Payment Successful!", {
                 description: "Your booking has been confirmed",
                 action: {
@@ -266,8 +269,7 @@ export default function BusDetailsPage() {
                     ),
                 },
               });
-              router.push(`/booking-confirmation?bookingId=${booking._id}`);
-              // console.log("Booking created:", booking);
+              router.push(`/booking-confirmation?bookingId=${booking._id}`); 
             } else {
               throw new Error("Failed to create booking");
             }
