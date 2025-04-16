@@ -32,6 +32,7 @@ interface User {
   phone: string;
   role: string;
   createdAt: string;
+  dob?:string;
 }
 
 interface PaginationData {
@@ -118,8 +119,10 @@ export default function UsersPage() {
         ...(role && role !== "all" && { role }),
       });
 
+
       const response = await fetch(`/api/admin/users?${params}`);
       const data = await response.json();
+      // console.log("sfs", data);
 
       if (data.success) {
         setUsers(data.data);

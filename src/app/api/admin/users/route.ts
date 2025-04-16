@@ -30,6 +30,7 @@ export async function GET(request: Request) {
         { name: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
         { phoneNumber: { $regex: search, $options: "i" } },
+        { dob: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -148,7 +149,7 @@ export async function PATCH(request: Request) {
       userId,
       { role },
       { new: true }
-    ).select("-password");
+    );
 
     if (!updatedUser) {
       return NextResponse.json(

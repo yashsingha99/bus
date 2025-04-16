@@ -156,13 +156,13 @@ export default function UserDetailsDrawer({
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
                         <span className="text-sm">
-                          Pickup: {booking.pickupAddress}
+                          Pickup: {booking?.pickupAddress || "Release Soon"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
                         <span className="text-sm">
-                          center: {booking.destination.destinationAddress}
+                          center: {booking?.destination?.destinationAddress || "Release Soon"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export default function UserDetailsDrawer({
                       <div className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4 text-gray-500" />
                         <span className="text-sm">
-                          Amount: ₹{booking.totalAmount}
+                          Amount: ₹{booking?.totalAmount}
                         </span>
                       </div>
                     </div>
@@ -228,7 +228,7 @@ export default function UserDetailsDrawer({
                     </CardContent>
                   </Card>
                 )}
-                {booking.paymentId && (
+                {booking?.paymentId && (
                   <Card>
                     <CardContent className="p-4 gap-4 flex items-center justify-between ">
                       <h3 className="font-semibold">Payment ID:</h3>

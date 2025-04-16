@@ -27,6 +27,7 @@ interface User {
   phone: string;
   role: string;
   createdAt: string;
+  dob? : string;
 }
 
 interface UserDetailsDrawerProps {
@@ -137,6 +138,20 @@ export function UserDetailsDrawer({
                 />
               ) : (
                 <p className="text-sm">{user.phone}</p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="phone">DOB</Label>
+              {isEditing ? (
+                <Input
+                  id="phone"
+                  value={formData.dob}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dob: e.target.value })
+                  }
+                />
+              ) : (
+                <p className="text-sm">{user?.dob}</p>
               )}
             </div>
 
