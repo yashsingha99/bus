@@ -37,7 +37,7 @@ const GoogleIcon = ({
   </svg>
 );
 
-import img1 from "../../assest/img1.jpg"
+import img1 from "../../assest/img1.jpg";
 import img3 from "../../assest/img3.jpg";
 import Image from "next/image";
 export default function AboutPage() {
@@ -49,7 +49,7 @@ export default function AboutPage() {
 
   const teamSliderRef = useRef<HTMLDivElement | null>(null);
   const reviewSliderRef = useRef<HTMLDivElement | null>(null);
-    const storySliderRef = useRef<HTMLDivElement | null>(null);
+  const storySliderRef = useRef<HTMLDivElement | null>(null);
   //  const storyIntervalRef = useRef(null);
   // Mock team data
   const teamMembers = [
@@ -58,58 +58,60 @@ export default function AboutPage() {
     { name: "TARUN VARSHNEY", position: "Co-Founder" },
   ];
 
-    const storyImages = [
-      {
-        src: img1,
-        caption: "Our headquarters in downtown",
-      },
-      {
-        src: img3,
-        caption: "The talented team behind Bustify",
-      },
-      // {
-      //   src: "/api/placeholder/600/400?text=Customer+Service",
-      //   caption: "Dedicated customer support 24/7",
-      // },
-      // {
-      //   src: "/api/placeholder/600/400?text=Bus+Partners",
-      //   caption: "Partnering with top bus operators",
-      // },
-    ];
+  const storyImages = [
+    {
+      src: img1,
+      caption: "Our headquarters in downtown",
+    },
+    {
+      src: img3,
+      caption: "The talented team behind Bustify",
+    },
+    // {
+    //   src: "/api/placeholder/600/400?text=Customer+Service",
+    //   caption: "Dedicated customer support 24/7",
+    // },
+    // {
+    //   src: "/api/placeholder/600/400?text=Bus+Partners",
+    //   caption: "Partnering with top bus operators",
+    // },
+  ];
 
-  const navigateSlider = (direction : string) => {
-      if (direction === 'next') {
-          setCurrentStorySlide(prev => (prev + 1) % storyImages.length);
-        } else {
-          setCurrentStorySlide(prev => (prev - 1 + storyImages.length) % storyImages.length);
-        }
-  }
+  const navigateSlider = (direction: string) => {
+    if (direction === "next") {
+      setCurrentStorySlide((prev) => (prev + 1) % storyImages.length);
+    } else {
+      setCurrentStorySlide(
+        (prev) => (prev - 1 + storyImages.length) % storyImages.length
+      );
+    }
+  };
   // Mock review data
- const reviews = useMemo(
-   () => [
-     {
-       name: "Harshita Lavania",
-       rating: 5,
-       text: "Great experience with bustify, timely service, convenient bus timings, good quality for the price.",
-     },
-     {
-       name: "Nikhil Bansal",
-       rating: 5,
-       text: "bus service and quality so good! The booking process was seamless",
-     },
-     {
-       name: "Saksham Agrawal",
-       rating: 4,
-       text: "Great service overall. The interface is intuitive and I found exactly what I needed without any hassle.",
-     },
-     {
-       name: "Saloni Bansal",
-       rating: 5,
-       text: "I've been using Bustify for all my bus travel needs for the past year. Never disappoints!",
-     },
-   ],
-   []
- );
+  const reviews = useMemo(
+    () => [
+      {
+        name: "Harshita Lavania",
+        rating: 5,
+        text: "Great experience with bustify, timely service, convenient bus timings, good quality for the price.",
+      },
+      {
+        name: "Nikhil Bansal",
+        rating: 5,
+        text: "bus service and quality so good! The booking process was seamless",
+      },
+      {
+        name: "Saksham Agrawal",
+        rating: 4,
+        text: "Great service overall. The interface is intuitive and I found exactly what I needed without any hassle.",
+      },
+      {
+        name: "Saloni Bansal",
+        rating: 5,
+        text: "I've been using Bustify for all my bus travel needs for the past year. Never disappoints!",
+      },
+    ],
+    []
+  );
 
   const navigateTeamSlider = (direction: string) => {
     const container = teamSliderRef.current;
@@ -163,7 +165,7 @@ export default function AboutPage() {
   return (
     <main className="flex-1 overflow-hidden">
       <section className="relative w-full py-8 md:py-16 lg:py-24 bg-muted">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-white z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-white/20 z-0"></div>
 
         <div className="container px-4 md:px-6 max-w-6xl mx-auto">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -187,17 +189,16 @@ export default function AboutPage() {
                 Our Story
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground">
-                Bustify was founded in 2024 with a simple mission: to make bus
-                travel easier, more convenient, and more enjoyable for everyone.
-                We recognized the challenges that travelers face when booking
-                bus tickets and set out to create a solution that would
-                streamline the entire process.
+                Bustify was founded in 2024 with a focused mission: to provide
+                affordable and reliable bus services for college students
+                appearing for NPTEL exams. What began as a student initiative to
+                solve a real transportation challenge has grown into a trusted
+                service.
               </p>
               <p className="text-base sm:text-lg text-muted-foreground">
-                What started as a small team with big dreams has now grown into
-                a trusted platform serving thousands of travelers across the
-                country. We have partnered with hundreds of bus operators to offer
-                a wide range of routes and options to our customers.
+                In the past year, Bustify successfully arranged comfortable and
+                cost-effective travel for over 500 students. the platform
+                ensured smooth, timely, and budget-friendly travel experiences.
               </p>
             </div>
 
@@ -225,11 +226,11 @@ export default function AboutPage() {
                       unoptimized
                     />
                     {/* Caption overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                    {/* <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
                       <p className="text-white text-sm md:text-base">
                         {image.caption}
                       </p>
-                    </div>
+                    </div> */}
                   </div>
                 ))}
 

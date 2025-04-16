@@ -385,6 +385,7 @@ export default function BusDetailsPage() {
         phone: data.phone,
         role: data.role,
       });
+      // handlePaymentByRazorpay();
     }
   }, []);
 

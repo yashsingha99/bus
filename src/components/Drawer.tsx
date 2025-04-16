@@ -69,7 +69,7 @@ const Drawer = () => {
             </button>
           </div>
           {userData && (
-            <div className="text-sm"> Hey, {userData?.fullName}</div>
+            <div className="text-sm text-green-500 w-full flex items-center"> Hey, {userData?.fullName}</div>
           )}
 
           <nav className="mt-4 w-full flex justify-around overflow-auto scrollbar-none lg:space-y-6 space-y-4 lg:text-5xl text-3xl">
