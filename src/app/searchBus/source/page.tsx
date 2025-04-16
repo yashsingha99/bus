@@ -200,15 +200,15 @@ export default function BusDetailsPage() {
 
       const orderId: string = await createOrderId(finalPrice, "INR");
       // console.log("Order ID:", orderId);
-      console.log(
-        "selectedDate",
-        new Date(selectedDate).toLocaleDateString("en-IN", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      );
+      // console.log(
+      //   "selectedDate",
+      //   new Date(selectedDate).toLocaleDateString("en-IN", {
+      //     weekday: "short",
+      //     month: "short",
+      //     day: "numeric",
+      //     year: "numeric",
+      //   })
+      // );
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
@@ -251,10 +251,10 @@ export default function BusDetailsPage() {
             const booking = bookingResponse.data.data;
 
             if (booking && booking._id) {
-              await axios.put(`/api/passanger/booking/payment`, {
-                bookingId: booking._id,
-                paymentStatus: "completed",
-              });
+              // await axios.put(`/api/passanger/booking/payment`, {
+              //   bookingId: booking._id,
+              //   paymentStatus: "completed",
+              // });
 
               // const added = await axios.get("/api/saveToSheet");
               //  console.log(added);

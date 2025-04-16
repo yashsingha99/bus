@@ -78,8 +78,8 @@ export async function POST(request: Request) {
       paymentId: bookingData.paymentId,
       pickupAddress: bookingData.pickupAddress,
       bookedBy: user._id,  
-      status: "pending",
-      paymentStatus: "pending",
+      status: "confirmed",
+      paymentStatus: "completed",
     });
 
     
