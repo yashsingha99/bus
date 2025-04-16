@@ -109,7 +109,7 @@ export default function TicketsPage() {
   //       return "bg-gray-500";
   //   }
   // };
-  if (user === null) {
+  if (user === null || !user?.id) {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center">

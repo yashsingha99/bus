@@ -86,11 +86,11 @@ interface RazorpayInstance {
 }
 
 interface User {
-  id?: string;
+  id: string;
   fullName: string;
   email: string;
   phone: string;
-  role?: string;
+  role: string;
 }
 
 export default function BusDetailsPage() {
@@ -197,8 +197,18 @@ export default function BusDetailsPage() {
     try {
       const shouldProcced = isValidateDateTime();
       if (!shouldProcced) return;
-
+      if (!user?.id) {
+        toast("User not found", {
+          action: {
+            label: "Sign in",
+            onClick: () => router.push(`/ticket`),
+          },
+        });
+        console.log("user not found");
+        return;
+      }
       const orderId: string = await createOrderId(finalPrice, "INR");
+
       // console.log("Order ID:", orderId);
       // console.log(
       //   "selectedDate",
@@ -258,7 +268,7 @@ export default function BusDetailsPage() {
 
               // const added = await axios.get("/api/saveToSheet");
               //  console.log(added);
-               
+
               toast("Payment Successful!", {
                 description: "Your booking has been confirmed",
                 action: {
@@ -269,7 +279,7 @@ export default function BusDetailsPage() {
                     ),
                 },
               });
-              router.push(`/booking-confirmation?bookingId=${booking._id}`); 
+              router.push(`/booking-confirmation?bookingId=${booking._id}`);
             } else {
               throw new Error("Failed to create booking");
             }
@@ -366,12 +376,14 @@ export default function BusDetailsPage() {
   };
 
   const handleUserData = useCallback((data: User | null) => {
+    console.log("data", data)
     if (data) {
       setUser({
         id: data.id,
         fullName: data.fullName,
         email: data.email,
         phone: data.phone,
+        role: data.role,
       });
     }
   }, []);
@@ -625,7 +637,7 @@ export default function BusDetailsPage() {
             )}
             <CardFooter className="flex flex-col gap-2">
               {/* //------------------------------ RAZORPAY PAYMENT -----------------------------------*/}
-              {user ? (
+              {user && user.id ? (
                 <FeedbackButton
                   className="w-full"
                   onClick={proceedToPayment}

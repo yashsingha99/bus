@@ -43,17 +43,10 @@ export async function POST(req: Request) {
         role: "USER",
         notifications: [],
       });
-      // console.log(newUser);
+      console.log(newUser);
       
       return NextResponse.json({
-        user: {
-          id: newUser._id,
-          fullName: newUser.fullName,
-          phone: newUser.phone,
-          role: newUser.role,
-          email: newUser.email,
-          dob: newUser.dob,
-        },
+         user :  newUser
       });
     } catch (modelError) {
       console.error("Model operation error:", modelError);

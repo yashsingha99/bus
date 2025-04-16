@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     ];
     // @ts-expect-error-ignore
     const missingFields = requiredFields.filter((field) => !bookingData[field]);
-
+    console.log(bookingData);
     if (missingFields.length > 0) {
       return NextResponse.json(
         { message: `Missing required fields: ${missingFields.join(", ")}` },

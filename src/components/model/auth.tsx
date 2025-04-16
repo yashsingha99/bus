@@ -46,7 +46,8 @@ interface DataType {
   fullName: string;
   email: string;
   phone: string;
-  userId: string;
+  role:string
+  // userId: string;
 }
 
 type AuthProps = {
@@ -214,9 +215,8 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
       console.log(response.data);
 
       if (response.data) {
-        if (state) {
-          state(response.data.user);
-        }
+        // console.log(response.data);
+       
         // console.log(response.data)
         const userD = {
           email: response.data.user.email,
@@ -225,6 +225,9 @@ function Auth({ children, navigateRoute, callback, state }: AuthProps) {
           role: response.data.user.role,
           id: response.data.user._id,
         };
+         if (state) {
+           state(userD);
+         }
         localStorage.setItem("user", JSON.stringify(userD));
         toast.success(
           isSignIn ? "Signed in successfully!" : "Registered successfully!"
