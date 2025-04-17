@@ -23,10 +23,10 @@ const Drawer = () => {
   ];
 
   const adminNavigation = [
-    { page: "Dashboard", navigate: "/AATUadmin" },
-    { page: "Trips", navigate: "/AATUadmin/trips" },
-    { page: "Users", navigate: "/AATUadmin/users" },
-    { page: "Reserved", navigate: "/AATUadmin/reserved-users" },
+    { page: "Dashboard", navigate: "/AATKHARK" },
+    { page: "Trips", navigate: "/AATKHARK/trips" },
+    { page: "Users", navigate: "/AATKHARK/users" },
+    { page: "Reserved", navigate: "/AATKHARK/reserved-users" },
     // { page: "Settings", navigate: "/AATUadmin/settings" },
   ];
   useEffect(() => {

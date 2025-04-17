@@ -146,7 +146,7 @@ export default function UsersPage() {
     const userString = localStorage.getItem("user");
     const userData = userString ? JSON.parse(userString) : null;
 
-    if (!userData) {
+    if (!userData || userData?.role !== "NATRAJ121290") {
       router.push("/");
     }
     setCurrentUser(userData);

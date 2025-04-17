@@ -168,7 +168,7 @@ export default function TripManagementPage() {
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
-      if(userData?.role !== "IAMADMINROCK"){
+      if (userData?.role !== "NATRAJ121290") {
         router.push("/");
       }
       setUser(userData);

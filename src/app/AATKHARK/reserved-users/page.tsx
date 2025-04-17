@@ -99,8 +99,8 @@ export default function ReservedUsersPage() {
     if (typeof window !== 'undefined') {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
-       if (userData?.role !== "IAMADMINROCK"){
-          router.push('/');
+       if (userData?.role !== "NATRAJ121290") {
+         router.push("/");
        }
 
       // setUser(userData);
