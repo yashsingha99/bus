@@ -179,11 +179,11 @@ export default function TripManagementPage() {
   };
   
   const handleEditTrip = (tripId: string) => {
-    router.push(`/AATUadmin/editTrip?tripId=${tripId}`);
+    router.push(`/AATKHARK/editTrip?tripId=${tripId}`);
   };
   
   const handleAddTrip = () => {
-    router.push(`/AATUadmin/editTrip?tripId=newTrip`);
+    router.push(`/AATKHARK/editTrip?tripId=newTrip`);
   };
   
   const fetchTrips = async () => {

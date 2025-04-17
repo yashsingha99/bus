@@ -163,18 +163,18 @@ export default function AdminDashboard() {
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          <Link href="/admin/users">
+          <Link href="/AATKHARK/users">
             <FeedbackButton>Users</FeedbackButton>
           </Link>
-          <Link href="/admin/trips">
+          <Link href="/AATKHARK/trips">
             <FeedbackButton>Trips</FeedbackButton>
           </Link>
-          <Link href="/admin/bookings">
+          <Link href="/AATKHARK/reserved-users">
             <FeedbackButton>Bookings</FeedbackButton>
           </Link>
-          <Link href="/admin/refunds">
+          {/* <Link href="/AATKHARK/refunds">
             <FeedbackButton>Refunds</FeedbackButton>
-          </Link>
+          </Link> */}
         </div>
       </div>
 

@@ -419,12 +419,12 @@ export default function EditTripPage() {
         // Create new trip
         await tripApi.createTrip(dataToSave);
         toast.success("Trip created successfully");
-        router.push("/AATUadmin/trips");
+        router.push("/AATKHARK/trips");
       } else if (tripId) {
         // Update existing trip
         await tripApi.updateTrip(dataToSave);
         toast.success("Trip updated successfully");
-        router.push("/AATUadmin/trips");
+        router.push("/AATKHARK/trips");
       }
     } catch (err) {
       console.error("Error submitting trip:", err);
@@ -436,7 +436,7 @@ export default function EditTripPage() {
 
   const handleDeleteDestination = async () => {
     if (!tripId || tripId === "newTrip") {
-      router.push("/AATUadmin/trips");
+      router.push("/AATKHARK/trips");
       return;
     }
 
@@ -444,7 +444,7 @@ export default function EditTripPage() {
       setIsSubmitting(true);
       await tripApi.deleteTrip(tripId);
       toast.success("Destination deleted successfully");
-      router.push("/AATUadmin/trips");
+      router.push("/AATKHARK/trips");
     } catch (err) {
       console.error("Error deleting destination:", err);
       toast.error("Failed to delete destination. Please try again.");
@@ -481,7 +481,7 @@ export default function EditTripPage() {
           <AlertDescription>No trip data available</AlertDescription>
         </Alert>
         <div className="mt-4">
-          <Button onClick={() => router.push("/AATUadmin/trips")}>
+          <Button onClick={() => router.push("/AATKHARK/trips")}>
             Back to Trips
           </Button>
         </div>
