@@ -136,7 +136,7 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.page, search, role, pagination.limit]);
+  }, [pagination.page, role, pagination.limit, search]);
 
    useEffect(() => {
      fetchUsers();
@@ -175,6 +175,14 @@ export default function UsersPage() {
       console.error("Error updating user role:", error);
       toast.error("Failed to update user role");
     }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+    setTimeout(() => {
+      fetchUsers();
+      // setPagination((prev) => ({ ...prev, page: 1 }));
+    }, 2000);
   };
 
   const handleViewDetails = (user: User) => {
@@ -220,7 +228,7 @@ export default function UsersPage() {
             <Input
               placeholder="Search users..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={handleSearch}
               className="max-w-sm"
             />
             <Select value={role} onValueChange={setRole}>

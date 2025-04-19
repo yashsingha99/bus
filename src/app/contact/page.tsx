@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/footer";
+import Head from "next/head";
 
 export default function ContactPage() {
   const [activeTab, setActiveTab] = useState("contact");
@@ -97,6 +98,17 @@ export default function ContactPage() {
   ];
 
   return (
+    <>
+    <Head>
+      <title>Contact | Bustify</title>
+      <meta name="description" content="Let's Connect'
+Your journey with us does not end after your bus ride." />
+      <meta property="og:title" content="Contact | Bustify" />
+      <meta property="og:description" content="Contact At +91 74175 82399" />
+      <meta property="og:image" content="/preview.png" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <link rel="canonical" href="https://bustify.in/contact" />
+    </Head>
     <main className="flex-1 bg-gradient-to-b from-background to-muted min-h-screen">
       {/* Interactive Bus Hero Section */}
       <section className="relative w-full py-12 flex flex-col items-center md:py-20 lg:py-28 overflow-hidden">
@@ -537,5 +549,6 @@ export default function ContactPage() {
       `}</style>
       <Footer />
     </main>
+    </>
   );
 }

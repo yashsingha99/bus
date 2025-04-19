@@ -148,7 +148,15 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        
+        {/* <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script> */}
+{/* <script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "e6ef5a7f-7420-4583-a1e8-173f752ed0fc",
+    });
+  });
+</script> */}
         <body className={inter.className}>
           <DrawerProvider>
             <Navbar />

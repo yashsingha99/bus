@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
-
+import { TripModel } from "@/model/trip.model";
 const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string;
 const key_secret = process.env.NEXT_PUBLIC_RAZORPAY_KEY_SECRET as string;
 
@@ -14,6 +14,7 @@ const razorpay = new Razorpay({
 })
 
 export type OrderBody = {
+    tripId : string
     amount: number;
     currency: string;
 }
@@ -21,11 +22,24 @@ export type OrderBody = {
 export async function POST(request: NextRequest) {
     try {
 
-        const { amount, currency }: OrderBody = await request.json();
+        const { amount, currency, tripId }: OrderBody = await request.json();
         if (!amount) {
             return NextResponse.json({ message: `Amount is required` }, { status: 400 })
         }
 
+        if (!tripId) {
+            return NextResponse.json({ message: `TripId is required` }, { status: 400 })
+        }
+        
+        const trip = await TripModel.findById(tripId);
+
+        if(!trip){
+            return NextResponse.json({ message: `Trip Doesn't Exist` }, { status: 400 })
+        }
+        
+        if(amount !== trip.Trips[0].price * 100){
+            return NextResponse.json({ message: `MEMORY DECRYPTED` }, { status: 403 })
+        }
         const options = {
             amount,
             currency: currency || "INR",

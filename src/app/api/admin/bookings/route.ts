@@ -16,33 +16,37 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
-    const status = searchParams.get("status");
+    const paymentStatus = searchParams.get("status"); // Changed from status to paymentStatus
     const search = searchParams.get("search");
-
+    
     const query: Record<string, unknown> = {};
     
-    if (status) {
-      query.status = status;
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus; // Use paymentStatus field instead of status
     }
-
+    
     if (search) {
       query.$or = [
         { pickupAddress: { $regex: search, $options: "i" } },
-        { "passengerDetails.name": { $regex: search, $options: "i" } },
-        { "passengerDetails.phone": { $regex: search, $options: "i" } },
+        { dropoffAddress: { $regex: search, $options: "i" } },
+        { "bookedBy.fullName": { $regex: search, $options: "i" } }, // Match the component's data structure
+        { "bookedBy.email": { $regex: search, $options: "i" } },
+        { "bookedBy.phone": { $regex: search, $options: "i" } }
       ];
     }
-
+    
     const skip = (page - 1) * limit;
+    
+    // Updated to match the populated fields used in the frontend
     const bookings = await BookingModel.find(query)
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
-      .populate("bookedBy", "fullName email phone")
+      .populate("bookedBy", "fullName email phone role")
       .populate("destination");
-
+    
     const totalBookings = await BookingModel.countDocuments(query);
-
+    
     return NextResponse.json({
       success: true,
       data: bookings,

@@ -60,7 +60,7 @@ export async function GET() {
             success: false,
             message: "User not found.",
           }),
-          { status: 404 } // Not Found
+          { status: 404 }
         );
       }
   

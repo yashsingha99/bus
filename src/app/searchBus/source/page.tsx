@@ -196,7 +196,7 @@ export default function BusDetailsPage() {
     setIsLoading(true);
     try {
       const shouldProcced = isValidateDateTime();
-      if (!shouldProcced) return;
+      if (!shouldProcced || !tripId) return;
       if (!user?.id) {
         toast("User not found", {
           action: {
@@ -207,8 +207,9 @@ export default function BusDetailsPage() {
         console.log("user not found");
         return;
       }
-      const orderId: string = await createOrderId(finalPrice, "INR");
-
+      const orderId: string = await createOrderId(finalPrice, "INR", tripId);
+      console.log(orderId);
+      
       // console.log("Order ID:", orderId);
       // console.log(
       //   "selectedDate",

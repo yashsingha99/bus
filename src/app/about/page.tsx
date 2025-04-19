@@ -40,7 +40,8 @@ const GoogleIcon = ({
 import img1 from "../../assest/img1.jpg";
 import img3 from "../../assest/img3.jpg";
 import Image from "next/image";
-export default function AboutPage() {
+import Head from "next/head";
+export default function Page() {
   // State for image carousel
   const [currentTeamSlide, setCurrentTeamSlide] = useState(0);
   const [currentReviewSlide, setCurrentReviewSlide] = useState(0);
@@ -163,352 +164,371 @@ export default function AboutPage() {
   };
 
   return (
-    <main className="flex-1 overflow-hidden">
-      <section className="relative w-full py-8 md:py-16 lg:py-24 bg-muted">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-white/20 z-0"></div>
+    <>
+      <Head>
+        <title>About | Bustify</title>
+        <meta
+          name="description"
+          content="Bustify was founded in 2024 with a focused mission: to provide affordable and reliable bus services for college students appearing for NPTEL exams. What began as a student initiative to solve a real transportation challenge has grown into a trusted service.
 
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl animate-fade-in">
-                About Bustify
-              </h1>
-              <p className="max-w-2xl mx-auto text-lg sm:text-xl md:text-2xl text-muted-foreground">
-                Your trusted partner for convenient and reliable bus travel
-              </p>
+In the past year, Bustify successfully arranged comfortable and cost-effective travel for over 500 students. the platform ensured smooth, timely, and budget-friendly travel experiences."
+        />
+        <meta property="og:title" content="About | Bustify" />
+        <meta property="og:description" content="About page of Bustify" />
+        <meta property="og:image" content="/preview.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <link rel="canonical" href="https://bustify.in/about" />
+      </Head>
+      <main className="flex-1 overflow-hidden">
+        <section className="relative w-full py-8 md:py-16 lg:py-24 bg-muted">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-white/20 z-0"></div>
+
+          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl animate-fade-in">
+                  About Bustify
+                </h1>
+                <p className="max-w-2xl mx-auto text-lg sm:text-xl md:text-2xl text-muted-foreground">
+                  Your trusted partner for convenient and reliable bus travel
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="w-full py-12 md:py-16 lg:py-24">
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            <div className="space-y-4 order-2 lg:order-1">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Our Story
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground">
-                Bustify was founded in 2024 with a focused mission: to provide
-                affordable and reliable bus services for college students
-                appearing for NPTEL exams. What began as a student initiative to
-                solve a real transportation challenge has grown into a trusted
-                service.
-              </p>
-              <p className="text-base sm:text-lg text-muted-foreground">
-                In the past year, Bustify successfully arranged comfortable and
-                cost-effective travel for over 500 students. the platform
-                ensured smooth, timely, and budget-friendly travel experiences.
-              </p>
-            </div>
+        <section className="w-full py-12 md:py-16 lg:py-24">
+          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
+              <div className="space-y-4 order-2 lg:order-1">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  Our Story
+                </h2>
+                <p className="text-base sm:text-lg text-muted-foreground">
+                  Bustify was founded in 2024 with a focused mission: to provide
+                  affordable and reliable bus services for college students
+                  appearing for NPTEL exams. What began as a student initiative
+                  to solve a real transportation challenge has grown into a
+                  trusted service.
+                </p>
+                <p className="text-base sm:text-lg text-muted-foreground">
+                  In the past year, Bustify successfully arranged comfortable
+                  and cost-effective travel for over 500 students. the platform
+                  ensured smooth, timely, and budget-friendly travel
+                  experiences.
+                </p>
+              </div>
 
-            <div
-              className="relative h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden shadow-lg order-1 lg:order-2"
-              ref={storySliderRef}
-            >
-              {/* Story Images Slider */}
-              <div className="relative w-full h-full">
-                {storyImages.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`absolute inset-0 w-full h-full transition-all duration-700 transform ${
-                      index === currentStorySlide
-                        ? "opacity-100 translate-x-0"
-                        : index < currentStorySlide
-                          ? "opacity-0 -translate-x-full"
-                          : "opacity-0 translate-x-full"
-                    }`}
-                  >
-                    <Image
-                      src={image.src}
-                      alt={`Bustify story image ${index + 1}`}
-                      className="object-cover w-full h-full"
-                      unoptimized
-                    />
-                    {/* Caption overlay */}
-                    {/* <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+              <div
+                className="relative h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden shadow-lg order-1 lg:order-2"
+                ref={storySliderRef}
+              >
+                {/* Story Images Slider */}
+                <div className="relative w-full h-full">
+                  {storyImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`absolute inset-0 w-full h-full transition-all duration-700 transform ${
+                        index === currentStorySlide
+                          ? "opacity-100 translate-x-0"
+                          : index < currentStorySlide
+                            ? "opacity-0 -translate-x-full"
+                            : "opacity-0 translate-x-full"
+                      }`}
+                    >
+                      <Image
+                        src={image.src}
+                        alt={`Bustify story image ${index + 1}`}
+                        className="object-cover w-full h-full"
+                        unoptimized
+                      />
+                      {/* Caption overlay */}
+                      {/* <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
                       <p className="text-white text-sm md:text-base">
                         {image.caption}
                       </p>
                     </div> */}
-                  </div>
-                ))}
-
-                {/* Story navigation buttons */}
-                <button
-                  onClick={() => navigateSlider("prev")}
-                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black rounded-full p-2 opacity-70 hover:opacity-100 transition-opacity duration-300 focus:outline-none z-10"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-
-                <button
-                  onClick={() => navigateSlider("next")}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black rounded-full p-2 opacity-70 hover:opacity-100 transition-opacity duration-300 focus:outline-none z-10"
-                  aria-label="Next image"
-                >
-                  <ChevronRight size={20} />
-                </button>
-
-                {/* Story indicator dots */}
-                <div className="absolute bottom-12 left-0 right-0 flex justify-center space-x-2 z-10">
-                  {storyImages.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentStorySlide(index)}
-                      className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                        currentStorySlide === index
-                          ? "bg-white"
-                          : "bg-white/40 hover:bg-white/60"
-                      }`}
-                      aria-label={`Go to slide ${index + 1}`}
-                    />
+                    </div>
                   ))}
+
+                  {/* Story navigation buttons */}
+                  <button
+                    onClick={() => navigateSlider("prev")}
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black rounded-full p-2 opacity-70 hover:opacity-100 transition-opacity duration-300 focus:outline-none z-10"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+
+                  <button
+                    onClick={() => navigateSlider("next")}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-black rounded-full p-2 opacity-70 hover:opacity-100 transition-opacity duration-300 focus:outline-none z-10"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+
+                  {/* Story indicator dots */}
+                  <div className="absolute bottom-12 left-0 right-0 flex justify-center space-x-2 z-10">
+                    {storyImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentStorySlide(index)}
+                        className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                          currentStorySlide === index
+                            ? "bg-white"
+                            : "bg-white/40 hover:bg-white/60"
+                        }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="w-full py-12 md:py-16 lg:py-24 bg-muted">
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Our Mission & Values
-              </h2>
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
-                What drives us every day
-              </p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: "Customer First",
-                desc: "We put our customers at the center of everything we do, constantly seeking ways to improve their experience.",
-              },
-              {
-                title: "Innovation",
-                desc: "We embrace technology and innovative solutions to solve complex problems in the transportation industry.",
-              },
-              {
-                title: "Reliability",
-                desc: "We strive to provide reliable service that our customers can count on, every single time.",
-              },
-              {
-                title: "Transparency",
-                desc: "We believe in being transparent with our customers about pricing, policies, and service details.",
-              },
-              {
-                title: "Accessibility",
-                desc: "We're committed to making bus travel accessible to everyone, regardless of location or background.",
-              },
-              {
-                title: "Sustainability",
-                desc: "We promote bus travel as a more environmentally friendly alternative to individual transportation.",
-              },
-            ].map((value, i) => (
-              <div
-                key={i}
-                className="bg-background p-6 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1"
-              >
-                <h3 className="text-lg sm:text-xl font-bold mb-2">
-                  {value.title}
-                </h3>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  {value.desc}
+        <section className="w-full py-12 md:py-16 lg:py-24 bg-muted">
+          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  Our Mission & Values
+                </h2>
+                <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
+                  What drives us every day
                 </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+            </div>
 
-      <section className="w-full py-12 md:py-16 lg:py-24">
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Our Team
-              </h2>
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
-                Meet the people behind Bustify
-              </p>
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  title: "Customer First",
+                  desc: "We put our customers at the center of everything we do, constantly seeking ways to improve their experience.",
+                },
+                {
+                  title: "Innovation",
+                  desc: "We embrace technology and innovative solutions to solve complex problems in the transportation industry.",
+                },
+                {
+                  title: "Reliability",
+                  desc: "We strive to provide reliable service that our customers can count on, every single time.",
+                },
+                {
+                  title: "Transparency",
+                  desc: "We believe in being transparent with our customers about pricing, policies, and service details.",
+                },
+                {
+                  title: "Accessibility",
+                  desc: "We're committed to making bus travel accessible to everyone, regardless of location or background.",
+                },
+                {
+                  title: "Sustainability",
+                  desc: "We promote bus travel as a more environmentally friendly alternative to individual transportation.",
+                },
+              ].map((value, i) => (
+                <div
+                  key={i}
+                  className="bg-background p-6 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1"
+                >
+                  <h3 className="text-lg sm:text-xl font-bold mb-2">
+                    {value.title}
+                  </h3>
+                  <p className="text-sm sm:text-base text-muted-foreground">
+                    {value.desc}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
+        </section>
 
-          <div className="relative">
-            <div className="overflow-hidden" ref={teamSliderRef}>
-              <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentTeamSlide * 100}%)` }}
-              >
-                {teamMembers.map((member, i) => (
-                  <div
-                    key={i}
-                    className="flex-none w-full sm:w-1/2 md:w-1/3 px-2"
-                  >
-                    <div className="flex flex-col items-center text-center p-4 h-full">
-                      {/* <div className="w-32 h-32 rounded-full overflow-hidden mb-4 shadow-md transform transition-transform duration-300 hover:scale-105">
+        <section className="w-full py-12 md:py-16 lg:py-24">
+          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  Our Team
+                </h2>
+                <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
+                  Meet the people behind Bustify
+                </p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="overflow-hidden" ref={teamSliderRef}>
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{
+                    transform: `translateX(-${currentTeamSlide * 100}%)`,
+                  }}
+                >
+                  {teamMembers.map((member, i) => (
+                    <div
+                      key={i}
+                      className="flex-none w-full sm:w-1/2 md:w-1/3 px-2"
+                    >
+                      <div className="flex flex-col items-center text-center p-4 h-full">
+                        {/* <div className="w-32 h-32 rounded-full overflow-hidden mb-4 shadow-md transform transition-transform duration-300 hover:scale-105">
                         <img
                           src={`/api/placeholder/128/128`}
                           alt={member.name}
                           className="object-cover w-full h-full"
                         />
                       </div> */}
-                      <h3 className="text-lg sm:text-xl font-bold">
-                        {member.name}
-                      </h3>
-                      <p className="text-sm sm:text-base text-muted-foreground">
-                        {member.position}
-                      </p>
+                        <h3 className="text-lg sm:text-xl font-bold">
+                          {member.name}
+                        </h3>
+                        <p className="text-sm sm:text-base text-muted-foreground">
+                          {member.position}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => navigateTeamSlider("prev")}
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
+                disabled={currentTeamSlide === 0}
+              >
+                <ChevronLeft size={24} />
+              </button>
+
+              <button
+                onClick={() => navigateTeamSlider("next")}
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+
+            <div className="flex justify-center mt-6 space-x-2">
+              {Array.from({ length: Math.ceil(teamMembers.length / 3) }).map(
+                (_, i) => (
+                  <button
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${currentTeamSlide === i ? "bg-primary" : "bg-gray-300"}`}
+                    onClick={() => setCurrentTeamSlide(i)}
+                  />
+                )
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="w-full py-12 md:py-16 lg:py-24 bg-muted">
+          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  What Our Customers Say
+                </h2>
+                <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
+                  Real reviews from Bustify users
+                </p>
               </div>
             </div>
 
-            <button
-              onClick={() => navigateTeamSlider("prev")}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
-              disabled={currentTeamSlide === 0}
-            >
-              <ChevronLeft size={24} />
-            </button>
+            <div className="relative">
+              <div
+                className="overflow-hidden rounded-lg bg-background shadow-lg"
+                ref={reviewSliderRef}
+              >
+                <div
+                  className="flex transition-transform duration-500 ease-in-out"
+                  style={{
+                    transform: `translateX(-${currentReviewSlide * 100}%)`,
+                  }}
+                >
+                  {reviews.map((review, i) => (
+                    <div key={i} className="flex-none w-full p-6 md:p-8">
+                      <div className="flex flex-col h-full">
+                        <div className="flex justify-between">
+                          <div className="flex mb-2">
+                            {renderStars(review.rating)}
+                          </div>
+                          <GoogleIcon className="w-5 h-5" />
+                        </div>
 
-            <button
-              onClick={() => navigateTeamSlider("next")}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
+                        <p className="text-base sm:text-lg italic mb-4">
+                          {review.text}
+                        </p>
+                        <p className="text-sm sm:text-base font-semibold mt-auto">
+                          — {review.name}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-          <div className="flex justify-center mt-6 space-x-2">
-            {Array.from({ length: Math.ceil(teamMembers.length / 3) }).map(
-              (_, i) => (
+              <button
+                onClick={() => navigateReviewSlider("prev")}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
+                disabled={currentReviewSlide === 0}
+              >
+                <ChevronLeft size={24} />
+              </button>
+
+              <button
+                onClick={() => navigateReviewSlider("next")}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
+                disabled={currentReviewSlide === reviews.length - 1}
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+
+            <div className="flex justify-center mt-6 space-x-2">
+              {reviews.map((_, i) => (
                 <button
                   key={i}
-                  className={`w-2 h-2 rounded-full ${currentTeamSlide === i ? "bg-primary" : "bg-gray-300"}`}
-                  onClick={() => setCurrentTeamSlide(i)}
+                  className={`w-2 h-2 rounded-full ${currentReviewSlide === i ? "bg-primary" : "bg-gray-300"}`}
+                  onClick={() => setCurrentReviewSlide(i)}
                 />
-              )
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="w-full py-12 md:py-16 lg:py-24 bg-muted">
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                What Our Customers Say
-              </h2>
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
-                Real reviews from Bustify users
-              </p>
+              ))}
             </div>
           </div>
+        </section>
 
-          <div className="relative">
-            <div
-              className="overflow-hidden rounded-lg bg-background shadow-lg"
-              ref={reviewSliderRef}
-            >
-              <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{
-                  transform: `translateX(-${currentReviewSlide * 100}%)`,
-                }}
-              >
-                {reviews.map((review, i) => (
-                  <div key={i} className="flex-none w-full p-6 md:p-8">
-                    <div className="flex flex-col h-full">
-                      <div className="flex justify-between">
-                        <div className="flex mb-2">
-                          {renderStars(review.rating)}
-                        </div>
-                        <GoogleIcon className="w-5 h-5" />
-                      </div>
-
-                      <p className="text-base sm:text-lg italic mb-4">
-                        {review.text}
-                      </p>
-                      <p className="text-sm sm:text-base font-semibold mt-auto">
-                        — {review.name}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+        <section className="w-full py-12 md:py-16 lg:py-24">
+          <div className="container px-4 md:px-6 max-w-6xl mx-auto">
+            <div className="flex flex-col items-center justify-center space-y-6 text-center">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  Ready to Experience Bustify?
+                </h2>
+                <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
+                  Join thousands of satisfied travelers who have chosen Bustify
+                  for their journey
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/searchBus">
+                  <Button size="lg" className="px-6 sm:px-8 w-full sm:w-auto">
+                    Book Your Journey
+                  </Button>
+                </Link>
+                <Link href="/contact">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="px-6 sm:px-8 w-full sm:w-auto"
+                  >
+                    Contact Us
+                  </Button>
+                </Link>
               </div>
             </div>
-
-            <button
-              onClick={() => navigateReviewSlider("prev")}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
-              disabled={currentReviewSlide === 0}
-            >
-              <ChevronLeft size={24} />
-            </button>
-
-            <button
-              onClick={() => navigateReviewSlider("next")}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background rounded-full p-2 shadow-md opacity-80 hover:opacity-100 focus:outline-none"
-              disabled={currentReviewSlide === reviews.length - 1}
-            >
-              <ChevronRight size={24} />
-            </button>
           </div>
-
-          <div className="flex justify-center mt-6 space-x-2">
-            {reviews.map((_, i) => (
-              <button
-                key={i}
-                className={`w-2 h-2 rounded-full ${currentReviewSlide === i ? "bg-primary" : "bg-gray-300"}`}
-                onClick={() => setCurrentReviewSlide(i)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="w-full py-12 md:py-16 lg:py-24">
-        <div className="container px-4 md:px-6 max-w-6xl mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-6 text-center">
-            <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Ready to Experience Bustify?
-              </h2>
-              <p className="max-w-2xl mx-auto text-base sm:text-lg text-muted-foreground">
-                Join thousands of satisfied travelers who have chosen Bustify
-                for their journey
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/searchBus">
-                <Button size="lg" className="px-6 sm:px-8 w-full sm:w-auto">
-                  Book Your Journey
-                </Button>
-              </Link>
-              <Link href="/contact">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="px-6 sm:px-8 w-full sm:w-auto"
-                >
-                  Contact Us
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-      <Footer />
-    </main>
+        </section>
+        <Footer />
+      </main>
+    </>
   );
 }

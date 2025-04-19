@@ -31,7 +31,7 @@ import { FeedbackButton } from "@/components/ui/feedback-button";
 import { PopulatedBooking } from "../page";
 import { UserDetailsDrawerSkeleton } from "./user-details-drawer-skeleton";
 import Image from "next/image";
-
+import { Button } from "@/components/ui/button";
 // interface PassengerDetails {
 //   name: string;
 //   phone: string;
@@ -60,7 +60,21 @@ export default function UserDetailsDrawer({
   const [status, setStatus] = useState(booking.status);
   const [paymentStatus, setPaymentStatus] = useState(booking.paymentStatus);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isImageFullScreen, setIsImageFullScreen] = useState(false);
+ 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await axios.delete(`/api/admin/bookings/${booking._id}`);
+      toast.success("Booking deleted successfully");
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      toast.error("Failed to delete booking");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleUpdate = async () => {
     try {
@@ -282,6 +296,14 @@ export default function UserDetailsDrawer({
                   >
                     {isUpdating ? "Updating..." : "Update Booking"}
                   </FeedbackButton>
+                  <Button
+                    className="w-full"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Booking"}
+                  </Button>
                 </div>
               </div>
             )}
