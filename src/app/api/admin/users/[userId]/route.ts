@@ -159,6 +159,8 @@ export async function DELETE(
     
     // Delete user
     await UserModel.findByIdAndDelete(userId);
+
+    await BookingModel.deleteMany({ bookedBy: userId });
     
     return NextResponse.json({
       success: true,

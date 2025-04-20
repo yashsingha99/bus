@@ -102,6 +102,7 @@ export default function BusDetailsPage() {
   const [errorDateTime, setErrorDateTime] = useState({
     date: false,
     time: false,
+    pickUp: false,
   });
   const [price, setPrice] = useState(0);
   const [tripData, setTripData] = useState<ITrip>();
@@ -209,7 +210,7 @@ export default function BusDetailsPage() {
       }
       const orderId: string = await createOrderId(finalPrice, "INR", tripId);
       console.log(orderId);
-      
+
       // console.log("Order ID:", orderId);
       // console.log(
       //   "selectedDate",
@@ -220,13 +221,23 @@ export default function BusDetailsPage() {
       //     year: "numeric",
       //   })
       // );
-
+      const newDiscription = 
+        `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"} at pickup:= ${pickup ? pickup : selectedPickup}, Date:= ${new Date(
+          selectedDate
+        ).toLocaleDateString("en-IN", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })} timing:= ${selectedTime}`
+      
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
         amount: finalPrice * 100,
         currency: "INR",
         name: "Bustify Ticket Booking",
-        description: `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"}`,
+        // description: `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"} at pickup:=${pickup ? pickup : selectedTime}, timing:=${selectedTime}`,
+        description: newDiscription,
         order_id: orderId,
         handler: async function (response: RazorpayResponse) {
           try {
@@ -364,6 +375,10 @@ export default function BusDetailsPage() {
   const isValidateDateTime = () => {
     let shouldProcced = true;
     const error = errorDateTime;
+    if (selectedPickup === "") {
+      error.pickUp = true;
+      shouldProcced = false;
+    }
     if (selectedDate === "") {
       error.date = true;
       shouldProcced = false;
@@ -377,7 +392,7 @@ export default function BusDetailsPage() {
   };
 
   const handleUserData = useCallback((data: User | null) => {
-    console.log("data", data)
+    console.log("data", data);
     if (data) {
       setUser({
         id: data.id,
@@ -501,6 +516,11 @@ export default function BusDetailsPage() {
                       </SelectContent>
                     </Select>
                     {errorDateTime.date && (
+                      <p className="text-red-600 text-sm">
+                        PickUp Location is Required
+                      </p>
+                    )}
+                    {errorDateTime.pickUp && (
                       <p className="text-red-600 text-sm">
                         PickUp Location is Required
                       </p>

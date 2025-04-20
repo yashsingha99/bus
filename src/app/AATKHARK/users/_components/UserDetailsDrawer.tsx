@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Drawer,
-  // DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -27,7 +26,7 @@ interface User {
   phone: string;
   role: string;
   createdAt: string;
-  dob? : string;
+  dob?: string;
 }
 
 interface UserDetailsDrawerProps {
@@ -95,6 +94,23 @@ export function UserDetailsDrawer({
           </DrawerHeader>
 
           <div className="grid gap-4 py-4 px-4">
+            {/* _ID */}
+            <div className="grid gap-2">
+              <Label htmlFor="name">ID</Label>
+              {isEditing ? (
+                <Input
+                  id="name"
+                  value={formData._id}
+                  onChange={(e) =>
+                    setFormData({ ...formData, _id: e.target.value })
+                  }
+                />
+              ) : (
+                <p className="text-sm">{user._id}</p>
+              )}
+            </div>
+
+            {/* Name */}
             <div className="grid gap-2">
               <Label htmlFor="name">Name</Label>
               {isEditing ? (
@@ -110,6 +126,7 @@ export function UserDetailsDrawer({
               )}
             </div>
 
+            {/* Email */}
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               {isEditing ? (
@@ -126,6 +143,7 @@ export function UserDetailsDrawer({
               )}
             </div>
 
+            {/* Phone */}
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone Number</Label>
               {isEditing ? (
@@ -140,21 +158,25 @@ export function UserDetailsDrawer({
                 <p className="text-sm">{user.phone}</p>
               )}
             </div>
+
+            {/* DOB */}
             <div className="grid gap-2">
-              <Label htmlFor="phone">DOB</Label>
+              <Label htmlFor="dob">Date of Birth</Label>
               {isEditing ? (
                 <Input
-                  id="phone"
-                  value={formData.dob}
+                  id="dob"
+                  type="date"
+                  value={formData.dob || ""}
                   onChange={(e) =>
                     setFormData({ ...formData, dob: e.target.value })
                   }
                 />
               ) : (
-                <p className="text-sm">{user?.dob}</p>
+                <p className="text-sm">{user.dob || "—"}</p>
               )}
             </div>
 
+            {/* Role */}
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
               {isEditing ? (
@@ -164,7 +186,7 @@ export function UserDetailsDrawer({
                     setFormData({ ...formData, role: value })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="role">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -177,6 +199,7 @@ export function UserDetailsDrawer({
               )}
             </div>
 
+            {/* Created At */}
             <div className="grid gap-2">
               <Label>Created At</Label>
               <p className="text-sm">
@@ -185,6 +208,7 @@ export function UserDetailsDrawer({
             </div>
           </div>
 
+          {/* Footer Actions */}
           <DrawerFooter>
             {isEditing ? (
               <div className="flex gap-2">
@@ -206,4 +230,4 @@ export function UserDetailsDrawer({
       </DrawerContent>
     </Drawer>
   );
-} 
+}

@@ -17,13 +17,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import UserBook from "@/components/model/user-book";
 
 export interface User {
   _id: string;
@@ -119,7 +113,7 @@ export default function ReservedUsersPage() {
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("all");
+  // const [paymentStatus, setPaymentStatus] = useState("all");
   const [pagination, setPagination] = useState<PaginationData>({
     total: 0,
     page: 1,
@@ -141,23 +135,30 @@ export default function ReservedUsersPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
+
       const params = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
       });
 
-      if (search) {
-        params.append("search", search);
-      }
-
-      if (paymentStatus !== "all") {
-        params.append("status", paymentStatus);
-      }
+      if (search) params.append("search", search);
+      // if (paymentStatus !== "all") params.append("status", paymentStatus);
 
       const response = await axios.get(`/api/admin/bookings?${params}`);
+      const fetchedPagination = response.data.pagination;
+
       setBookings(response.data.data);
-      setPagination(response.data.pagination);
-    } catch (err : unknown) {
+
+      // ✅ Only update pagination if something changed
+      if (
+        fetchedPagination.total !== pagination.total ||
+        fetchedPagination.page !== pagination.page ||
+        fetchedPagination.limit !== pagination.limit ||
+        fetchedPagination.totalPages !== pagination.totalPages
+      ) {
+        setPagination(fetchedPagination);
+      }
+    } catch (err: unknown) {
       if (err instanceof Error) {
         toast.error(err.message);
       } else {
@@ -170,17 +171,17 @@ export default function ReservedUsersPage() {
 
   useEffect(() => {
     fetchBookings();
-  }, [pagination.page, search, fetchBookings, pagination.limit, paymentStatus]);
+  }, [ ]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on search
   };
 
-  const handleStatusChange = (value: string) => {
-    setPaymentStatus(value);
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on filter change
-  };
+  // const handleStatusChange = (value: string) => {
+  //   setPaymentStatus(value);
+  //   setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on filter change
+  // };
 
   return (
     <>
@@ -196,7 +197,7 @@ export default function ReservedUsersPage() {
                 onChange={handleSearch}
                 className="max-w-sm"
               />
-              <Select value={paymentStatus} onValueChange={handleStatusChange}>
+              {/* <Select value={paymentStatus} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Payment Status" />
                 </SelectTrigger>
@@ -205,7 +206,10 @@ export default function ReservedUsersPage() {
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
-              </Select>
+              </Select> */}
+              <UserBook>
+                <Button>Book User</Button>
+              </UserBook>
             </div>
 
             <div className="rounded-md border">
