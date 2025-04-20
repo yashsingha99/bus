@@ -209,7 +209,7 @@ export default function BusDetailsPage() {
         return;
       }
       const orderId: string = await createOrderId(finalPrice, "INR", tripId);
-      console.log(orderId);
+      // console.log(orderId);
 
       // console.log("Order ID:", orderId);
       // console.log(
@@ -375,7 +375,7 @@ export default function BusDetailsPage() {
   const isValidateDateTime = () => {
     let shouldProcced = true;
     const error = errorDateTime;
-    if (selectedPickup === "") {
+    if (!pickup && selectedPickup === "") {
       error.pickUp = true;
       shouldProcced = false;
     }
