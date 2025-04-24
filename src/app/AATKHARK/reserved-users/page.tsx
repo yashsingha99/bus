@@ -12,12 +12,18 @@ import {
 import UserDetailsDrawer from "./_components/userDetailsDrawer";
 import axios from "axios";
 import { toast, Toaster } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Filter, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import UserBook from "@/components/model/user-book";
+import { Checkbox } from "@/components/ui/checkbox";
+import * as XLSX from "xlsx";
 
 export interface User {
   _id: string;
@@ -49,80 +55,30 @@ export interface PopulatedBooking {
   updatedAt: string;
 }
 
-interface PaginationData {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-function ReservedUsersSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <Skeleton className="h-10 w-64" />
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Payment Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-32" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-24" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-20" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-16" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-16" />
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-9 w-24" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
+// interface PaginationData {
+//   total: number;
+//   page: number;
+//   limit: number;
+//   totalPages: number;
+// }
 
 export default function ReservedUsersPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<PopulatedBooking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<PopulatedBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  // const [paymentStatus, setPaymentStatus] = useState("all");
-  const [pagination, setPagination] = useState<PaginationData>({
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 0,
-  });
+  const [filters, setFilters] = useState<{
+    [key: string]: string[];
+  }>({});
+  // const [pagination, setPagination] = useState<PaginationData>({
+  //   total: 0,
+  //   page: 1,
+  //   limit: 10,
+  //   totalPages: 0,
+  // });
 
   useEffect(() => {
-    // Only run on client side
     if (typeof window !== "undefined") {
       const userString = localStorage.getItem("user");
       const userData = userString ? JSON.parse(userString) : null;
@@ -135,35 +91,18 @@ export default function ReservedUsersPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-      });
-
-      if (search) params.append("search", search);
-      // if (paymentStatus !== "all") params.append("status", paymentStatus);
-
-      const response = await axios.get(`/api/admin/bookings?${params}`);
-      const fetchedPagination = response.data.pagination;
-
+      const response = await axios.get(`/api/admin/bookings`);
       setBookings(response.data.data);
-
-      // ✅ Only update pagination if something changed
-      if (
-        fetchedPagination.total !== pagination.total ||
-        fetchedPagination.page !== pagination.page ||
-        fetchedPagination.limit !== pagination.limit ||
-        fetchedPagination.totalPages !== pagination.totalPages
-      ) {
-        setPagination(fetchedPagination);
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
+      setFilteredBookings(response.data.data);
+      // setPagination(response.data.bookings);
+    } catch (err : unknown) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data.message || "Failed to fetch bookings");
       } else {
-        toast.error("An unknown error occurred");
+        toast.error("Failed to fetch bookings");
       }
+      // console.error(err);
+      toast.error("Failed to fetch bookings");
     } finally {
       setLoading(false);
     }
@@ -171,136 +110,184 @@ export default function ReservedUsersPage() {
 
   useEffect(() => {
     fetchBookings();
-  }, [ ]);
+  }, []);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on search
+  useEffect(() => {
+    let filtered = bookings;
+    Object.entries(filters).forEach(([key, values]) => {
+      if (values.length > 0) {
+        filtered = filtered.filter((b) => {
+          const val =
+            key === "fullName"
+              ? b.bookedBy.fullName
+              : key === "phone"
+              ? b.bookedBy.phone
+              : key === "paymentStatus"
+              ? b.paymentStatus
+              : key === "destination"
+              ? b.destination.destinationAddress
+              : key === "date"
+              ? b.date
+              : key === "time"
+              ? b.time
+              : key === "pickupAddress"
+              ? b.pickupAddress
+              : "";
+          return values.includes(val);
+        });
+      }
+    });
+    setFilteredBookings(filtered);
+  }, [filters, bookings]);
+
+  const getUniqueValues = (key: string): string[] => {
+    return Array.from(
+      new Set(
+        bookings.map((b) => {
+          if (key === "fullName") return b.bookedBy.fullName;
+          if (key === "phone") return b.bookedBy.phone;
+          if (key === "paymentStatus") return b.paymentStatus;
+          if (key === "destination") return b.destination.destinationAddress;
+          if (key === "date") return b.date;
+          if (key === "time") return b.time;
+          if (key === "pickupAddress") return b.pickupAddress;
+          return "";
+        })
+      )
+    );
   };
 
-  // const handleStatusChange = (value: string) => {
-  //   setPaymentStatus(value);
-  //   setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on filter change
-  // };
+  const toggleFilterValue = (key: string, value: string) => {
+    setFilters((prev) => {
+      const current = prev[key] || [];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [key]: updated };
+    });
+  };
+
+  const handleDownload = () => {
+    const dataToExport = filteredBookings.map((booking) => ({
+      Name: booking.bookedBy.fullName,
+      Phone: booking.bookedBy.phone,
+      Date: booking.date,
+      Destination: booking.destination.destinationAddress,
+      Time: booking.time,
+      PaymentStatus: booking.paymentStatus,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Bookings");
+    XLSX.writeFile(workbook, "filtered_bookings.xlsx");
+  };
+
+  const renderFilter = (key: string, label: string) => (
+    <TableHead key={key} className="relative">
+      <div className="flex items-center gap-2">
+        {label}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Filter className={`w-4 h-4 ${filters[key]?.length > 0 && "text-red-600"}`} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="p-2 space-y-1 max-h-64 overflow-auto">
+            {getUniqueValues(key).map((val) => (
+              <div key={val} className="flex items-center space-x-2">
+                <Checkbox
+                  checked={filters[key]?.includes(val) || false}
+                  onCheckedChange={() => toggleFilterValue(key, val)}
+                />
+                <span className="text-sm">{val}</span>
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setFilters((prev) => ({ ...prev, [key]: [] }))}
+              className="w-full justify-start text-red-500"
+            >
+              Clear Filter
+            </Button>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </TableHead>
+  );
 
   return (
-    <>
-      <div className="py-10">
-        {loading ? (
-          <ReservedUsersSkeleton />
-        ) : (
-          <>
-            <div className="flex flex-1 items-center space-x-2 mb-6">
-              <Input
-                placeholder="Search users..."
-                value={search}
-                onChange={handleSearch}
-                className="max-w-sm"
-              />
-              {/* <Select value={paymentStatus} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Payment Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select> */}
-              <UserBook>
-                <Button>Book User</Button>
-              </UserBook>
-            </div>
+    <div className="py-10">
+      <div className="flex flex-1 items-center space-x-2 mb-6">
+        <Input
+          placeholder="Search users..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+        <UserBook>
+          <Button>Book User</Button>
+        </UserBook>
+        <Button onClick={handleDownload} variant="outline" className="flex items-center gap-2">
+          <Download className="w-4 h-4" /> Download Excel
+        </Button>
+      </div>
 
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Payment Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bookings.length > 0 ? (
-                    bookings.map((booking) => (
-                      <TableRow key={booking._id}>
-                        <TableCell>{booking.bookedBy.fullName}</TableCell>
-                        <TableCell>{booking.bookedBy?.phone}</TableCell>
-                        <TableCell>
-                          {new Date(booking.date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              booking.paymentStatus === "completed"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {booking.paymentStatus}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <UserDetailsDrawer
-                            booking={booking}
-                            isLoading={loading}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4">
-                        No bookings found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-              <div className="flex items-center justify-between p-4">
-                <p className="text-sm text-muted-foreground">
-                  Showing {bookings.length} of {pagination.total} bookings
-                </p>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: prev.page - 1,
-                      }))
-                    }
-                    disabled={pagination.page === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm">
-                    Page {pagination.page} of {pagination.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: prev.page + 1,
-                      }))
-                    }
-                    disabled={pagination.page === pagination.totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>#</TableHead>
+              {renderFilter("fullName", "Name")}
+              {renderFilter("phone", "CONTACT NO.")}
+              {renderFilter("date", "EXAM DATE")}
+              {renderFilter("destination", "Exam Center")}
+              {renderFilter("time", "Exam Time")}
+              {renderFilter("pickupAddress", "Pickup Point")}
+              {renderFilter("paymentStatus", "Payment Status")}
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredBookings
+              .filter((b) =>
+                search
+                  ? b.bookedBy.fullName
+                      .toLowerCase()
+                      .includes(search.toLowerCase()) ||
+                    b.bookedBy.phone.includes(search)
+                  : true
+              )
+              .map((booking, i) => (
+                <TableRow key={booking._id}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{booking.bookedBy.fullName}</TableCell>
+                  <TableCell>{booking.bookedBy.phone}</TableCell>
+                  <TableCell>{booking.date}</TableCell>
+                  <TableCell>{booking.destination.destinationAddress}</TableCell>
+                  <TableCell>{booking.time}</TableCell>
+                  <TableCell>{booking.pickupAddress}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        booking.paymentStatus === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {booking.paymentStatus}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <UserDetailsDrawer booking={booking} isLoading={loading} />
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
       </div>
       <Toaster />
-    </>
+    </div>
   );
 }

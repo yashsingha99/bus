@@ -18,13 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-// import { Separator } from "@/components/ui/separator";
-import {
-  Clock,
-  MapPin,
-  CreditCard,
-  X,
-} from "lucide-react";
+import { Clock, MapPin, CreditCard, X } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import { FeedbackButton } from "@/components/ui/feedback-button";
@@ -32,26 +26,11 @@ import { PopulatedBooking } from "../page";
 import { UserDetailsDrawerSkeleton } from "./user-details-drawer-skeleton";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-// interface PassengerDetails {
-//   name: string;
-//   phone: string;
-//   gender: "male" | "female" | "other";
-// }
 
 interface UserDetailsDrawerProps {
-  booking: PopulatedBooking 
-    // & {
-    //   passengerDetails: PassengerDetails[];
-    // };
+  booking: PopulatedBooking;
   isLoading?: boolean;
 }
-
-// interface User {
-//   _id: string;
-//   fullName: string;
-//   email: string;
-//   phone: string;
-// }
 
 export default function UserDetailsDrawer({
   booking,
@@ -62,7 +41,13 @@ export default function UserDetailsDrawer({
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImageFullScreen, setIsImageFullScreen] = useState(false);
- 
+  const [pickupAddress, setPickupAddress] = useState(booking.pickupAddress || "");
+  const [destinationAddress, setDestinationAddress] = useState(
+    booking.destination?.destinationAddress || ""
+  );
+  const [time, setTime] = useState(booking.time || "");
+  const [amount, setAmount] = useState(booking.totalAmount || 0);
+
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
@@ -82,6 +67,10 @@ export default function UserDetailsDrawer({
       await axios.put(`/api/admin/bookings/${booking._id}`, {
         status,
         paymentStatus,
+        pickupAddress,
+        destinationAddress,
+        time,
+        totalAmount: amount,
       });
       toast.success("Booking updated successfully");
     } catch (error) {
@@ -130,9 +119,7 @@ export default function UserDetailsDrawer({
         <DrawerContent>
           <div className="mx-auto w-full max-w-lg p-4 max-h-[80vh] overflow-y-auto">
             <DrawerHeader>
-              <DrawerTitle className="text-2xl font-bold">
-                Booking Details
-              </DrawerTitle>
+              <DrawerTitle className="text-2xl font-bold">Booking Details</DrawerTitle>
               <DrawerDescription>
                 Review and manage booking information
               </DrawerDescription>
@@ -142,122 +129,132 @@ export default function UserDetailsDrawer({
               <UserDetailsDrawerSkeleton />
             ) : (
               <div className="space-y-6 py-4">
-                {/* Status Section */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-medium">Booking Status</h3>
-                        <Badge className={getStatusColor(status)}>
-                          {status.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-medium">Payment Status</h3>
-                        <Badge className={getPaymentStatusColor(paymentStatus)}>
-                          {paymentStatus.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Trip Details */}
-                <Card>
-                  <CardContent className="p-4 space-y-4 ">
-                    <h3 className="font-semibold">Trip Information</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">
-                          Pickup: {booking?.pickupAddress || "Release Soon"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">
-                          center: {booking?.destination?.destinationAddress || "Release Soon"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">Time: {booking.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">
-                          Amount: ₹{booking?.totalAmount}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Passenger Details */}
-                {/* <Card>
-                  <CardContent className="p-4 space-y-4 overflow-y-auto max-h-[200px]">
-                    <h3 className="font-semibold">Passenger Information</h3>
-                    {booking?.passengerDetails.map(
-                      (passenger: PassengerDetails, index: number) => (
-                        <Card key={index} className="p-4 gap-4">
-                          <div key={index} className="flex justify-between items-center space-y-2">
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm">{passenger.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4 text-gray-500" />
-                              <span className="text-sm">{passenger.phone}</span>
-                            </div>
-                            <Badge variant="outline" className="ml-6">
-                              {passenger.gender}
+                {isUpdating ? (
+                  <div className="space-y-4">
+                    <Card>
+                      <CardContent className="p-4 space-y-2">
+                        <div>
+                          <label className="text-sm font-medium">Pickup Address</label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2"
+                            value={pickupAddress}
+                            onChange={(e) => setPickupAddress(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Destination Address</label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2"
+                            value={destinationAddress}
+                            onChange={(e) => setDestinationAddress(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Time</label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-300 rounded-md p-2"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Amount (₹)</label>
+                          <input
+                            type="number"
+                            className="w-full border border-gray-300 rounded-md p-2"
+                            value={amount}
+                            onChange={(e) => setAmount(Number(e.target.value))}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-1">
+                            <h3 className="text-sm font-medium">Booking Status</h3>
+                            <Badge className={getStatusColor(status)}>
+                              {status.toUpperCase()}
                             </Badge>
-                            {index < booking.passengerDetails.length - 1 && (
-                              <Separator className="my-2" />
-                            )}
                           </div>
-                        </Card>
-                      )
-                    )}
-                    
-                  </CardContent>
-                </Card> */}
+                          <div className="space-y-1">
+                            <h3 className="text-sm font-medium">Payment Status</h3>
+                            <Badge className={getPaymentStatusColor(paymentStatus)}>
+                              {paymentStatus.toUpperCase()}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4 space-y-4 ">
+                        <h3 className="font-semibold">Trip Information</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm">
+                              Pickup: {pickupAddress || "Release Soon"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm">
+                              Center: {destinationAddress || "Release Soon"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm">Time: {time}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm">Amount: ₹{amount}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                {/* Payment Proof */}
-                {booking.paymentProof && (
-                  <Card>
-                    <CardContent className="p-4 space-y-4">
-                      <h3 className="font-semibold">Payment Proof</h3>
-                      <div
-                        className="relative w-full h-48 cursor-pointer"
-                        onClick={() => setIsImageFullScreen(true)}
-                      >
-                        <Image
-                          src={booking.paymentProof}
-                          alt="Payment Proof"
-                          fill
-                          className="object-contain rounded-lg"
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                {booking?.paymentId && (
-                  <Card>
-                    <CardContent className="p-4 gap-4 flex items-center justify-between ">
-                      <h3 className="font-semibold">Payment ID:</h3>
-                      <p>{booking.paymentId}</p>
-                    </CardContent>
-                  </Card>
+                    {booking.paymentProof && (
+                      <Card>
+                        <CardContent className="p-4 space-y-4">
+                          <h3 className="font-semibold">Payment Proof</h3>
+                          <div
+                            className="relative w-full h-48 cursor-pointer"
+                            onClick={() => setIsImageFullScreen(true)}
+                          >
+                            <Image
+                              src={booking.paymentProof}
+                              alt="Payment Proof"
+                              fill
+                              className="object-contain rounded-lg"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {booking?.paymentId && (
+                      <Card>
+                        <CardContent className="p-4 gap-4 flex items-center justify-between ">
+                          <h3 className="font-semibold">Payment ID:</h3>
+                          <p>{booking.paymentId}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 )}
 
                 {/* Status Update Controls */}
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Update Status
-                      </label>
+                      <label className="text-sm font-medium">Update Status</label>
                       <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -270,13 +267,8 @@ export default function UserDetailsDrawer({
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Update Payment Status
-                      </label>
-                      <Select
-                        value={paymentStatus}
-                        onValueChange={setPaymentStatus}
-                      >
+                      <label className="text-sm font-medium">Update Payment Status</label>
+                      <Select value={paymentStatus} onValueChange={setPaymentStatus}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select payment status" />
                         </SelectTrigger>
@@ -288,14 +280,36 @@ export default function UserDetailsDrawer({
                       </Select>
                     </div>
                   </div>
-                  <FeedbackButton
-                    className="w-full"
-                    variant="default"
-                    onClick={handleUpdate}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? "Updating..." : "Update Booking"}
-                  </FeedbackButton>
+                  {!isUpdating ? (
+                    <FeedbackButton
+                      className="w-full"
+                      variant="default"
+                      onClick={() => setIsUpdating(true)}
+                      disabled={isUpdating}
+                    >
+                      Update Booking
+                    </FeedbackButton>
+                  ) : (
+                    <FeedbackButton
+                      className="w-full"
+                      variant="default"
+                      onClick={handleUpdate}
+                      disabled={!isUpdating}
+                    >
+                      Submit
+                    </FeedbackButton>
+                  )}
+
+                  {isUpdating && (
+                    <FeedbackButton
+                      className="w-full"
+                      variant="default"
+                      onClick={() => setIsUpdating(false)}
+                    >
+                      Cancel Update
+                    </FeedbackButton>
+                  )}
+
                   <Button
                     className="w-full"
                     variant="destructive"

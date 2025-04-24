@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
 import Footer from "@/components/footer";
 import Head from "next/head";
+// import meta from "next/meta"
 
 // (window as any).OneSignalInitialized = true;
 
@@ -128,15 +129,16 @@ export default function Home() {
 
   return (
     <>
-    <Head>
-      <title>Home | Bustify</title>
-      <meta name="description" content="Home page of Bustify" />
-      <meta property="og:title" content="Home | Bustify" />
-      <meta property="og:description" content="Home page of Bustify" />
-      <meta property="og:image" content="/preview.png" />
-      <meta name="twitter:card" content="summary_large_image" />
-        <link rel="canonical" href="https://bustify.in/" />
-      </Head>
+      <Head>
+        <title>Home | Bustify</title>
+        <meta name="description" content="Home page of Bustify" />
+        <meta property="og:title" content="Home | Bustify" />
+        <meta property="og:description" content="Home page of Bustify" />
+        <meta property="og:image" content="/preview.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+          <link rel="canonical" href="https://bustify.in/" />
+      </Head> 
+      
       <Suspense fallback={<HomeSkeleton />}>
         <div className="w-full h-full flex items-center">
           <Hero />
