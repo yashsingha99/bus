@@ -174,6 +174,7 @@ export default function ReservedUsersPage() {
       Date: booking.date,
       Destination: booking.destination.destinationAddress,
       Time: booking.time,
+      PickupPoint: booking.pickupAddress,
       PaymentStatus: booking.paymentStatus,
     }));
 
