@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
   Card,
@@ -16,13 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Auth from "@/components/model/auth";
 import Link from "next/link";
-import { User } from "@/types/user.type";
+// import { User } from "@/types/user.type";
 import { 
   ChartContainer, 
   ChartTooltip, 
   ChartTooltipContent 
 } from "@/components/ui/chart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import { TrendingUp } from "lucide-react";
 import { useLoadUser } from "@/hooks/useLoadUser";
 
@@ -48,7 +47,7 @@ interface DashboardData {
 }
 
 export default function AdminDashboard() {
-  const router = useRouter();
+  // const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
@@ -132,22 +131,22 @@ export default function AdminDashboard() {
     return <LoadingSkeleton />;
   }
 
-  const mergedAnalyticsData = Array.from(
-    new Set([
-      ...dashboardData.revenue.dayByRevenue.map((d) => d._id),
-      ...dashboardData.dailyUserRegistrations.map((d) => d._id),
-    ])
-  )
-    .sort()
-    .map((date) => {
-      const revenueData = dashboardData.revenue.dayByRevenue.find((d) => d._id === date);
-      const userData = dashboardData.dailyUserRegistrations.find((d) => d._id === date);
-      return {
-        date,
-        revenue: revenueData?.revenue || 0,
-        users: userData?.count || 0,
-      };
-    });
+  // const mergedAnalyticsData = Array.from(
+  //   new Set([
+  //     ...dashboardData.revenue.dayByRevenue.map((d) => d._id),
+  //     ...dashboardData.dailyUserRegistrations.map((d) => d._id),
+  //   ])
+  // )
+  //   .sort()
+  //   .map((date) => {
+  //     const revenueData = dashboardData.revenue.dayByRevenue.find((d) => d._id === date);
+  //     const userData = dashboardData.dailyUserRegistrations.find((d) => d._id === date);
+  //     return {
+  //       date,
+  //       revenue: revenueData?.revenue || 0,
+  //       users: userData?.count || 0,
+  //     };
+  //   });
 
   return (
     <div className="container mx-auto p-4">

@@ -1,6 +1,6 @@
 // File: /app/api/admin/dashboard/route.ts
 import { dbConnection } from "@/lib/db";
-import { BookingModel } from "@/model/booking.model";
+import { BookingModel, IBooking } from "@/model/booking.model";
 import { TripModel } from "@/model/trip.model";
 import { UserModel } from "@/model/user.model";
 import { NextResponse } from "next/server";
@@ -31,7 +31,7 @@ interface DashboardApiData {
   totalUsers: number;
   totalTrips: number;
   totalBookings: number;
-  recentBookings: any[]; // Type depends on your BookingModel populate
+  recentBookings: IBooking[]; // Type depends on your BookingModel populate
   bookingStats: BookingStat[];
   paymentStats: PaymentStat[];
   revenueData: RevenueData[];
