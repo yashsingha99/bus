@@ -206,14 +206,16 @@ export default function BusSearchPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <div className="flex flex-wrap gap-1">
-                      {trip.Trips[0]?.Timing.slice(0, 3).map((time, idx) => (
+                      {/* {trip.Trips[0]?.Timing.slice(0, 3).map((time, idx) => ( */}
                         <span
-                          key={idx}
+                          // key={idx}
                           className="rounded-full bg-muted px-2 py-0.5 text-xs"
                         >
-                          {time}
+                          {/* {time} */}
+                          Forenoon
                         </span>
-                      ))}
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs">Afternoon</span>
+                      {/* ))} */}
                       {trip.Trips[0].Timing.length > 3 && (
                         <span className="text-xs text-muted-foreground">
                           +{trip.Trips[0]?.Timing.length - 3} more
