@@ -1,0 +1,12 @@
+.nav-scroll {
+    overflow: scroll;
+    scrollbar-width: none;
+  }
+  
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
