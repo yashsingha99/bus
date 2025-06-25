@@ -14,7 +14,6 @@ export const bookingApi = {
     }
   },
 
-  // Get booking by ID
   getBookingById: async (bookingId: string): Promise<IBooking> => {
     try {
       const response = await axios.get<{ data: IBooking }>(`/api/passanger/booking?bookingId=${bookingId}`);

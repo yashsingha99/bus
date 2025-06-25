@@ -4,10 +4,10 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
-      allow: '/',
+      allow: '*',
       disallow: [
         '/api/',
-        '/admin/',
+        '/AATKHARK/',
         '/_next/',
         '/private/',
       ],

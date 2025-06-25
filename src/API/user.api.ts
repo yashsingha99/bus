@@ -17,4 +17,3 @@ export const login = async (user: User) => {
   const response = await axios.post(`/api/auth/check`, user);
   return response.data;
 };
-

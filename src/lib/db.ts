@@ -15,7 +15,7 @@ export const dbConnection = async (): Promise<void> => {
   }
   try {
     const URI = process.env.NEXT_MONGODB_URI 
-    // || "mongodb://localhost:27017"
+    || "mongodb://localhost:27017/bustify"
     
     const db = await mongoose.connect(URI!);
     connection.isConnected = db.connections[0].readyState;

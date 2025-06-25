@@ -38,7 +38,9 @@ import axios from "axios";
 import Script from "next/script";
 import { toast, Toaster } from "sonner";
 import LoadingSkeleton from "../_components/loading-skeleton";
-// import PaymentDrawer from "../_components/paymentDrawer";
+
+
+ 
 import Auth from "@/components/model/auth";
 
 interface RazorpayResponse {
@@ -193,6 +195,8 @@ export default function BusDetailsPage() {
   // };
 
   //-------------------------------------- HANDLE PAYMENT BY RAZORPAY ----------------------------------
+  
+  
   const handlePaymentByRazorpay = async () => {
     setIsLoading(true);
     try {
@@ -209,18 +213,7 @@ export default function BusDetailsPage() {
         return;
       }
       const orderId: string = await createOrderId(finalPrice, "INR", tripId);
-      // console.log(orderId);
-
-      // console.log("Order ID:", orderId);
-      // console.log(
-      //   "selectedDate",
-      //   new Date(selectedDate).toLocaleDateString("en-IN", {
-      //     weekday: "short",
-      //     month: "short",
-      //     day: "numeric",
-      //     year: "numeric",
-      //   })
-      // );
+    
       const newDiscription = 
         `Booking ${" "} for ${" "} ${tripData?.destinationAddress || "Destination"} at pickup:= ${pickup ? pickup : selectedPickup}, Date:= ${new Date(
           selectedDate
@@ -356,6 +349,7 @@ export default function BusDetailsPage() {
   }, [tripId, fetchTrips]);
 
   //------------------------------------ SET PRICE BY DATE AND TIME OF TRIP  -----------------------------
+
   useEffect(() => {
     if (tripData && selectedDate && selectedTime) {
       const newPrice = getPriceFromTripData(

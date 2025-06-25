@@ -6,6 +6,8 @@ import { useDrawerContext } from "@/context/DrawerContext";
 import { useState, useEffect } from "react";
 import "./drawer.css";
 import { useNavigation } from "@/utils/navigation";
+import { Button } from "./ui/button";
+import Auth from "./model/auth";
 // import Auth from "./model/auth";
 // import { Button } from "./ui/button";
 const Drawer = () => {
@@ -105,7 +107,7 @@ const Drawer = () => {
           <div className="absolute bottom-8 left-8 right-8 z-20">
             <div className="container mx-auto">
               <div className="relative flex flex-wrap w-full gap-4">
-                {userData && (
+                {userData ? (
                   <>
                     <button
                       onClick={handleSignOut}
@@ -114,8 +116,7 @@ const Drawer = () => {
                       Log Out
                     </button>
                   </>
-                )}
-                {/* : (
+                ) : (
                   <>
                     <Auth
                       navigateRoute=""
@@ -134,15 +135,15 @@ const Drawer = () => {
                       </Button>
                     </Auth>
                   </>
-                )} */}
+                )} 
 
-                {/* <button className="bg-[#545CFF] cursor-pointer hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-3xl lg:text-3xl text-xl">
+                <button className="bg-[#545CFF] cursor-pointer hover:scale-110 text-white lg:w-60 lg:h-16 w-full h-10 rounded-3xl lg:text-3xl text-xl">
                   Get in touch
-                </button> */}
+                </button> 
 
-                {/* <div
+             {/*  <div
                   className={`absolute w-80 h-48 z-10 left-48 filter blur-[150px] bg-[#3e59dd]  shadow-[0_0_30px_rgba(247,146,30,0.6)] rounded-full transform -translate-x-1/2 -translate-y-1/2 `}
-                ></div> */}
+                 ></div> */}
               </div>
             </div>
           </div>
