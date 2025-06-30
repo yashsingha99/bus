@@ -6,8 +6,8 @@
 .pnp.js
 .yarn/install-state.gz
 
-/src/AATKHARK
-/src/api
+/src/app/AATKHARK
+/src/app/api
 
 
 package.json
