@@ -12,6 +12,9 @@ const config: Config = {
 
   theme: {
   	extend: {
+		  fontFamily: {
+			  cursive: ['"Pacifico"', 'cursive'],
+		  },
 		
   		colors: {
   			background: 'hsl(var(--background))',

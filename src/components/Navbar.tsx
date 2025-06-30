@@ -24,15 +24,12 @@ const Navbar = () => {
   const { navigate } = useNavigation();
   const [user, setUser] = useState<User | null>(null);
 
-
   useEffect(()=>{
   const userData = JSON.parse(localStorage.getItem("user")?? "{}");
-  // console.log(userData)
     if(userData){
       setUser(userData);
     }
   }, [])
-  // console.log(user);
   
   return (
     // <header className="w-full ">

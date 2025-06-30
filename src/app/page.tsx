@@ -76,7 +76,7 @@ export default function Home() {
       </Head>
 
       <Suspense fallback={<HomeSkeleton />}>
-        <div className="w-full h-full flex items-center">
+        <div className="w-full h-full">
           <Hero />
         </div>
         <Footer />
