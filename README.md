@@ -9,6 +9,9 @@
 > **Bustify** is a modern travel itinerary management platform built with **Next.js App Router**. Whether you're organizing a weekend getaway or coordinating a business tour, Bustify simplifies trip planning with a clean UI and seamless UX.
 
 ---
+[![Flow Diagram](https://drive.google.com/file/d/1Gi8biGkFxMyfk4a4UumoUSI8M8H1AT9l/view?usp=sharing)](https://drive.google.com/file/d/1Gi8biGkFxMyfk4a4UumoUSI8M8H1AT9l/view?usp=sharing)
+
+
 
 ## ✨ Features
 
